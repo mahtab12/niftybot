@@ -1,0 +1,25 @@
+access niftybot platform:
+  title: 'Access NiftyBot Platform'
+  description: 'Allow users to access the NiftyBot trading platform.'
+
+administer niftybot:
+  title: 'Administer NiftyBot'
+  description: 'Full administrative access to NiftyBot settings and configuration.'
+  restrict access: true
+
+view niftybot dashboard:
+  title: 'View NiftyBot Dashboard'
+  description: 'Allow users to view the trading dashboard.'
+
+place niftybot orders:
+  title: 'Place Orders'
+  description: 'Allow users to place trading orders.'
+
+view niftybot reports:
+  title: 'View Reports'
+  description: 'Allow users to view trading reports.'
+
+manage niftybot subscriptions:
+  title: 'Manage Subscriptions'
+  description: 'Allow administrators to manage subscription plans.'
+  restrict access: true

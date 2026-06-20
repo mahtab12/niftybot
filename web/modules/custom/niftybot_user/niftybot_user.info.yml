@@ -1,0 +1,9 @@
+name: 'NiftyBot User'
+type: module
+description: 'User registration, KYC verification, and wallet management for NiftyBot.'
+package: NiftyBot
+core_version_requirement: ^11
+dependencies:
+  - niftybot_core:niftybot_core
+  - drupal:user
+  - drupal:file

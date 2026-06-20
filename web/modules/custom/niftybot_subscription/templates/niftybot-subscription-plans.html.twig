@@ -1,0 +1,44 @@
+<div class="niftybot-plans">
+  <h2>{{ 'Choose Your Plan'|t }}</h2>
+  <p class="plans-subtitle">{{ 'Select the plan that fits your trading needs.'|t }}</p>
+
+  <div class="plans-grid">
+    {% for plan in plans %}
+      <div class="plan-card {% if plan.machine_name == 'pro' %}plan-card--featured{% endif %}">
+        {% if plan.machine_name == 'pro' %}
+          <div class="plan-badge">{{ 'Most Popular'|t }}</div>
+        {% endif %}
+
+        <h3 class="plan-name">{{ plan.name }}</h3>
+        <p class="plan-description">{{ plan.description }}</p>
+
+        <div class="plan-price">
+          <span class="price-amount">₹{{ plan.price|number_format(0) }}</span>
+          <span class="price-period">/{{ 'month'|t }}</span>
+        </div>
+
+        <ul class="plan-features">
+          <li class="plan-feature-highlight">
+            {{ 'Up to @count orders/day'|t({'@count': plan.max_orders_per_day}) }}
+          </li>
+          {% if plan.max_capital %}
+            <li class="plan-feature-highlight">
+              {{ 'Max capital: ₹@cap'|t({'@cap': plan.max_capital|number_format(0)}) }}
+            </li>
+          {% endif %}
+          {% for feature in plan.features_list %}
+            <li>{{ feature }}</li>
+          {% endfor %}
+        </ul>
+
+        {% if current_subscription and current_subscription.plan_id == plan.plan_id %}
+          <span class="button button--disabled">{{ 'Current Plan'|t }}</span>
+        {% else %}
+          <a href="{{ path('niftybot_subscription.subscribe', {'plan_id': plan.plan_id}) }}" class="button button--primary">
+            {{ 'Subscribe'|t }}
+          </a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>

@@ -1,0 +1,7 @@
+niftybot_dashboard.main:
+  path: '/niftybot/dashboard'
+  defaults:
+    _controller: '\Drupal\niftybot_dashboard\Controller\DashboardController::main'
+    _title: 'Trading Dashboard'
+  requirements:
+    _permission: 'view niftybot dashboard'

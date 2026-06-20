@@ -1,0 +1,56 @@
+<div class="niftybot-positions">
+  <div class="positions-summary">
+    <div class="summary-card">
+      <span class="summary-label">{{ 'Total Investment'|t }}</span>
+      <span class="summary-value">₹{{ total_investment|number_format(2) }}</span>
+    </div>
+    <div class="summary-card">
+      <span class="summary-label">{{ 'Total P&L'|t }}</span>
+      <span class="summary-value {{ total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+        {{ total_pnl >= 0 ? '+' : '' }}₹{{ total_pnl|number_format(2) }}
+      </span>
+    </div>
+  </div>
+
+  {% if positions|length > 0 %}
+    <table class="niftybot-table positions-table">
+      <thead>
+        <tr>
+          <th>{{ 'Symbol'|t }}</th>
+          <th>{{ 'Exchange'|t }}</th>
+          <th>{{ 'Type'|t }}</th>
+          <th>{{ 'Qty'|t }}</th>
+          <th>{{ 'Avg Price'|t }}</th>
+          <th>{{ 'Current'|t }}</th>
+          <th>{{ 'P&L'|t }}</th>
+          <th>{{ 'P&L %'|t }}</th>
+          <th>{{ 'Broker'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pos in positions %}
+          <tr>
+            <td class="position-symbol">{{ pos.symbol }}</td>
+            <td>{{ pos.exchange }}</td>
+            <td>{{ pos.product_type }}</td>
+            <td>{{ pos.quantity }}</td>
+            <td>₹{{ pos.average_price|number_format(2) }}</td>
+            <td>₹{{ pos.current_price ? pos.current_price|number_format(2) : '--' }}</td>
+            <td class="{{ pos.pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+              {{ pos.pnl >= 0 ? '+' : '' }}₹{{ pos.pnl|number_format(2) }}
+            </td>
+            <td class="{{ pos.pnl_percentage >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+              {{ pos.pnl_percentage >= 0 ? '+' : '' }}{{ pos.pnl_percentage|number_format(2) }}%
+            </td>
+            <td>{{ pos.broker|capitalize }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <p>{{ 'No open positions. Place a trade to see your positions here.'|t }}</p>
+      <a href="{{ path('niftybot_trading.order_form') }}" class="button button--primary">{{ 'Place Order'|t }}</a>
+    </div>
+  {% endif %}
+</div>

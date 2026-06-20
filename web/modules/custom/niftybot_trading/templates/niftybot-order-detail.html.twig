@@ -1,0 +1,122 @@
+<div class="niftybot-order-detail">
+  <div class="order-detail-header">
+    <h2>{{ order.symbol }} - {{ order.transaction_type }}</h2>
+    <span class="order-status order-status--{{ order.status }}">
+      {{ order.status|replace({'_': ' '})|capitalize }}
+    </span>
+  </div>
+
+  <table class="order-detail-table">
+    <tr>
+      <td><strong>{{ 'Order ID'|t }}</strong></td>
+      <td>#{{ order.order_id }}</td>
+    </tr>
+    {% if order.broker_order_id %}
+    <tr>
+      <td><strong>{{ 'Broker Order ID'|t }}</strong></td>
+      <td>{{ order.broker_order_id }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td><strong>{{ 'Broker'|t }}</strong></td>
+      <td>{{ order.broker|capitalize }}</td>
+    </tr>
+    <tr>
+      <td><strong>{{ 'Symbol'|t }}</strong></td>
+      <td>{{ order.symbol }}</td>
+    </tr>
+    <tr>
+      <td><strong>{{ 'Exchange'|t }}</strong></td>
+      <td>{{ order.exchange }}</td>
+    </tr>
+    <tr>
+      <td><strong>{{ 'Instrument'|t }}</strong></td>
+      <td>{{ order.instrument_type|capitalize }}</td>
+    </tr>
+    <tr>
+      <td><strong>{{ 'Transaction'|t }}</strong></td>
+      <td>
+        <span class="txn-type txn-type--{{ order.transaction_type|lower }}">
+          {{ order.transaction_type }}
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>{{ 'Order Type'|t }}</strong></td>
+      <td>{{ order.order_type }}</td>
+    </tr>
+    <tr>
+      <td><strong>{{ 'Product'|t }}</strong></td>
+      <td>{{ order.product_type }}</td>
+    </tr>
+    <tr>
+      <td><strong>{{ 'Quantity'|t }}</strong></td>
+      <td>{{ order.quantity }}</td>
+    </tr>
+    {% if order.price %}
+    <tr>
+      <td><strong>{{ 'Order Price'|t }}</strong></td>
+      <td>₹{{ order.price|number_format(2) }}</td>
+    </tr>
+    {% endif %}
+    {% if order.trigger_price %}
+    <tr>
+      <td><strong>{{ 'Trigger Price'|t }}</strong></td>
+      <td>₹{{ order.trigger_price|number_format(2) }}</td>
+    </tr>
+    {% endif %}
+    {% if order.executed_price %}
+    <tr>
+      <td><strong>{{ 'Executed Price'|t }}</strong></td>
+      <td>₹{{ order.executed_price|number_format(2) }}</td>
+    </tr>
+    {% endif %}
+    {% if order.executed_quantity %}
+    <tr>
+      <td><strong>{{ 'Executed Qty'|t }}</strong></td>
+      <td>{{ order.executed_quantity }}</td>
+    </tr>
+    {% endif %}
+    {% if order.stoploss %}
+    <tr>
+      <td><strong>{{ 'Stop Loss'|t }}</strong></td>
+      <td>₹{{ order.stoploss|number_format(2) }}</td>
+    </tr>
+    {% endif %}
+    {% if order.target %}
+    <tr>
+      <td><strong>{{ 'Target'|t }}</strong></td>
+      <td>₹{{ order.target|number_format(2) }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td><strong>{{ 'Placed At'|t }}</strong></td>
+      <td>{{ order.placed_at|date('d M Y, h:i:s A') }}</td>
+    </tr>
+    {% if order.executed_at %}
+    <tr>
+      <td><strong>{{ 'Executed At'|t }}</strong></td>
+      <td>{{ order.executed_at|date('d M Y, h:i:s A') }}</td>
+    </tr>
+    {% endif %}
+    {% if order.status_message %}
+    <tr>
+      <td><strong>{{ 'Status Message'|t }}</strong></td>
+      <td>{{ order.status_message }}</td>
+    </tr>
+    {% endif %}
+    {% if order.notes %}
+    <tr>
+      <td><strong>{{ 'Notes'|t }}</strong></td>
+      <td>{{ order.notes }}</td>
+    </tr>
+    {% endif %}
+  </table>
+
+  <div class="order-actions">
+    <a href="{{ path('niftybot_trading.orders') }}" class="button">{{ 'Back to Orders'|t }}</a>
+    {% if order.status in ['pending', 'placed'] %}
+      <a href="{{ path('niftybot_trading.order_cancel', {'order_id': order.order_id}) }}" class="button button--danger">{{ 'Cancel Order'|t }}</a>
+    {% endif %}
+  </div>
+</div>

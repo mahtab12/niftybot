@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for NiftyBot Reports module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function niftybot_reports_theme($existing, $type, $theme, $path) {
+  return [
+    'niftybot_reports_overview' => [
+      'variables' => [
+        'stats' => [],
+        'monthly_summary' => [],
+      ],
+      'template' => 'niftybot-reports-overview',
+    ],
+    'niftybot_pnl_report' => [
+      'variables' => [
+        'daily_pnl' => [],
+        'total_pnl' => 0,
+        'winning_trades' => 0,
+        'losing_trades' => 0,
+      ],
+      'template' => 'niftybot-pnl-report',
+    ],
+    'niftybot_admin_reports' => [
+      'variables' => [
+        'platform_stats' => [],
+        'top_traders' => [],
+        'revenue' => [],
+      ],
+      'template' => 'niftybot-admin-reports',
+    ],
+  ];
+}

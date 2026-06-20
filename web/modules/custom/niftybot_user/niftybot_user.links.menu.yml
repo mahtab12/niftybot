@@ -1,0 +1,47 @@
+niftybot_user.dashboard_menu:
+  title: 'Dashboard'
+  route_name: niftybot_dashboard.main
+  menu_name: niftybot-main
+  weight: 0
+
+niftybot_user.profile_menu:
+  title: 'My Profile'
+  route_name: niftybot_user.profile
+  menu_name: niftybot-main
+  weight: 1
+
+niftybot_user.wallet_menu:
+  title: 'Wallet'
+  route_name: niftybot_user.wallet
+  menu_name: niftybot-main
+  weight: 2
+
+niftybot_user.orders_menu:
+  title: 'Orders'
+  route_name: niftybot_trading.orders
+  menu_name: niftybot-main
+  weight: 3
+
+niftybot_user.positions_menu:
+  title: 'Positions'
+  route_name: niftybot_trading.positions
+  menu_name: niftybot-main
+  weight: 4
+
+niftybot_user.history_menu:
+  title: 'Trade History'
+  route_name: niftybot_trading.history
+  menu_name: niftybot-main
+  weight: 5
+
+niftybot_user.reports_menu:
+  title: 'Reports'
+  route_name: niftybot_reports.user
+  menu_name: niftybot-main
+  weight: 6
+
+niftybot_user.plans_menu:
+  title: 'Plans'
+  route_name: niftybot_subscription.plans
+  menu_name: niftybot-main
+  weight: 7

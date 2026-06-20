@@ -1,0 +1,51 @@
+<div class="niftybot-wallet">
+  <div class="wallet-header">
+    <div class="wallet-balance-card">
+      <h3>{{ 'Available Balance'|t }}</h3>
+      <div class="wallet-amount">₹{{ balance|number_format(2) }}</div>
+      <div class="wallet-actions">
+        <a href="{{ path('niftybot_user.wallet_deposit') }}" class="button button--primary">{{ 'Deposit'|t }}</a>
+        <a href="{{ path('niftybot_user.wallet_withdraw') }}" class="button">{{ 'Withdraw'|t }}</a>
+      </div>
+    </div>
+  </div>
+
+  <h3>{{ 'Transaction History'|t }}</h3>
+
+  {% if transactions|length > 0 %}
+    <table class="niftybot-table wallet-transactions">
+      <thead>
+        <tr>
+          <th>{{ 'Date'|t }}</th>
+          <th>{{ 'Type'|t }}</th>
+          <th>{{ 'Amount'|t }}</th>
+          <th>{{ 'Method'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in transactions %}
+          <tr>
+            <td>{{ txn.created|date('d M Y, h:i A') }}</td>
+            <td>
+              <span class="txn-type txn-type--{{ txn.type }}">
+                {{ txn.type|capitalize }}
+              </span>
+            </td>
+            <td class="txn-amount txn-amount--{{ txn.type }}">
+              {% if txn.type == 'deposit' %}+{% else %}-{% endif %}₹{{ txn.amount|number_format(2) }}
+            </td>
+            <td>{{ txn.payment_method|replace({'_': ' '})|capitalize }}</td>
+            <td>
+              <span class="txn-status txn-status--{{ txn.status }}">
+                {{ txn.status|capitalize }}
+              </span>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">{{ 'No transactions yet. Make your first deposit to start trading.'|t }}</p>
+  {% endif %}
+</div>

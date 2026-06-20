@@ -1,0 +1,54 @@
+<div class="niftybot-my-subscription">
+  {% if subscription and plan %}
+    <div class="subscription-card active">
+      <div class="subscription-status">
+        <span class="status status--success">{{ 'Active'|t }}</span>
+      </div>
+
+      <h3>{{ plan.name }} {{ 'Plan'|t }}</h3>
+      <p>{{ plan.description }}</p>
+
+      <table class="subscription-details">
+        <tr>
+          <td><strong>{{ 'Start Date'|t }}</strong></td>
+          <td>{{ subscription.start_date|date('d M Y') }}</td>
+        </tr>
+        <tr>
+          <td><strong>{{ 'End Date'|t }}</strong></td>
+          <td>{{ subscription.end_date|date('d M Y') }}</td>
+        </tr>
+        <tr>
+          <td><strong>{{ 'Days Remaining'|t }}</strong></td>
+          <td>{{ days_remaining }} {{ 'days'|t }}</td>
+        </tr>
+        <tr>
+          <td><strong>{{ 'Max Orders/Day'|t }}</strong></td>
+          <td>{{ plan.max_orders_per_day }}</td>
+        </tr>
+        <tr>
+          <td><strong>{{ 'Auto-Renew'|t }}</strong></td>
+          <td>{{ subscription.auto_renew ? 'Yes'|t : 'No'|t }}</td>
+        </tr>
+        <tr>
+          <td><strong>{{ 'Amount Paid'|t }}</strong></td>
+          <td>₹{{ subscription.payment_amount|number_format(2) }}</td>
+        </tr>
+      </table>
+
+      {% if plan.features_list %}
+        <h4>{{ 'Plan Features'|t }}</h4>
+        <ul class="plan-features-list">
+          {% for feature in plan.features_list %}
+            <li>{{ feature }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="no-subscription">
+      <h3>{{ 'No Active Subscription'|t }}</h3>
+      <p>{{ 'You do not have an active subscription. Subscribe to a plan to start trading.'|t }}</p>
+      <a href="{{ path('niftybot_subscription.plans') }}" class="button button--primary">{{ 'View Plans'|t }}</a>
+    </div>
+  {% endif %}
+</div>

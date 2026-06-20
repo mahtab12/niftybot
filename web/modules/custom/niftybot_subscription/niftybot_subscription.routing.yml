@@ -1,0 +1,57 @@
+niftybot_subscription.plans:
+  path: '/niftybot/plans'
+  defaults:
+    _controller: '\Drupal\niftybot_subscription\Controller\SubscriptionController::plans'
+    _title: 'Subscription Plans'
+  requirements:
+    _permission: 'access niftybot platform'
+
+niftybot_subscription.subscribe:
+  path: '/niftybot/subscribe/{plan_id}'
+  defaults:
+    _form: '\Drupal\niftybot_subscription\Form\SubscribeForm'
+    _title: 'Subscribe'
+  requirements:
+    _permission: 'access niftybot platform'
+    plan_id: \d+
+
+niftybot_subscription.my_subscription:
+  path: '/niftybot/my-subscription'
+  defaults:
+    _controller: '\Drupal\niftybot_subscription\Controller\SubscriptionController::mySubscription'
+    _title: 'My Subscription'
+  requirements:
+    _permission: 'access niftybot platform'
+
+niftybot_subscription.admin_plans:
+  path: '/admin/niftybot/plans'
+  defaults:
+    _controller: '\Drupal\niftybot_subscription\Controller\SubscriptionAdminController::plansList'
+    _title: 'Manage Subscription Plans'
+  requirements:
+    _permission: 'manage niftybot subscriptions'
+
+niftybot_subscription.admin_plan_add:
+  path: '/admin/niftybot/plans/add'
+  defaults:
+    _form: '\Drupal\niftybot_subscription\Form\PlanForm'
+    _title: 'Add Subscription Plan'
+  requirements:
+    _permission: 'manage niftybot subscriptions'
+
+niftybot_subscription.admin_plan_edit:
+  path: '/admin/niftybot/plans/{plan_id}/edit'
+  defaults:
+    _form: '\Drupal\niftybot_subscription\Form\PlanForm'
+    _title: 'Edit Subscription Plan'
+  requirements:
+    _permission: 'manage niftybot subscriptions'
+    plan_id: \d+
+
+niftybot_subscription.admin_subscribers:
+  path: '/admin/niftybot/subscribers'
+  defaults:
+    _controller: '\Drupal\niftybot_subscription\Controller\SubscriptionAdminController::subscribersList'
+    _title: 'Active Subscribers'
+  requirements:
+    _permission: 'manage niftybot subscriptions'

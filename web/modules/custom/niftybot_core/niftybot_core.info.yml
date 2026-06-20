@@ -1,0 +1,10 @@
+name: 'NiftyBot Core'
+type: module
+description: 'Core module for NiftyBot trading platform. Provides shared services, configuration, and base functionality.'
+package: NiftyBot
+core_version_requirement: ^11
+dependencies:
+  - drupal:user
+  - drupal:system
+  - drupal:node
+  - drupal:views

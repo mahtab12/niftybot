@@ -1,0 +1,39 @@
+<div class="niftybot-admin-overview">
+  <h2>{{ 'Platform Overview'|t }}</h2>
+
+  <div class="niftybot-stats-grid">
+    <div class="niftybot-stat-card">
+      <div class="stat-value">{{ stats.total_users }}</div>
+      <div class="stat-label">{{ 'Total Users'|t }}</div>
+    </div>
+
+    <div class="niftybot-stat-card">
+      <div class="stat-value">{{ stats.pending_kyc }}</div>
+      <div class="stat-label">{{ 'Pending KYC'|t }}</div>
+    </div>
+
+    <div class="niftybot-stat-card">
+      <div class="stat-value">{{ stats.active_subscriptions }}</div>
+      <div class="stat-label">{{ 'Active Subscriptions'|t }}</div>
+    </div>
+
+    <div class="niftybot-stat-card">
+      <div class="stat-value">{{ stats.orders_today }}</div>
+      <div class="stat-label">{{ 'Orders Today'|t }}</div>
+    </div>
+
+    <div class="niftybot-stat-card">
+      <div class="stat-value">{{ stats.total_trades }}</div>
+      <div class="stat-label">{{ 'Total Trades'|t }}</div>
+    </div>
+  </div>
+
+  <h3>{{ 'Quick Links'|t }}</h3>
+  <ul class="niftybot-admin-links">
+    <li><a href="{{ path('niftybot_core.settings') }}">{{ 'Platform Settings'|t }}</a></li>
+    <li><a href="{{ path('niftybot_user.kyc_admin') }}">{{ 'KYC Management'|t }}</a></li>
+    <li><a href="{{ path('niftybot_subscription.admin_plans') }}">{{ 'Subscription Plans'|t }}</a></li>
+    <li><a href="{{ path('niftybot_trading.admin_orders') }}">{{ 'Order Management'|t }}</a></li>
+    <li><a href="{{ path('niftybot_reports.admin') }}">{{ 'Reports'|t }}</a></li>
+  </ul>
+</div>

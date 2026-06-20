@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - niftybot_core
+    - niftybot_user
+    - niftybot_subscription
+    - niftybot_trading
+    - niftybot_dashboard
+    - niftybot_reports
+id: niftybot_admin
+label: 'NiftyBot Admin'
+weight: 2
+is_admin: false
+permissions:
+  - 'access niftybot platform'
+  - 'administer niftybot'
+  - 'view niftybot dashboard'
+  - 'place niftybot orders'
+  - 'view niftybot reports'
+  - 'submit kyc'
+  - 'view own kyc'
+  - 'administer kyc'
+  - 'manage wallet'
+  - 'administer wallets'
+  - 'manage niftybot subscriptions'

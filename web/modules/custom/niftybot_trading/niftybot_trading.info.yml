@@ -1,0 +1,10 @@
+name: 'NiftyBot Trading'
+type: module
+description: 'Order placement, trade history, and position tracking for NiftyBot.'
+package: NiftyBot
+core_version_requirement: ^11
+dependencies:
+  - niftybot_core:niftybot_core
+  - niftybot_user:niftybot_user
+  - niftybot_subscription:niftybot_subscription
+  - drupal:user

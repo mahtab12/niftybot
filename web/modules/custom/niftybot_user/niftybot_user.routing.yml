@@ -1,0 +1,72 @@
+niftybot_user.register:
+  path: '/niftybot/register'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\UserRegistrationForm'
+    _title: 'Create Account'
+  requirements:
+    _user_is_logged_in: 'FALSE'
+
+niftybot_user.profile:
+  path: '/niftybot/profile'
+  defaults:
+    _controller: '\Drupal\niftybot_user\Controller\UserProfileController::profile'
+    _title: 'My Profile'
+  requirements:
+    _permission: 'access niftybot platform'
+
+niftybot_user.kyc_submit:
+  path: '/niftybot/kyc'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\KycSubmissionForm'
+    _title: 'KYC Verification'
+  requirements:
+    _permission: 'submit kyc'
+
+niftybot_user.kyc_status:
+  path: '/niftybot/kyc/status'
+  defaults:
+    _controller: '\Drupal\niftybot_user\Controller\KycController::status'
+    _title: 'KYC Status'
+  requirements:
+    _permission: 'view own kyc'
+
+niftybot_user.kyc_admin:
+  path: '/admin/niftybot/kyc'
+  defaults:
+    _controller: '\Drupal\niftybot_user\Controller\KycController::adminList'
+    _title: 'KYC Management'
+  requirements:
+    _permission: 'administer kyc'
+
+niftybot_user.kyc_review:
+  path: '/admin/niftybot/kyc/{kyc_id}/review'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\KycReviewForm'
+    _title: 'Review KYC'
+  requirements:
+    _permission: 'administer kyc'
+    kyc_id: \d+
+
+niftybot_user.wallet:
+  path: '/niftybot/wallet'
+  defaults:
+    _controller: '\Drupal\niftybot_user\Controller\WalletController::overview'
+    _title: 'My Wallet'
+  requirements:
+    _permission: 'manage wallet'
+
+niftybot_user.wallet_deposit:
+  path: '/niftybot/wallet/deposit'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\WalletDepositForm'
+    _title: 'Deposit Funds'
+  requirements:
+    _permission: 'manage wallet'
+
+niftybot_user.wallet_withdraw:
+  path: '/niftybot/wallet/withdraw'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\WalletWithdrawForm'
+    _title: 'Withdraw Funds'
+  requirements:
+    _permission: 'manage wallet'

@@ -1,0 +1,251 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for niftybot_user module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function niftybot_user_schema() {
+  $schema['niftybot_kyc'] = [
+    'description' => 'Stores KYC verification data for users.',
+    'fields' => [
+      'kyc_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'User ID.',
+      ],
+      'pan_number' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+      ],
+      'aadhaar_last4' => [
+        'type' => 'varchar',
+        'length' => 4,
+        'not null' => TRUE,
+        'description' => 'Last 4 digits of Aadhaar for display.',
+      ],
+      'aadhaar_hash' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'Hashed Aadhaar number.',
+      ],
+      'full_name' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ],
+      'date_of_birth' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+      ],
+      'address' => [
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
+      'bank_account_number' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+      ],
+      'bank_ifsc' => [
+        'type' => 'varchar',
+        'length' => 11,
+        'not null' => TRUE,
+      ],
+      'bank_name' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ],
+      'pan_document_fid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'File ID for PAN card document.',
+      ],
+      'aadhaar_document_fid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'File ID for Aadhaar document.',
+      ],
+      'selfie_fid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'File ID for selfie verification.',
+      ],
+      'status' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'pending',
+        'description' => 'KYC status: pending, under_review, approved, rejected.',
+      ],
+      'rejection_reason' => [
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
+      'reviewed_by' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'Admin user who reviewed the KYC.',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['kyc_id'],
+    'unique keys' => [
+      'uid' => ['uid'],
+      'pan_number' => ['pan_number'],
+    ],
+    'indexes' => [
+      'status' => ['status'],
+    ],
+    'foreign keys' => [
+      'user' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+    ],
+  ];
+
+  $schema['niftybot_wallet'] = [
+    'description' => 'User wallet balances.',
+    'fields' => [
+      'wallet_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'balance' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['wallet_id'],
+    'unique keys' => [
+      'uid' => ['uid'],
+    ],
+    'foreign keys' => [
+      'user' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+    ],
+  ];
+
+  $schema['niftybot_wallet_transactions'] = [
+    'description' => 'Wallet deposit and withdrawal transactions.',
+    'fields' => [
+      'transaction_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'type' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'description' => 'Transaction type: deposit, withdrawal.',
+      ],
+      'amount' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => TRUE,
+      ],
+      'status' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'pending',
+        'description' => 'Status: pending, completed, failed, cancelled.',
+      ],
+      'payment_method' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => FALSE,
+        'description' => 'Payment method: upi, bank_transfer, card.',
+      ],
+      'payment_reference' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ],
+      'notes' => [
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['transaction_id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'type' => ['type'],
+      'status' => ['status'],
+      'created' => ['created'],
+    ],
+    'foreign keys' => [
+      'user' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+    ],
+  ];
+
+  return $schema;
+}

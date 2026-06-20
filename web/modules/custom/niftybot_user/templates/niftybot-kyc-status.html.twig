@@ -1,0 +1,51 @@
+<div class="niftybot-kyc-status">
+  <h2>{{ 'KYC Verification Status'|t }}</h2>
+
+  {% if kyc %}
+    <div class="kyc-status-card">
+      <div class="kyc-status-badge kyc-status--{{ kyc.status }}">
+        {{ status_label }}
+      </div>
+
+      <table class="kyc-details">
+        <tr>
+          <td><strong>{{ 'Name'|t }}</strong></td>
+          <td>{{ kyc.full_name }}</td>
+        </tr>
+        <tr>
+          <td><strong>{{ 'PAN'|t }}</strong></td>
+          <td>{{ kyc.pan_number }}</td>
+        </tr>
+        <tr>
+          <td><strong>{{ 'Submitted On'|t }}</strong></td>
+          <td>{{ kyc.created|date('d M Y, h:i A') }}</td>
+        </tr>
+        {% if kyc.updated > kyc.created %}
+        <tr>
+          <td><strong>{{ 'Last Updated'|t }}</strong></td>
+          <td>{{ kyc.updated|date('d M Y, h:i A') }}</td>
+        </tr>
+        {% endif %}
+      </table>
+
+      {% if kyc.status == 'rejected' %}
+        <div class="kyc-rejection">
+          <h4>{{ 'Reason for Rejection'|t }}</h4>
+          <p>{{ kyc.rejection_reason }}</p>
+          <a href="{{ path('niftybot_user.kyc_submit') }}" class="button button--primary">{{ 'Re-submit KYC'|t }}</a>
+        </div>
+      {% endif %}
+
+      {% if kyc.status == 'approved' %}
+        <div class="kyc-approved-message">
+          <p>{{ 'Your identity has been verified. You can now trade on the platform.'|t }}</p>
+        </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="kyc-not-submitted">
+      <p>{{ 'You have not submitted KYC verification yet. KYC is required before you can start trading.'|t }}</p>
+      <a href="{{ path('niftybot_user.kyc_submit') }}" class="button button--primary">{{ 'Submit KYC Now'|t }}</a>
+    </div>
+  {% endif %}
+</div>

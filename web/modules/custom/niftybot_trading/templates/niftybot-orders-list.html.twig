@@ -1,0 +1,67 @@
+<div class="niftybot-orders">
+  <div class="orders-header">
+    <a href="{{ path('niftybot_trading.order_form') }}" class="button button--primary">{{ '+ Place New Order'|t }}</a>
+  </div>
+
+  {% if orders|length > 0 %}
+    <table class="niftybot-table orders-table">
+      <thead>
+        <tr>
+          {% if is_admin %}<th>{{ 'User'|t }}</th>{% endif %}
+          <th>{{ 'Symbol'|t }}</th>
+          <th>{{ 'Exchange'|t }}</th>
+          <th>{{ 'Type'|t }}</th>
+          <th>{{ 'Order'|t }}</th>
+          <th>{{ 'Qty'|t }}</th>
+          <th>{{ 'Price'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+          <th>{{ 'Broker'|t }}</th>
+          <th>{{ 'Date'|t }}</th>
+          <th>{{ 'Actions'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          <tr class="order-row order-status--{{ order.status }}">
+            {% if is_admin %}<td>{{ order.username }}</td>{% endif %}
+            <td class="order-symbol">{{ order.symbol }}</td>
+            <td>{{ order.exchange }}</td>
+            <td>
+              <span class="txn-type txn-type--{{ order.transaction_type|lower }}">
+                {{ order.transaction_type }}
+              </span>
+            </td>
+            <td>{{ order.order_type }}</td>
+            <td>{{ order.quantity }}</td>
+            <td>
+              {% if order.executed_price %}
+                ₹{{ order.executed_price|number_format(2) }}
+              {% elseif order.price %}
+                ₹{{ order.price|number_format(2) }}
+              {% else %}
+                {{ 'Market'|t }}
+              {% endif %}
+            </td>
+            <td>
+              <span class="order-status order-status--{{ order.status }}">
+                {{ order.status|replace({'_': ' '})|capitalize }}
+              </span>
+            </td>
+            <td>{{ order.broker|capitalize }}</td>
+            <td>{{ order.placed_at|date('d M, h:i A') }}</td>
+            <td>
+              <a href="{{ order.detail_url }}">{{ 'View'|t }}</a>
+              {% if order.cancel_url is defined and order.cancel_url %}
+                | <a href="{{ order.cancel_url }}" class="cancel-link">{{ 'Cancel'|t }}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <p>{{ 'No orders yet. Place your first order to get started.'|t }}</p>
+    </div>
+  {% endif %}
+</div>

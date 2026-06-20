@@ -1,0 +1,42 @@
+<div class="niftybot-kyc-admin">
+  <h2>{{ 'KYC Verification Requests'|t }}</h2>
+
+  {% if kyc_records|length > 0 %}
+    <table class="niftybot-table">
+      <thead>
+        <tr>
+          <th>{{ 'ID'|t }}</th>
+          <th>{{ 'User'|t }}</th>
+          <th>{{ 'Email'|t }}</th>
+          <th>{{ 'Name'|t }}</th>
+          <th>{{ 'PAN'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+          <th>{{ 'Submitted'|t }}</th>
+          <th>{{ 'Actions'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for kyc in kyc_records %}
+          <tr>
+            <td>{{ kyc.kyc_id }}</td>
+            <td>{{ kyc.username }}</td>
+            <td>{{ kyc.email }}</td>
+            <td>{{ kyc.full_name }}</td>
+            <td>{{ kyc.pan_number }}</td>
+            <td>
+              <span class="kyc-status kyc-status--{{ kyc.status }}">
+                {{ kyc.status|replace({'_': ' '})|capitalize }}
+              </span>
+            </td>
+            <td>{{ kyc.created|date('d M Y') }}</td>
+            <td>
+              <a href="{{ kyc.review_url }}" class="button button--small">{{ 'Review'|t }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">{{ 'No KYC submissions yet.'|t }}</p>
+  {% endif %}
+</div>

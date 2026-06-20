@@ -1,0 +1,50 @@
+<div class="niftybot-reports">
+  <h2>{{ 'Trading Reports'|t }}</h2>
+
+  <div class="reports-stats">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.total_orders }}</div>
+      <div class="stat-label">{{ 'Total Orders'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.executed_orders }}</div>
+      <div class="stat-label">{{ 'Executed'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.cancelled_orders }}</div>
+      <div class="stat-label">{{ 'Cancelled'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.success_rate }}%</div>
+      <div class="stat-label">{{ 'Success Rate'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">₹{{ stats.total_investment|number_format(2) }}</div>
+      <div class="stat-label">{{ 'Total Investment'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value {{ stats.total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+        {{ stats.total_pnl >= 0 ? '+' : '' }}₹{{ stats.total_pnl|number_format(2) }}
+      </div>
+      <div class="stat-label">{{ 'Total P&L'|t }}</div>
+    </div>
+  </div>
+
+  <div class="reports-actions">
+    <h3>{{ 'Detailed Reports'|t }}</h3>
+    <ul class="reports-links">
+      <li><a href="{{ path('niftybot_reports.pnl') }}">{{ 'P&L Report'|t }}</a></li>
+      <li><a href="{{ path('niftybot_trading.history') }}">{{ 'Trade History'|t }}</a></li>
+      <li><a href="{{ path('niftybot_trading.positions') }}">{{ 'Position Report'|t }}</a></li>
+    </ul>
+  </div>
+
+  <div class="reports-export">
+    <h3>{{ 'Export Data'|t }}</h3>
+    <div class="export-buttons">
+      <a href="{{ path('niftybot_reports.export', {'type': 'orders'}) }}" class="button">{{ 'Export Orders (CSV)'|t }}</a>
+      <a href="{{ path('niftybot_reports.export', {'type': 'trades'}) }}" class="button">{{ 'Export Trades (CSV)'|t }}</a>
+      <a href="{{ path('niftybot_reports.export', {'type': 'positions'}) }}" class="button">{{ 'Export Positions (CSV)'|t }}</a>
+    </div>
+  </div>
+</div>

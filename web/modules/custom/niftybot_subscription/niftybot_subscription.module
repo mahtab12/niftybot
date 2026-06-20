@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for NiftyBot Subscription module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function niftybot_subscription_theme($existing, $type, $theme, $path) {
+  return [
+    'niftybot_subscription_plans' => [
+      'variables' => [
+        'plans' => [],
+        'current_subscription' => NULL,
+      ],
+      'template' => 'niftybot-subscription-plans',
+    ],
+    'niftybot_my_subscription' => [
+      'variables' => [
+        'subscription' => NULL,
+        'plan' => NULL,
+        'days_remaining' => 0,
+      ],
+      'template' => 'niftybot-my-subscription',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_cron().
+ */
+function niftybot_subscription_cron() {
+  $database = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+
+  $database->update('niftybot_user_subscriptions')
+    ->fields(['status' => 'expired'])
+    ->condition('end_date', $now, '<')
+    ->condition('status', 'active')
+    ->execute();
+}

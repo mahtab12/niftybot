@@ -1,0 +1,8 @@
+services:
+  niftybot_core.broker_manager:
+    class: Drupal\niftybot_core\Service\BrokerManager
+    arguments: ['@config.factory', '@logger.factory', '@http_client']
+
+  niftybot_core.notification_service:
+    class: Drupal\niftybot_core\Service\NotificationService
+    arguments: ['@plugin.manager.mail', '@config.factory', '@current_user', '@logger.factory']

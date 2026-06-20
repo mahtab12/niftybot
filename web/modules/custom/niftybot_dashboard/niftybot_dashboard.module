@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for NiftyBot Dashboard module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function niftybot_dashboard_theme($existing, $type, $theme, $path) {
+  return [
+    'niftybot_dashboard' => [
+      'variables' => [
+        'user' => NULL,
+        'kyc_status' => NULL,
+        'subscription' => NULL,
+        'plan' => NULL,
+        'wallet_balance' => 0,
+        'positions' => [],
+        'recent_orders' => [],
+        'stats' => [],
+      ],
+      'template' => 'niftybot-dashboard',
+    ],
+  ];
+}

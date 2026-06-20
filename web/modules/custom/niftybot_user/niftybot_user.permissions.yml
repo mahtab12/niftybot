@@ -1,0 +1,21 @@
+submit kyc:
+  title: 'Submit KYC Verification'
+  description: 'Allow users to submit KYC verification documents.'
+
+administer kyc:
+  title: 'Administer KYC'
+  description: 'Approve or reject KYC verifications.'
+  restrict access: true
+
+view own kyc:
+  title: 'View Own KYC'
+  description: 'Allow users to view their own KYC status.'
+
+manage wallet:
+  title: 'Manage Wallet'
+  description: 'Allow users to manage deposits and withdrawals.'
+
+administer wallets:
+  title: 'Administer Wallets'
+  description: 'Administrative access to all user wallets.'
+  restrict access: true

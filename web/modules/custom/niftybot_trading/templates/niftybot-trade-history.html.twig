@@ -1,0 +1,63 @@
+<div class="niftybot-trade-history">
+  <div class="history-summary">
+    <div class="summary-card">
+      <span class="summary-label">{{ 'Total Trades'|t }}</span>
+      <span class="summary-value">{{ summary.total_trades }}</span>
+    </div>
+    <div class="summary-card">
+      <span class="summary-label">{{ 'Total Buy Value'|t }}</span>
+      <span class="summary-value">₹{{ summary.total_buy_value|number_format(2) }}</span>
+    </div>
+    <div class="summary-card">
+      <span class="summary-label">{{ 'Total Sell Value'|t }}</span>
+      <span class="summary-value">₹{{ summary.total_sell_value|number_format(2) }}</span>
+    </div>
+    <div class="summary-card">
+      <span class="summary-label">{{ 'Net P&L'|t }}</span>
+      <span class="summary-value {{ summary.net_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+        {{ summary.net_pnl >= 0 ? '+' : '' }}₹{{ summary.net_pnl|number_format(2) }}
+      </span>
+    </div>
+  </div>
+
+  {% if trades|length > 0 %}
+    <table class="niftybot-table history-table">
+      <thead>
+        <tr>
+          <th>{{ 'Date'|t }}</th>
+          <th>{{ 'Symbol'|t }}</th>
+          <th>{{ 'Exchange'|t }}</th>
+          <th>{{ 'Type'|t }}</th>
+          <th>{{ 'Qty'|t }}</th>
+          <th>{{ 'Price'|t }}</th>
+          <th>{{ 'Value'|t }}</th>
+          <th>{{ 'Broker'|t }}</th>
+          <th>{{ 'Strategy'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for trade in trades %}
+          <tr>
+            <td>{{ trade.executed_at|date('d M Y, h:i A') }}</td>
+            <td class="trade-symbol">{{ trade.symbol }}</td>
+            <td>{{ trade.exchange }}</td>
+            <td>
+              <span class="txn-type txn-type--{{ trade.transaction_type|lower }}">
+                {{ trade.transaction_type }}
+              </span>
+            </td>
+            <td>{{ trade.executed_quantity }}</td>
+            <td>₹{{ trade.executed_price|number_format(2) }}</td>
+            <td>₹{{ (trade.executed_price * trade.executed_quantity)|number_format(2) }}</td>
+            <td>{{ trade.broker|capitalize }}</td>
+            <td>{{ trade.strategy ?: '-' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <p>{{ 'No executed trades yet.'|t }}</p>
+    </div>
+  {% endif %}
+</div>

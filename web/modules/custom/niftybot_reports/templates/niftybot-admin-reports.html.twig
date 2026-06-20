@@ -1,0 +1,32 @@
+<div class="niftybot-admin-reports">
+  <h2>{{ 'Platform Reports'|t }}</h2>
+
+  <div class="platform-stats">
+    <div class="stat-card">
+      <div class="stat-value">{{ platform_stats.total_users }}</div>
+      <div class="stat-label">{{ 'Total Users'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ platform_stats.active_subscriptions }}</div>
+      <div class="stat-label">{{ 'Active Subscriptions'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ platform_stats.total_orders }}</div>
+      <div class="stat-label">{{ 'Total Orders'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">₹{{ platform_stats.total_revenue|number_format(2) }}</div>
+      <div class="stat-label">{{ 'Total Revenue'|t }}</div>
+    </div>
+  </div>
+
+  <div class="admin-quick-links">
+    <h3>{{ 'Management'|t }}</h3>
+    <ul>
+      <li><a href="{{ path('niftybot_user.kyc_admin') }}">{{ 'KYC Approvals'|t }}</a></li>
+      <li><a href="{{ path('niftybot_subscription.admin_subscribers') }}">{{ 'Subscribers'|t }}</a></li>
+      <li><a href="{{ path('niftybot_trading.admin_orders') }}">{{ 'All Orders'|t }}</a></li>
+      <li><a href="{{ path('niftybot_core.settings') }}">{{ 'Platform Settings'|t }}</a></li>
+    </ul>
+  </div>
+</div>

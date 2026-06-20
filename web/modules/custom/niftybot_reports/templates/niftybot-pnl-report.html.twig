@@ -1,0 +1,60 @@
+<div class="niftybot-pnl-report">
+  <h2>{{ 'Profit & Loss Report'|t }}</h2>
+
+  <div class="pnl-summary">
+    <div class="stat-card large">
+      <div class="stat-value {{ total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+        {{ total_pnl >= 0 ? '+' : '' }}₹{{ total_pnl|number_format(2) }}
+      </div>
+      <div class="stat-label">{{ 'Total P&L'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value pnl-positive">{{ winning_trades }}</div>
+      <div class="stat-label">{{ 'Winning Days'|t }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value pnl-negative">{{ losing_trades }}</div>
+      <div class="stat-label">{{ 'Losing Days'|t }}</div>
+    </div>
+    {% if (winning_trades + losing_trades) > 0 %}
+    <div class="stat-card">
+      <div class="stat-value">{{ ((winning_trades / (winning_trades + losing_trades)) * 100)|number_format(1) }}%</div>
+      <div class="stat-label">{{ 'Win Rate'|t }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if daily_pnl|length > 0 %}
+    <h3>{{ 'Daily Breakdown'|t }}</h3>
+    <table class="niftybot-table pnl-table">
+      <thead>
+        <tr>
+          <th>{{ 'Date'|t }}</th>
+          <th>{{ 'Trades'|t }}</th>
+          <th>{{ 'Buy Value'|t }}</th>
+          <th>{{ 'Sell Value'|t }}</th>
+          <th>{{ 'P&L'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for day in daily_pnl %}
+          <tr>
+            <td>{{ day.date }}</td>
+            <td>{{ day.trades }}</td>
+            <td>₹{{ day.buy|number_format(2) }}</td>
+            <td>₹{{ day.sell|number_format(2) }}</td>
+            <td class="{{ day.pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+              {{ day.pnl >= 0 ? '+' : '' }}₹{{ day.pnl|number_format(2) }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">{{ 'No trading data available for P&L report.'|t }}</p>
+  {% endif %}
+
+  <div class="report-actions">
+    <a href="{{ path('niftybot_reports.user') }}" class="button">{{ 'Back to Reports'|t }}</a>
+  </div>
+</div>

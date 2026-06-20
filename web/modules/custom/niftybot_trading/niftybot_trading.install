@@ -1,0 +1,280 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for niftybot_trading module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function niftybot_trading_schema() {
+  $schema['niftybot_orders'] = [
+    'description' => 'Trading orders placed by users.',
+    'fields' => [
+      'order_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'broker' => [
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => TRUE,
+        'description' => 'Broker identifier: groww, zerodha, angel, etc.',
+      ],
+      'broker_order_id' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+        'description' => 'Order ID returned by the broker.',
+      ],
+      'symbol' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ],
+      'exchange' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+        'description' => 'NSE, BSE, NFO, MCX.',
+      ],
+      'instrument_type' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'equity',
+        'description' => 'equity, futures, options.',
+      ],
+      'transaction_type' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+        'description' => 'BUY or SELL.',
+      ],
+      'order_type' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'description' => 'MARKET, LIMIT, SL, SL-M.',
+      ],
+      'product_type' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'CNC',
+        'description' => 'CNC (delivery), MIS (intraday), NRML (F&O).',
+      ],
+      'quantity' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'price' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+        'description' => 'Limit price. NULL for market orders.',
+      ],
+      'trigger_price' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'executed_price' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'executed_quantity' => [
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'status' => [
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => TRUE,
+        'default' => 'pending',
+        'description' => 'pending, placed, executed, partially_executed, cancelled, rejected, failed.',
+      ],
+      'status_message' => [
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
+      'stoploss' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'target' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'strategy' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+        'description' => 'Strategy name that triggered this order.',
+      ],
+      'notes' => [
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
+      'placed_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'executed_at' => [
+        'type' => 'int',
+        'not null' => FALSE,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['order_id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'broker' => ['broker'],
+      'symbol' => ['symbol'],
+      'status' => ['status'],
+      'placed_at' => ['placed_at'],
+      'uid_status' => ['uid', 'status'],
+    ],
+    'foreign keys' => [
+      'user' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+    ],
+  ];
+
+  $schema['niftybot_positions'] = [
+    'description' => 'Current user positions (holdings).',
+    'fields' => [
+      'position_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'broker' => [
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => TRUE,
+      ],
+      'symbol' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ],
+      'exchange' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+      ],
+      'instrument_type' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'equity',
+      ],
+      'product_type' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'CNC',
+      ],
+      'quantity' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'average_price' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => TRUE,
+      ],
+      'current_price' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'pnl' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'pnl_percentage' => [
+        'type' => 'numeric',
+        'precision' => 8,
+        'scale' => 2,
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'status' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'open',
+        'description' => 'open, closed.',
+      ],
+      'opened_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'closed_at' => [
+        'type' => 'int',
+        'not null' => FALSE,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['position_id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'symbol' => ['symbol'],
+      'status' => ['status'],
+      'uid_status' => ['uid', 'status'],
+    ],
+    'foreign keys' => [
+      'user' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+    ],
+  ];
+
+  return $schema;
+}

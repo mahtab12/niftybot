@@ -1,0 +1,48 @@
+niftybot_core.admin:
+  title: 'NiftyBot'
+  description: 'Manage NiftyBot trading platform.'
+  route_name: niftybot_core.admin
+  parent: system.admin
+  weight: -5
+
+niftybot_core.settings:
+  title: 'NiftyBot Settings'
+  description: 'Configure NiftyBot platform settings.'
+  route_name: niftybot_core.settings
+  parent: niftybot_core.admin
+  weight: 10
+
+niftybot_user.kyc_admin_menu:
+  title: 'KYC Management'
+  description: 'Review and manage KYC verifications.'
+  route_name: niftybot_user.kyc_admin
+  parent: niftybot_core.admin
+  weight: 1
+
+niftybot_subscription.admin_plans_menu:
+  title: 'Subscription Plans'
+  description: 'Manage subscription plans.'
+  route_name: niftybot_subscription.admin_plans
+  parent: niftybot_core.admin
+  weight: 2
+
+niftybot_subscription.admin_subscribers_menu:
+  title: 'Subscribers'
+  description: 'View active subscribers.'
+  route_name: niftybot_subscription.admin_subscribers
+  parent: niftybot_core.admin
+  weight: 3
+
+niftybot_trading.admin_orders_menu:
+  title: 'Order Management'
+  description: 'View and manage all trading orders.'
+  route_name: niftybot_trading.admin_orders
+  parent: niftybot_core.admin
+  weight: 4
+
+niftybot_reports.admin_menu:
+  title: 'Platform Reports'
+  description: 'View platform-wide reports and analytics.'
+  route_name: niftybot_reports.admin
+  parent: niftybot_core.admin
+  weight: 5

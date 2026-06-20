@@ -1,0 +1,28 @@
+services:
+  trading:
+    container_name: ddev-${DDEV_SITENAME}-trading
+    build:
+      context: ../trading_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${TRADING_API_KEY:-niftybot-dev-key}
+      - GROWW_API_KEY=${GROWW_API_KEY:-}
+      - GROWW_API_SECRET=${GROWW_API_SECRET:-}
+      - GROWW_TOTP_SECRET=${GROWW_TOTP_SECRET:-}
+      - GROWW_AUTH_METHOD=${GROWW_AUTH_METHOD:-api_key}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=db
+      - DB_PASSWORD=db
+      - DB_NAME=db
+      - LOG_LEVEL=INFO
+      - DEBUG=true
+    depends_on:
+      - db
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+    networks:
+      - default

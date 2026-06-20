@@ -1,0 +1,57 @@
+niftybot_trading.order_form:
+  path: '/niftybot/trade/order'
+  defaults:
+    _form: '\Drupal\niftybot_trading\Form\OrderForm'
+    _title: 'Place Order'
+  requirements:
+    _permission: 'place niftybot orders'
+
+niftybot_trading.orders:
+  path: '/niftybot/trade/orders'
+  defaults:
+    _controller: '\Drupal\niftybot_trading\Controller\OrderController::ordersList'
+    _title: 'My Orders'
+  requirements:
+    _permission: 'place niftybot orders'
+
+niftybot_trading.order_detail:
+  path: '/niftybot/trade/orders/{order_id}'
+  defaults:
+    _controller: '\Drupal\niftybot_trading\Controller\OrderController::orderDetail'
+    _title: 'Order Details'
+  requirements:
+    _permission: 'place niftybot orders'
+    order_id: \d+
+
+niftybot_trading.order_cancel:
+  path: '/niftybot/trade/orders/{order_id}/cancel'
+  defaults:
+    _form: '\Drupal\niftybot_trading\Form\OrderCancelForm'
+    _title: 'Cancel Order'
+  requirements:
+    _permission: 'place niftybot orders'
+    order_id: \d+
+
+niftybot_trading.positions:
+  path: '/niftybot/trade/positions'
+  defaults:
+    _controller: '\Drupal\niftybot_trading\Controller\PositionController::positionsList'
+    _title: 'My Positions'
+  requirements:
+    _permission: 'place niftybot orders'
+
+niftybot_trading.history:
+  path: '/niftybot/trade/history'
+  defaults:
+    _controller: '\Drupal\niftybot_trading\Controller\TradeHistoryController::history'
+    _title: 'Trade History'
+  requirements:
+    _permission: 'place niftybot orders'
+
+niftybot_trading.admin_orders:
+  path: '/admin/niftybot/orders'
+  defaults:
+    _controller: '\Drupal\niftybot_trading\Controller\OrderController::adminOrdersList'
+    _title: 'All Orders'
+  requirements:
+    _permission: 'administer niftybot'

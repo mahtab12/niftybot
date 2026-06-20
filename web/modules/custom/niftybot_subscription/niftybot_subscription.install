@@ -1,0 +1,263 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for niftybot_subscription module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function niftybot_subscription_schema() {
+  $schema['niftybot_subscription_plans'] = [
+    'description' => 'Subscription plans available on the platform.',
+    'fields' => [
+      'plan_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'name' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ],
+      'machine_name' => [
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+      ],
+      'description' => [
+        'type' => 'text',
+        'not null' => FALSE,
+      ],
+      'price' => [
+        'type' => 'numeric',
+        'precision' => 10,
+        'scale' => 2,
+        'not null' => TRUE,
+      ],
+      'duration_days' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 30,
+        'description' => 'Duration in days.',
+      ],
+      'max_orders_per_day' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 10,
+      ],
+      'max_capital' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+        'description' => 'Maximum trading capital allowed.',
+      ],
+      'features' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+        'description' => 'JSON-encoded features list.',
+      ],
+      'brokers_allowed' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Comma-separated broker IDs allowed.',
+      ],
+      'status' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => '1 = active, 0 = inactive.',
+      ],
+      'weight' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Sort weight for display order.',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['plan_id'],
+    'unique keys' => [
+      'machine_name' => ['machine_name'],
+    ],
+    'indexes' => [
+      'status' => ['status'],
+      'weight' => ['weight'],
+    ],
+  ];
+
+  $schema['niftybot_user_subscriptions'] = [
+    'description' => 'User subscription records.',
+    'fields' => [
+      'subscription_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'plan_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'start_date' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'end_date' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'status' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'active',
+        'description' => 'Status: active, expired, cancelled.',
+      ],
+      'payment_amount' => [
+        'type' => 'numeric',
+        'precision' => 10,
+        'scale' => 2,
+        'not null' => TRUE,
+      ],
+      'payment_reference' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ],
+      'auto_renew' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['subscription_id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'plan_id' => ['plan_id'],
+      'status' => ['status'],
+      'end_date' => ['end_date'],
+    ],
+    'foreign keys' => [
+      'user' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+      'plan' => [
+        'table' => 'niftybot_subscription_plans',
+        'columns' => ['plan_id' => 'plan_id'],
+      ],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function niftybot_subscription_install() {
+  $now = \Drupal::time()->getRequestTime();
+  $database = \Drupal::database();
+
+  $plans = [
+    [
+      'name' => 'Starter',
+      'machine_name' => 'starter',
+      'description' => 'Perfect for beginners. Access basic trading features.',
+      'price' => 499.00,
+      'duration_days' => 30,
+      'max_orders_per_day' => 5,
+      'max_capital' => 50000.00,
+      'features' => json_encode([
+        'Basic order placement',
+        'Portfolio tracking',
+        'Daily trade reports',
+        'Email support',
+      ]),
+      'brokers_allowed' => 'groww',
+      'status' => 1,
+      'weight' => 0,
+      'created' => $now,
+      'updated' => $now,
+    ],
+    [
+      'name' => 'Pro',
+      'machine_name' => 'pro',
+      'description' => 'For active traders. Unlock advanced features and higher limits.',
+      'price' => 1499.00,
+      'duration_days' => 30,
+      'max_orders_per_day' => 25,
+      'max_capital' => 500000.00,
+      'features' => json_encode([
+        'Advanced order types',
+        'Real-time portfolio tracking',
+        'Strategy signals',
+        'Detailed analytics & reports',
+        'Priority support',
+        'Multiple broker support',
+      ]),
+      'brokers_allowed' => 'groww,zerodha,angel',
+      'status' => 1,
+      'weight' => 1,
+      'created' => $now,
+      'updated' => $now,
+    ],
+    [
+      'name' => 'Elite',
+      'machine_name' => 'elite',
+      'description' => 'For serious traders. Unlimited access with premium features.',
+      'price' => 3999.00,
+      'duration_days' => 30,
+      'max_orders_per_day' => 100,
+      'max_capital' => 5000000.00,
+      'features' => json_encode([
+        'Unlimited order types',
+        'Auto-trading strategies',
+        'Risk management tools',
+        'Advanced analytics',
+        'API access',
+        'All brokers supported',
+        'Dedicated account manager',
+        '24/7 premium support',
+      ]),
+      'brokers_allowed' => 'groww,zerodha,angel,upstox,fyers',
+      'status' => 1,
+      'weight' => 2,
+      'created' => $now,
+      'updated' => $now,
+    ],
+  ];
+
+  foreach ($plans as $plan) {
+    $database->insert('niftybot_subscription_plans')
+      ->fields($plan)
+      ->execute();
+  }
+}

@@ -1,0 +1,9 @@
+name: 'NiftyBot Subscription'
+type: module
+description: 'Subscription plans and user subscription management for NiftyBot.'
+package: NiftyBot
+core_version_requirement: ^11
+dependencies:
+  - niftybot_core:niftybot_core
+  - niftybot_user:niftybot_user
+  - drupal:user

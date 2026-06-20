@@ -1,0 +1,31 @@
+niftybot_reports.user:
+  path: '/niftybot/reports'
+  defaults:
+    _controller: '\Drupal\niftybot_reports\Controller\ReportController::userReports'
+    _title: 'My Reports'
+  requirements:
+    _permission: 'view niftybot reports'
+
+niftybot_reports.pnl:
+  path: '/niftybot/reports/pnl'
+  defaults:
+    _controller: '\Drupal\niftybot_reports\Controller\ReportController::pnlReport'
+    _title: 'P&L Report'
+  requirements:
+    _permission: 'view niftybot reports'
+
+niftybot_reports.export:
+  path: '/niftybot/reports/export/{type}'
+  defaults:
+    _controller: '\Drupal\niftybot_reports\Controller\ReportController::exportCsv'
+  requirements:
+    _permission: 'view niftybot reports'
+    type: 'orders|trades|positions|pnl'
+
+niftybot_reports.admin:
+  path: '/admin/niftybot/reports'
+  defaults:
+    _controller: '\Drupal\niftybot_reports\Controller\ReportController::adminReports'
+    _title: 'Platform Reports'
+  requirements:
+    _permission: 'administer niftybot'

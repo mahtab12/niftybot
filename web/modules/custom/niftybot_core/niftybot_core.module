@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for NiftyBot Core module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function niftybot_core_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.niftybot_core':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('NiftyBot is a trading platform that enables users to manage portfolios, place orders, and track trades through integrated broker APIs.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function niftybot_core_theme($existing, $type, $theme, $path) {
+  return [
+    'niftybot_admin_overview' => [
+      'variables' => [
+        'stats' => [],
+        'recent_activity' => [],
+      ],
+      'template' => 'niftybot-admin-overview',
+    ],
+  ];
+}

@@ -1,0 +1,15 @@
+niftybot_core.settings:
+  path: '/admin/config/niftybot'
+  defaults:
+    _form: '\Drupal\niftybot_core\Form\NiftybotSettingsForm'
+    _title: 'NiftyBot Settings'
+  requirements:
+    _permission: 'administer niftybot'
+
+niftybot_core.admin:
+  path: '/admin/niftybot'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\AdminController::overview'
+    _title: 'NiftyBot Admin'
+  requirements:
+    _permission: 'administer niftybot'

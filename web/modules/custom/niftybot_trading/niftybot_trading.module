@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for NiftyBot Trading module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function niftybot_trading_theme($existing, $type, $theme, $path) {
+  return [
+    'niftybot_orders_list' => [
+      'variables' => [
+        'orders' => [],
+        'is_admin' => FALSE,
+      ],
+      'template' => 'niftybot-orders-list',
+    ],
+    'niftybot_order_detail' => [
+      'variables' => [
+        'order' => NULL,
+      ],
+      'template' => 'niftybot-order-detail',
+    ],
+    'niftybot_positions_list' => [
+      'variables' => [
+        'positions' => [],
+        'total_pnl' => 0,
+        'total_investment' => 0,
+      ],
+      'template' => 'niftybot-positions-list',
+    ],
+    'niftybot_trade_history' => [
+      'variables' => [
+        'trades' => [],
+        'summary' => [],
+      ],
+      'template' => 'niftybot-trade-history',
+    ],
+  ];
+}
