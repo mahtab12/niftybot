@@ -1,0 +1,14 @@
+uuid: 39258f34-6fe8-4a54-bd72-6c071f4f86ef
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.niftybot_admin
+  module:
+    - user
+id: user_add_role_action.niftybot_admin
+label: 'Add the NiftyBot Admin role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: niftybot_admin

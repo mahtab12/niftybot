@@ -1,0 +1,14 @@
+uuid: 2f380007-9b0c-4d9a-8452-10574fdd2595
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.niftybot_trader
+  module:
+    - user
+id: user_remove_role_action.niftybot_trader
+label: 'Remove the NiftyBot Trader role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: niftybot_trader

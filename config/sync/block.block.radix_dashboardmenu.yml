@@ -1,0 +1,25 @@
+uuid: 55761875-42a8-4de8-8c9e-0563b09e1f6e
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.dashboard-menu
+  module:
+    - system
+  theme:
+    - radix
+id: radix_dashboardmenu
+theme: radix
+region: navbar_branding
+weight: 0
+provider: null
+plugin: 'system_menu_block:dashboard-menu'
+settings:
+  id: 'system_menu_block:dashboard-menu'
+  label: 'Dashboard Menu'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: false
+visibility: {  }

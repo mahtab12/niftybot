@@ -1,0 +1,25 @@
+uuid: c6d040eb-5a15-4a87-a338-60f62d8cd0ee
+langcode: en
+status: true
+dependencies:
+  module:
+    - niftybot_core
+    - niftybot_user
+_core:
+  default_config_hash: cqEtjrDg8_w6eEkvVDybKIrf9crQIbqK-B53oxK3alw
+id: niftybot_admin
+label: 'NiftyBot Admin'
+weight: 2
+is_admin: false
+permissions:
+  - 'access niftybot platform'
+  - 'administer kyc'
+  - 'administer niftybot'
+  - 'administer wallets'
+  - 'manage niftybot subscriptions'
+  - 'manage wallet'
+  - 'place niftybot orders'
+  - 'submit kyc'
+  - 'view niftybot dashboard'
+  - 'view niftybot reports'
+  - 'view own kyc'

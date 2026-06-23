@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: gqkFIrh0voOtYhIiGWI6WKTJUZBQTd2TMk4Lofk02tU
+platform_name: NiftyBot
+enable_registration: true
+require_kyc: true
+require_subscription: true
+trading_api_base_url: 'http://localhost:8000'
+trading_api_key: ''
+max_orders_per_day: 50
+supported_exchanges:
+  - NSE
+  - BSE
+email_notifications: true
+notify_on_order_execution: true
+notify_on_kyc_status: true

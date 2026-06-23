@@ -1,0 +1,14 @@
+uuid: 5c4f3b45-fb3d-4f4f-9507-65c374ed8418
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.niftybot_trader
+  module:
+    - user
+id: user_add_role_action.niftybot_trader
+label: 'Add the NiftyBot Trader role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: niftybot_trader

@@ -1,0 +1,14 @@
+uuid: 64f72470-bc14-4ab4-97fd-05099948c4b1
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.niftybot_admin
+  module:
+    - user
+id: user_remove_role_action.niftybot_admin
+label: 'Remove the NiftyBot Admin role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: niftybot_admin

@@ -1,0 +1,21 @@
+uuid: 5e8ddb93-579e-4710-9da1-46c05c22299e
+langcode: en
+status: true
+dependencies:
+  module:
+    - niftybot_core
+    - niftybot_user
+_core:
+  default_config_hash: 5tp-fhfk9Yjc7OTf2cXzLCRCYpPzV1JaMTk93cKH--c
+id: niftybot_trader
+label: 'NiftyBot Trader'
+weight: 3
+is_admin: false
+permissions:
+  - 'access niftybot platform'
+  - 'manage wallet'
+  - 'place niftybot orders'
+  - 'submit kyc'
+  - 'view niftybot dashboard'
+  - 'view niftybot reports'
+  - 'view own kyc'
