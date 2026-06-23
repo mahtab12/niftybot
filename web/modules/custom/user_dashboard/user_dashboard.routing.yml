@@ -1,0 +1,32 @@
+user_dashboard.dashboard:
+  path: '/user/dashboard'
+  defaults:
+    _controller: '\Drupal\user_dashboard\Controller\UserDashboardController::dashboard'
+    _title: 'User Dashboard'
+  requirements:
+    _permission: 'access content'
+
+user_dashboard.profile:
+  path: '/user/profile'
+  defaults:
+    _controller: '\Drupal\user_dashboard\Controller\UserDashboardController::profile'
+    _title: 'User Profile'
+  requirements:
+    _permission: 'access content'
+
+user_dashboard.node_edit:
+  path: '/product-edit/{node}'
+  defaults:
+    _controller: '\Drupal\user_dashboard\Controller\NodeEditController::edit'
+    _title: 'Edit Product'
+  requirements:
+    _permission: 'access content'
+    node: \d+
+
+user_dashboard.user_profile_edit:
+  path: '/user/my-profile'
+  defaults:
+    _controller: '\Drupal\user_dashboard\Controller\UserProfileController::editProfile'
+    _title: 'Edit Profile'
+  requirements:
+    _permission: 'access content'

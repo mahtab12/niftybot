@@ -1,0 +1,19 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/10.1.x/core/modules/sdc/src/metadata.schema.json
+name: Page Footer
+status: experimental
+description: 'Component for the page footer.'
+props:
+  type: object
+  properties:
+    footer_attributes:
+      type: Drupal\Core\Template\Attribute
+      description: 'HTML attributes specifically for the footer.'
+    footer_utility_classes:
+      type: ['array', 'null']
+      items:
+        type: string
+      description: 'Additional utility classes to add to the footer.'
+slots:
+  page_inner_footer:
+    title: Page Inner Footer
+    description: 'The main contents of the footer.'

@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\radix\Hook\FormelementHooks;
+
+/**
+ * @file
+ * Theme and preprocess functions for form elements.
+ */
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for form elements.
+ */
+#[LegacyHook]
+function radix_theme_suggestions_form_element_alter(array &$suggestions, array $variables) {
+  FormelementHooks::themeSuggestionsFormElementAlter($suggestions, $variables);
+}

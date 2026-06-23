@@ -1,0 +1,111 @@
+<?php
+
+/**
+ * @file
+ * Theme and preprocess functions for menus.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\radix\Hook\MenuHooks;
+use Drupal\Core\Template\Attribute;
+use Drupal\Component\Utility\Xss;
+
+/**
+ * Implements hook_preprocess_menu().
+ */
+#[LegacyHook]
+function radix_preprocess_menu(&$variables, $hook) {
+  MenuHooks::preprocessMenu($variables, $hook);
+}
+
+/**
+ * Implements template_preprocess_menu_local_task.
+ */
+function radix_preprocess_menu_local_task(&$variables) {
+  radix_link_fixer($variables);
+}
+
+/**
+ * Implements template_preprocess_menu_local_action().
+ */
+function radix_preprocess_menu_local_action(&$variables) {
+  // Add button classes.
+  $variables['link']['#options']['attributes']['class'][] = 'btn';
+  $variables['link']['#options']['attributes']['class'][] = 'btn-primary';
+}
+
+/**
+ * Implements template_preprocess_links__dropbutton().
+ */
+function radix_preprocess_links__dropbutton(&$variables) {
+  $links = &$variables['links'];
+
+  // Ensure the dropdown SDC always receives valid (non-NULL) props, even when
+  // there are no links (e.g. an operations element with no accessible
+  // operations). Without these defaults the radix:dropdown component receives
+  // NULL for dropdown_button_content, dropdown_button_url and split_button,
+  // which the schema rejects with an InvalidComponentException.
+  $variables['split'] = FALSE;
+  $variables['button'] = [
+    'text' => '',
+    'url' => '',
+    'attributes' => new Attribute(),
+  ];
+
+  // Do nothing further if we have no links.
+  if (!count($links)) {
+    return;
+  }
+
+  // Get the first link and use it for the dropbutton.
+  $link = reset($links);
+  /** @var \Drupal\Core\Url $link_url */
+  $link_url = $link['link']['#url'] ?? NULL;
+
+  // Apply the link's options (e.g. the "destination" query parameter added by
+  // the Views "Include destination" setting) before stringifying the URL.
+  // template_preprocess_links() stores these in '#options', so calling
+  // Url::toString() on the bare Url object would otherwise drop them, which
+  // dropped the destination parameter from the first link only.
+  // @see https://www.drupal.org/project/radix/issues/3486275
+  if ($link_url && !empty($link['link']['#options'])) {
+    $link_url->mergeOptions($link['link']['#options']);
+  }
+
+  $variables['split'] = $link_url && $link_url->getRouteName() !== '<nolink>';
+  $variables['button'] = [
+    'text' => isset($link['text']) ? htmlspecialchars_decode(Xss::filter(
+      is_array($link['text'])
+        ? \Drupal::service('renderer')->renderInIsolation($link['text'])
+        : $link['text']
+    )) : '',
+    'url' => $link_url ? $link_url->toString() : '',
+    'attributes' => $link['text_attributes'] ?? $link['attributes'] ?? new Attribute(),
+  ];
+
+  // Combine classes to avoid core bug #3494015.
+  foreach ($links as &$link) {
+    radix_link_fixer($link);
+  }
+}
+
+/**
+ * Fixes link render arrays to avoid a loss of classes due to care bug #3494015.
+ *
+ * @param &array $link_variable
+ *   Render array containing a 'link' element.
+ */
+function radix_link_fixer(&$link_variable) {
+  // Link element is optional.
+  if (empty($link_variable['link'])) {
+    return;
+  }
+  // \Drupal\Core\Render\Render\Link does not correctly combine classes in
+  // #options and directly in #attributes. To circumvent the bug, move any
+  // classes in options to attributes.
+  // @see https://www.drupal.org/project/drupal/issues/3494015
+  $attributes_class = $link_variable['link']['#attributes']['class'] ?? [];
+  $options_class = $link_variable['link']['#options']['attributes']['class'] ?? [];
+  $link_variable['link']['#attributes']['class'] = array_merge((array) $options_class, (array) $attributes_class);
+  unset($link_variable['link']['#options']['attributes']['class']);
+}

@@ -1,0 +1,30 @@
+dashboard:
+  version: 1.x
+  css:
+    theme:
+      assets/css/bootstrap.min.css: {}
+      assets/fonts/bootstrap/bootstrap-icons.css: {}
+      assets/css/main.min.css: {}
+      assets/vendor/overlay-scroll/OverlayScrollbars.min.css: {}
+  js:
+    assets/js/jquery.min.js: {}
+    https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js: { type: external }
+    assets/js/bootstrap.bundle.min.js: {}
+    assets/js/modernizr.js: {}
+    assets/js/moment.js: {}
+    assets/vendor/overlay-scroll/jquery.overlayScrollbars.min.js: {}
+    assets/vendor/overlay-scroll/custom-scrollbar.js: {}
+    assets/vendor/newsticker/newsTicker.min.js: {}
+    assets/vendor/newsticker/custom-newsTicker.js: {}
+    assets/vendor/apex/apexcharts.min.js: {}
+    assets/vendor/apex/custom/dash1/analytics.js: {}
+    assets/vendor/apex/custom/dash1/visitors.js: {}
+    assets/vendor/apex/custom/dash1/income.js: {}
+    assets/vendor/apex/custom/dash1/orders.js: {}
+    assets/vendor/apex/custom/dash1/sales.js: {}
+    assets/vendor/apex/custom/dash1/sparkline.js: {}
+    assets/vendor/apex/custom/dash1/conversion.js: {}
+    assets/js/main.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery

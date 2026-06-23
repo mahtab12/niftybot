@@ -1,0 +1,10 @@
+services:
+  user_dashboard.login_subscriber:
+    class: Drupal\user_dashboard\EventSubscriber\LoginRedirectSubscriber
+    arguments: ['@current_user', '@current_route_match']
+    tags:
+      - { name: event_subscriber }
+
+  user_dashboard.menu_loader:
+    class: Drupal\user_dashboard\Service\MenuLoader
+    arguments: ['@menu.link_tree']

@@ -1,0 +1,313 @@
+<?php
+
+/**
+ * @file
+ * User Dashboard module.
+ */
+use Drupal\user\Entity\User;
+use Drupal\profile\Entity\Profile;
+use CommerceGuys\Addressing\Country\CountryRepository;
+use CommerceGuys\Addressing\Subdivision\SubdivisionRepository;
+
+/**
+ * Implements hook_theme().
+ */
+function user_dashboard_theme($existing, $type, $theme, $path) {
+  return [
+    'user_dashboard' => [
+      'variables' => [
+        'data' => NULL,
+      ],
+      'template' => 'user-dashboard',
+    ],
+    'user_profile' => [
+      'variables' => [
+        'data' => NULL,
+      ],
+      'template' => 'user-profile',
+    ],
+    'node_seller_products_edit_form_frontend' => [
+      'variables' => [
+        'form' => NULL,
+      ],
+      'template' => 'node-seller-products-edit-form-frontend',
+    ],
+    'user_profile' => [
+      'variables' => [
+        'data' => NULL,
+      ],
+      'template' => 'user-profile',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function user_dashboard_preprocess_page(&$variables) {
+  $current_path = \Drupal::service('path.current')->getPath();
+  // dd($current_path);
+
+  // Check if the path contains "/user"
+  if (strpos($current_path, '/user') !== FALSE || strpos($current_path, '/profile') === 0 || strpos($current_path, '/node/add') === 0 || strpos($current_path, '/product-edit') === 0) {
+    // dd("COme");
+    $menu_loader = \Drupal::service('user_dashboard.menu_loader');
+    $dashboard_menu = $menu_loader->loadMenu('user-dashboard-menu');
+    // Attach your custom library
+    $variables['dashboard_menu'] = $dashboard_menu;
+    $variables['#attached']['library'][] = 'user_dashboard/dashboard';
+    $variables['website_name'] = \Drupal::config('system.site')->get('name');
+
+    if (\Drupal::routeMatch()->getRouteName() == 'entity.user.canonical') {
+      // Get the user entity from the route.
+      $profile_user = \Drupal::routeMatch()->getParameter('user');
+      
+      if ($profile_user instanceof User) {
+        // Get UID
+        $uid = $profile_user->id();
+        // Get username
+        $username = $profile_user->getDisplayName();
+        // You can add it to variables for Twig
+        $variables['profile_user'] = $profile_user;
+        $user_details = getProfileInformation($uid);
+        $variables['user_details'] = $user_details;
+      }
+    }
+    // dd($variables['address']);
+    $module_handler = \Drupal::service('extension.list.module');
+    $variables['mod_path'] = '/' . $module_handler->getPath('user_dashboard');
+  }
+}
+
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function user_dashboard_preprocess_node(array &$variables) {
+  // Get the node object.
+  $node = $variables['node'];
+
+  // Get the node author (user entity).
+  $author = $node->getOwner();
+
+  // Add author information to the template variables.
+  $variables['author_name'] = $author->getDisplayName();
+  $variables['author_uid'] = $author->id();
+
+  //$uid = \Drupal::currentUser()->id();
+  $user_details = getProfileInformation($author->id());
+  $variables['user_details'] = $user_details;
+  // dd($user_details);
+  // Optional: Add author profile fields (example: profile picture).
+  if ($author->hasField('user_picture') && !$author->get('user_picture')->isEmpty()) {
+    $variables['author_picture_url'] = file_create_url($author->get('user_picture')->entity->getFileUri());
+  }
+  else {
+    $variables['author_picture_url'] = NULL;
+  }
+
+  // Optional: Add other user-related info
+  if ($author->hasField('field_company_name') && !$author->get('field_company_name')->isEmpty()) {
+    $variables['author_company'] = $author->get('field_company_name')->value;
+  }
+
+  // You can now use {{ author_name }}, {{ author_picture_url }}, {{ author_company }} in node template.
+}
+
+
+
+/**
+ * Implements hook_theme_suggestions_page_alter().
+ */
+function user_dashboard_theme_suggestions_page_alter(array &$suggestions, array $variables) {
+  // Get the current path alias.
+  $route_name = \Drupal::routeMatch()->getRouteName();
+
+  $current_path = \Drupal::service('path.current')->getPath();
+  $alias = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
+
+  // List of paths you want to target.
+  $custom_paths = [
+    '/user/dashboard',
+    '/user/profile',
+    '/user/settings',
+    '/profile'
+  ];
+
+  if ($route_name === 'entity.user.canonical') {
+    $suggestions[] = 'page__user_profile';
+  }
+
+  // If current path is in the list, add your custom suggestion.
+  // if (in_array($alias, $custom_paths)) {
+  //   // dd("Here");
+  //   // Add suggestion 'page__user_custom' -> 'page--user-custom.html.twig'.
+  //   $suggestions[] = 'page__user_custom';
+  // }
+}
+
+
+/**
+ * Get profile information for a user.
+ *
+ * @param int $uid
+ *   The user ID.
+ *
+ * @return array
+ *   Profile information array (empty if not found).
+ */
+function getProfileInformation($uid) {
+  // $info = [];
+
+  // // Load the user.
+  // $account = User::load($uid);
+  // if (!$account) {
+  //   return $info;
+  // }
+
+  // // Example: basic user info.
+  // $info['uid'] = $account->id();
+  // $info['username'] = $account->getDisplayName();
+  // $info['email'] = $account->getEmail();
+  // // dd("Here");
+  // // if ($account) {
+  // //   $uri = $account->user_picture->entity->getFileUri();
+  // //   $info['logo']  = \Drupal::service('file_url_generator')->generateAbsoluteString($uri);
+  // // }
+
+  // // Load seller profile if exists.
+  // $profiles = \Drupal::entityTypeManager()
+  //   ->getStorage('profile')
+  //   ->loadByProperties([
+  //     'uid' => $uid,
+  //     'type' => 'seller_profile', // Change to your profile type machine name
+  //   ]);
+
+  // // dd($profiles);
+  // if (!empty($profiles)) {
+  //   $profile = reset($profiles);
+
+  //   $info['profile_id'] = $profile->id();
+  //   $info['profile_type'] = $profile->bundle();
+
+  //   if ($profile->hasField('field_logo') && !$profile->get('field_logo')->isEmpty()) {
+  //     $image = $profile->get('field_logo')->entity;
+  //     $uri = $image->getFileUri();
+  //     $url = \Drupal::service('file_url_generator')->generateAbsoluteString($uri);
+  //     $info['logo'] = $url;
+  //   } else {
+  //     $info['logo'] = "/modules/custom/user_dashboard/assets/images/user7.png";
+  //   }
+
+  //   // Example: custom profile fields.
+  //   if ($profile->hasField('field_company_name') && !$profile->get('field_company_name')->isEmpty()) {
+  //     $info['company_name'] = $profile->get('field_company_name')->value;
+  //     $info['about'] = $profile->get('field_about_company')->value;
+  //     $info['gst_number'] = $profile->get('field_gst_number')->value;
+  //     $field_deals_in_category = $profile->get('field_deals_in_category')->entity;
+  //     $info['deals_in_category'] = $field_deals_in_category ? $field_deals_in_category->label() : '';
+  //     $legal_status_of_firm = $profile->get('field_legal_status_of_firm')->entity;
+  //     $info['legal_status_of_firm'] = $legal_status_of_firm ? $legal_status_of_firm->label() : '';
+  //     $nature_of_business = $profile->get('field_nature_of_business')->entity;
+
+  //     $info['nature_of_business'] = $nature_of_business ? $nature_of_business->label() : '';
+  //     $annual_turnover = $profile->get('field_annual_turnover')->entity;
+
+  //     $info['annual_turnover'] = $annual_turnover ? $annual_turnover->label() : '';
+  //     $terms = $profile->get('field_deals_in_category')->referencedEntities();
+  //     $info['deals_in_category'] = [];
+  //     foreach ($terms as $term) {
+  //       $info['deals_in_category'][] = $term->label();
+  //     }
+  //   }
+
+  //   if ($profile->hasField('field_address') && !$profile->get('field_address')->isEmpty()) {
+  //     $info['address'] = getUserAddressDetails($profile->id());
+  //   }
+  // }
+
+  // return $info;
+}
+
+/**
+ * Get formatted country and state from a user's address field.
+ */
+function getUserAddressDetails($pid) {
+  // dd($uid);
+  $account = Profile::load($pid);
+  if (!$account || !$account->hasField('field_address')) {
+    return [];
+  }
+
+  $address = $account->get('field_address')->first();
+  if (!$address) {
+    return [];
+  }
+  //dd($address);
+  $city = $address->get('locality')->getString();
+  $state_code   = $address->get('administrative_area')->getString();
+  $country_code = $address->get('country_code')->getString();
+  
+  $country_repo = new CountryRepository();
+
+  // Get country name
+  $country_name = '';
+  if ($country_code) {
+    $country = $country_repo->get($country_code);
+    if ($country) {
+      $country_name = $country->getName();
+    }
+  }
+
+  return [
+    'country_code' => $country_code,
+    'country_name' => $country_name,
+    'state_code'   => $state_code,
+    'state_name'   => $state_code,
+    'city'         => $city,
+  ];
+}
+
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function user_dashboard_page_attachments_alter(array &$attachments) {
+  // Get current route.
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  // dd($route_name);
+  // Example: Remove library only on the node page of type 'article'.
+  if ($route_name === 'entity.user.canonical' || $route_name == 'user_dashboard.user_profile_edit') {
+    $user = \Drupal::routeMatch()->getParameter('user');
+    if ($user) {
+      // dd("Here");
+      if (isset($attachments['#attached']['library'])) {
+        $attachments['#attached']['library'] = array_diff(
+          $attachments['#attached']['library'],
+          ['martis/bootstrap'] // Replace with your library.
+        );
+      }
+    }
+  }
+  if ($route_name == "user_dashboard.user_profile_edit") {
+    if (isset($attachments['#attached']['library'])) {
+        $attachments['#attached']['library'] = array_diff(
+        $attachments['#attached']['library'],
+        ['martis/niceselect'] // Replace with your library.
+      );
+    }
+  }
+}
+
+function user_dashboard_preprocess_form(&$variables) {
+  if ($variables['element']['#id'] == 'mobile-register-form') {
+    $variables['theme_hook_suggestions'][] = 'form__mobile_register_form';
+  }
+}
+
+function user_dashboard_preprocess_form__mobile_register_form(&$variables) {
+  // Add a class or debug variable
+  $variables['attributes']['class'][] = 'custom-mobile-register-form';
+  // Or add a test variable
+  $variables['my_test'] = 'template working';
+}

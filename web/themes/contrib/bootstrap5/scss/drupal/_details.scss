@@ -1,0 +1,33 @@
+.accordion {
+  details {
+    overflow: unset;
+
+    &[open] {
+      .accordion-button {
+        color: var(--#{$prefix}accordion-active-color);
+        background-color: var(--#{$prefix}accordion-active-bg);
+
+        &::after {
+          background-image: var(--#{$prefix}accordion-btn-active-icon);
+          transform: var(--#{$prefix}accordion-btn-icon-transform);
+        }
+      }
+    }
+
+    &:not([open]) {
+      border-bottom: 0;
+
+      .accordion-button {
+        color: var(--#{$prefix}accordion-btn-color);
+        background-color: var(--#{$prefix}accordion-btn-bg);
+        border: unset;
+        @include border-bottom-radius(var(--#{$prefix}accordion-border-radius));
+
+        &::after {
+          background-image: var(--#{$prefix}accordion-btn-active-icon);
+          transform: unset;
+        }
+      }
+    }
+  }
+}

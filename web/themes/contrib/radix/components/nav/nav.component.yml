@@ -1,0 +1,83 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/10.1.x/core/modules/sdc/src/metadata.schema.json
+name: Nav
+status: experimental
+description: 'Nav component description. This component provides flexible navigation with several styles, alignments and fill options.'
+props:
+  type: object
+  properties:
+    alignment:
+      type: string
+      name: Alignment
+      description: "Specifies the alignment of the navigation. Available options: 'left', 'right', 'center', 'vertical'."
+      enum:
+        - ''
+        - left
+        - right
+        - center
+        - vertical
+    style:
+      type: string
+      name: Style
+      description: "Specifies the style of the navigation. Available options: 'tabs', 'pills'."
+      enum:
+        - ''
+        - tabs
+        - pills
+    fill:
+      type: string
+      name: Fill
+      description: "Specifies whether the navigation items should fill or justify the available navigation space. Available options: 'fill', 'justify'."
+      enum:
+        - ''
+        - fill
+        - justify
+    is_dropdown:
+      type: boolean
+      name: Is Dropdown
+      description: "When true (default), expanded items with children render as Bootstrap dropdowns. When false, children render inline as a nested vertical list (useful for sidebars and secondary navigation). Children only appear when the item is expanded; enable 'Expand all menu items' on the menu block to always show them."
+      default: true
+    dropdown_direction:
+      type: string
+      name: Dropdown Direction
+      description: "Direction in which nested submenus open when is_dropdown is true. Leave empty to open below (default); use 'dropend' to open to the right or 'dropstart' to open to the left."
+      enum:
+        - ''
+        - dropend
+        - dropstart
+    nav_utility_classes:
+      type: array
+      name: Utility Classes
+      items:
+        type: string
+      description: "Additional utility classes that can be added to the nav component. These classes should be defined in your theme's CSS."
+    nav_item_utility_classes:
+      type: array
+      name: Item Utility Classes
+      items:
+        type: string
+      description: "Additional utility classes that can be added to the nav item component. These classes should be defined in your theme's CSS."
+    nav_link_utility_classes:
+      type: array
+      name: Link Utility Classes
+      items:
+        type: string
+      description: "Additional utility classes that can be added to the nav link component. These classes should be defined in your theme's CSS."
+    heading_level:
+      type: string
+      name: Heading level
+      description: "Tag used by the links heading."
+    heading_utility_classes:
+      type: array
+      name: Heading Utility Classes
+      items:
+        type: string
+      description: "Additional utility classes that can be added to the nav heading component. These classes should be defined in your theme's CSS."
+    attributes:
+      type: Drupal\Core\Template\Attribute
+slots:
+  nav_heading:
+    name: Nav heading
+    description: Navigation heading.
+  nav_items:
+    name: Nav Items
+    description: Navigation items.

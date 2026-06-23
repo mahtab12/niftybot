@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\radix\Hook\FieldHooks;
+
+/**
+ * @file
+ * Theme and preprocess functions for fields.
+ */
+
+/**
+ * Implements hook_preprocess_field().
+ */
+#[LegacyHook]
+function radix_preprocess_field(&$variables) {
+  FieldHooks::preprocessField($variables);
+}
+
+/**
+ * Implements template_preprocess_filter_caption().
+ */
+function radix_preprocess_filter_caption(&$variables) {
+  // Do this for img tags only.
+  if (($variables['tag'] !== 'img')) {
+    return;
+  }
+
+  // Add the figure-img class to the rendered image markup.
+  libxml_use_internal_errors(TRUE);
+  $doc = new DOMDocument();
+  $doc->loadHTML($variables['node']);
+  if ($image = $doc->getElementsByTagName('img')->item(0)) {
+    $image->setAttribute('class', 'figure-img img-fluid');
+    $variables['node'] = [
+      '#markup' => $image->ownerDocument->saveHTML($image),
+    ];
+  }
+}
+
+/**
+ * Implements theme_suggestions_field_alter().
+ */
+function radix_theme_suggestions_field_alter(&$suggestions, $variables) {
+  $suggestions[] = 'field__' . $variables['element']['#entity_type'] . '__' . $variables['element']['#field_name'] . '__' . $variables['element']['#bundle'] . '__' . $variables['element']['#view_mode'];
+}

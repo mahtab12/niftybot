@@ -1,0 +1,6 @@
+user_dashboard.dashboard:
+  title: 'Dashboard'
+  description: 'User Dashboard'
+  route_name: user_dashboard.dashboard
+  menu_name: dashboard-menu
+  weight: 0
