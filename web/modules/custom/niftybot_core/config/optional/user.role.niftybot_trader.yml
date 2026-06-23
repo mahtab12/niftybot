@@ -8,6 +8,7 @@ dependencies:
     - niftybot_trading
     - niftybot_dashboard
     - niftybot_reports
+    - niftybot_investment
 id: niftybot_trader
 label: 'NiftyBot Trader'
 weight: 3
@@ -20,3 +21,4 @@ permissions:
   - 'submit kyc'
   - 'view own kyc'
   - 'manage wallet'
+  - 'access fxc investment'

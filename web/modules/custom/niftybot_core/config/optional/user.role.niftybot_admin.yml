@@ -8,6 +8,7 @@ dependencies:
     - niftybot_trading
     - niftybot_dashboard
     - niftybot_reports
+    - niftybot_investment
 id: niftybot_admin
 label: 'NiftyBot Admin'
 weight: 2
@@ -24,3 +25,5 @@ permissions:
   - 'manage wallet'
   - 'administer wallets'
   - 'manage niftybot subscriptions'
+  - 'access fxc investment'
+  - 'administer fxc investment'

@@ -43,6 +43,20 @@ class NiftybotSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $form['platform']['member_id_prefix'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Member ID prefix'),
+      '#description' => $this->t('Three uppercase letters used for member IDs (e.g. NBX00001).'),
+      '#default_value' => $config->get('member_id_prefix') ?? 'NBX',
+      '#required' => TRUE,
+      '#maxlength' => 3,
+      '#size' => 4,
+      '#attributes' => [
+        'pattern' => '[A-Za-z]{3}',
+        'style' => 'text-transform: uppercase;',
+      ],
+    ];
+
     $form['platform']['enable_registration'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable User Registration'),
@@ -132,9 +146,25 @@ class NiftybotSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
+    $prefix = strtoupper(trim((string) $form_state->getValue('member_id_prefix')));
+    if (!preg_match('/^[A-Z]{3}$/', $prefix)) {
+      $form_state->setErrorByName('member_id_prefix', $this->t('Member ID prefix must be exactly 3 letters.'));
+    }
+    else {
+      $form_state->setValue('member_id_prefix', $prefix);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('niftybot_core.settings')
       ->set('platform_name', $form_state->getValue('platform_name'))
+      ->set('member_id_prefix', $form_state->getValue('member_id_prefix'))
       ->set('enable_registration', $form_state->getValue('enable_registration'))
       ->set('require_kyc', $form_state->getValue('require_kyc'))
       ->set('require_subscription', $form_state->getValue('require_subscription'))

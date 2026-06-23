@@ -27,6 +27,7 @@ function niftybot_user_theme($existing, $type, $theme, $path) {
         'kyc_status' => NULL,
         'wallet_balance' => 0,
         'subscription' => NULL,
+        'member_id' => NULL,
       ],
       'template' => 'niftybot-user-profile',
     ],
@@ -40,6 +41,8 @@ function niftybot_user_theme($existing, $type, $theme, $path) {
     'niftybot_wallet_overview' => [
       'variables' => [
         'balance' => 0,
+        'available_balance' => 0,
+        'pending_withdrawals' => 0,
         'transactions' => [],
       ],
       'template' => 'niftybot-wallet-overview',
@@ -49,6 +52,25 @@ function niftybot_user_theme($existing, $type, $theme, $path) {
         'kyc_records' => [],
       ],
       'template' => 'niftybot-kyc-admin-list',
+    ],
+    'niftybot_upi_payment_demo' => [
+      'variables' => [
+        'upi_id' => '',
+        'amount' => NULL,
+      ],
+      'template' => 'niftybot-upi-payment-demo',
+    ],
+    'niftybot_wallet_deposits_admin' => [
+      'variables' => [
+        'deposits' => [],
+      ],
+      'template' => 'niftybot-wallet-deposits-admin',
+    ],
+    'niftybot_wallet_withdrawals_admin' => [
+      'variables' => [
+        'withdrawals' => [],
+      ],
+      'template' => 'niftybot-wallet-withdrawals-admin',
     ],
   ];
 }
@@ -64,16 +86,37 @@ function niftybot_user_mail($key, &$message, $params) {
 }
 
 /**
+ * Ensures KYC document upload directories exist under the private files path.
+ */
+function niftybot_user_ensure_kyc_upload_directories(): void {
+  if (!\Drupal\Core\Site\Settings::get('file_private_path')) {
+    return;
+  }
+
+  $file_system = \Drupal::service('file_system');
+  $flags = \Drupal\Core\File\FileSystemInterface::CREATE_DIRECTORY | \Drupal\Core\File\FileSystemInterface::MODIFY_PERMISSIONS;
+  foreach (['private://kyc/pan', 'private://kyc/aadhaar', 'private://kyc/selfie'] as $directory) {
+    $file_system->prepareDirectory($directory, $flags);
+  }
+}
+
+/**
  * Implements hook_user_insert().
  */
 function niftybot_user_user_insert($account) {
   $database = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+
   $database->insert('niftybot_wallet')
     ->fields([
       'uid' => $account->id(),
       'balance' => 0,
-      'created' => \Drupal::time()->getRequestTime(),
-      'updated' => \Drupal::time()->getRequestTime(),
+      'created' => $now,
+      'updated' => $now,
     ])
     ->execute();
+
+  /** @var \Drupal\niftybot_user\Service\MemberIdService $member_id_service */
+  $member_id_service = \Drupal::service('niftybot_user.member_id_service');
+  $member_id_service->assignMemberId((int) $account->id());
 }

@@ -5,6 +5,7 @@ namespace Drupal\niftybot_user\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Password\PasswordInterface;
+use Drupal\niftybot_user\Service\MemberIdService;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -21,10 +22,16 @@ class UserRegistrationForm extends FormBase {
   protected $passwordHasher;
 
   /**
+   * The member ID service.
+   */
+  protected MemberIdService $memberIdService;
+
+  /**
    * Constructs the form.
    */
-  public function __construct(PasswordInterface $password_hasher) {
+  public function __construct(PasswordInterface $password_hasher, MemberIdService $member_id_service) {
     $this->passwordHasher = $password_hasher;
+    $this->memberIdService = $member_id_service;
   }
 
   /**
@@ -32,7 +39,8 @@ class UserRegistrationForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('password')
+      $container->get('password'),
+      $container->get('niftybot_user.member_id_service'),
     );
   }
 
@@ -150,10 +158,14 @@ class UserRegistrationForm extends FormBase {
     $user->addRole('niftybot_trader');
     $user->save();
 
+    $member_id = $this->memberIdService->getMemberId((int) $user->id());
+
     _user_mail_notify('register_no_approval_required', $user);
     user_login_finalize($user);
 
-    $this->messenger()->addStatus($this->t('Welcome to NiftyBot! Your account has been created. Please complete KYC verification to start trading.'));
+    $this->messenger()->addStatus($this->t('Welcome to NiftyBot! Your member ID is @id. Please complete KYC verification to start trading.', [
+      '@id' => $member_id,
+    ]));
     $form_state->setRedirect('niftybot_user.kyc_submit');
   }
 

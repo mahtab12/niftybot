@@ -1,0 +1,5 @@
+investment:
+  version: 1.x
+  css:
+    theme:
+      css/investment.css: {}

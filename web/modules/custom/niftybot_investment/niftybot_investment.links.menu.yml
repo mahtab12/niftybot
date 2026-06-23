@@ -1,0 +1,18 @@
+niftybot_investment.dashboard_menu:
+  title: 'FXC Investment'
+  route_name: niftybot_investment.dashboard
+  menu_name: niftybot-main
+  weight: 3
+
+niftybot_investment.trades_menu:
+  title: 'Platform Trades'
+  route_name: niftybot_investment.platform_trades
+  menu_name: niftybot-main
+  weight: 8
+
+niftybot_investment.admin_trades_menu:
+  title: 'Platform Trades'
+  description: 'Record daily Nifty trades for investor transparency.'
+  route_name: niftybot_investment.admin_trades
+  parent: niftybot_core.admin
+  weight: 8

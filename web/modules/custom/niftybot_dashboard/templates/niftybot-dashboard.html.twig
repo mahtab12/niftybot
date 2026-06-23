@@ -56,6 +56,16 @@
         <div class="stat-label">{{ 'Total P&L'|t }}</div>
       </div>
     </div>
+
+    {% if fxc_investment %}
+      <div class="stat-card">
+        <div class="stat-icon">🤖</div>
+        <div class="stat-content">
+          <div class="stat-value pnl-positive">₹{{ fxc_investment.ai_profit_pending|number_format(2) }}</div>
+          <div class="stat-label">{{ 'AI Profit (this week)'|t }}</div>
+        </div>
+      </div>
+    {% endif %}
   </div>
 
   {# Subscription Info #}
@@ -74,6 +84,7 @@
       <div class="action-buttons">
         <a href="{{ path('niftybot_trading.order_form') }}" class="button button--primary">{{ 'Place Order'|t }}</a>
         <a href="{{ path('niftybot_user.wallet_deposit') }}" class="button">{{ 'Deposit'|t }}</a>
+        <a href="{{ path('niftybot_investment.dashboard') }}" class="button">{{ 'FXC Investment'|t }}</a>
         <a href="{{ path('niftybot_trading.positions') }}" class="button">{{ 'Positions'|t }}</a>
         <a href="{{ path('niftybot_trading.history') }}" class="button">{{ 'History'|t }}</a>
         <a href="{{ path('niftybot_reports.user') }}" class="button">{{ 'Reports'|t }}</a>

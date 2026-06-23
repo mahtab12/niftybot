@@ -109,16 +109,19 @@ class KycReviewForm extends FormBase {
       '#open' => TRUE,
     ];
 
+    $status_options = [
+      'pending' => $this->t('Pending Review'),
+      'under_review' => $this->t('Under Review'),
+      'approved' => $this->t('Approved'),
+      'rejected' => $this->t('Rejected'),
+    ];
+
     $form['decision']['status'] = [
       '#type' => 'select',
       '#title' => $this->t('Set Status'),
-      '#options' => [
-        'under_review' => $this->t('Under Review'),
-        'approved' => $this->t('Approved'),
-        'rejected' => $this->t('Rejected'),
-      ],
+      '#options' => $status_options,
       '#required' => TRUE,
-      '#default_value' => $kyc->status,
+      '#default_value' => array_key_exists($kyc->status, $status_options) ? $kyc->status : 'under_review',
     ];
 
     $form['decision']['rejection_reason'] = [
@@ -149,7 +152,8 @@ class KycReviewForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    if ($form_state->getValue('status') === 'rejected' && empty(trim($form_state->getValue('rejection_reason') ?? ''))) {
+    $status = $this->getSubmittedStatus($form_state);
+    if ($status === 'rejected' && empty(trim($form_state->getValue('rejection_reason') ?? ''))) {
       $form_state->setErrorByName('rejection_reason', $this->t('Please provide a reason for rejection.'));
     }
   }
@@ -160,17 +164,14 @@ class KycReviewForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $kyc_id = $form_state->get('kyc_id');
     $kyc_uid = $form_state->get('kyc_uid');
-    $status = $form_state->getValue('status');
+    $status = $this->getSubmittedStatus($form_state);
 
     $fields = [
       'status' => $status,
       'reviewed_by' => $this->currentUser->id(),
       'updated' => \Drupal::time()->getRequestTime(),
+      'rejection_reason' => $status === 'rejected' ? $form_state->getValue('rejection_reason') : NULL,
     ];
-
-    if ($status === 'rejected') {
-      $fields['rejection_reason'] = $form_state->getValue('rejection_reason');
-    }
 
     $this->database->update('niftybot_kyc')
       ->fields($fields)
@@ -184,6 +185,13 @@ class KycReviewForm extends FormBase {
 
     $this->messenger()->addStatus($this->t('KYC status updated to @status.', ['@status' => $status]));
     $form_state->setRedirect('niftybot_user.kyc_admin');
+  }
+
+  /**
+   * Gets the submitted review status from form values.
+   */
+  protected function getSubmittedStatus(FormStateInterface $form_state): string {
+    return (string) ($form_state->getValue('status') ?? '');
   }
 
 }

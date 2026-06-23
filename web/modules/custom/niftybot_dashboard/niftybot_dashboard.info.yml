@@ -8,4 +8,5 @@ dependencies:
   - niftybot_user:niftybot_user
   - niftybot_subscription:niftybot_subscription
   - niftybot_trading:niftybot_trading
+  - niftybot_investment:niftybot_investment
   - drupal:user

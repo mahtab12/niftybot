@@ -4,6 +4,8 @@ namespace Drupal\niftybot_dashboard\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
+use Drupal\niftybot_investment\Service\InvestmentService;
+use Drupal\niftybot_user\Service\WalletService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -13,19 +15,27 @@ class DashboardController extends ControllerBase {
 
   protected Connection $database;
 
+  protected ?InvestmentService $investmentService;
+
   /**
    * Constructs the controller.
    */
-  public function __construct(Connection $database) {
+  public function __construct(Connection $database, ?InvestmentService $investment_service = NULL) {
     $this->database = $database;
+    $this->investmentService = $investment_service;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    $investment_service = $container->has('niftybot_investment.investment_service')
+      ? $container->get('niftybot_investment.investment_service')
+      : NULL;
+
     return new static(
-      $container->get('database')
+      $container->get('database'),
+      $investment_service,
     );
   }
 
@@ -33,7 +43,7 @@ class DashboardController extends ControllerBase {
    * Main dashboard page.
    */
   public function main() {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
     $user = $this->entityTypeManager()->getStorage('user')->load($uid);
 
     $kyc_status = $this->database->select('niftybot_kyc', 'k')
@@ -83,6 +93,11 @@ class DashboardController extends ControllerBase {
 
     $stats = $this->getUserStats($uid);
 
+    $fxc_investment = NULL;
+    if ($this->investmentService) {
+      $fxc_investment = $this->investmentService->getActiveInvestment($uid);
+    }
+
     return [
       '#theme' => 'niftybot_dashboard',
       '#user' => $user,
@@ -93,7 +108,8 @@ class DashboardController extends ControllerBase {
       '#positions' => $positions,
       '#recent_orders' => $recent_orders,
       '#stats' => $stats,
-    ];
+      '#fxc_investment' => $fxc_investment,
+    ] + WalletService::walletRenderCache($uid);
   }
 
   /**

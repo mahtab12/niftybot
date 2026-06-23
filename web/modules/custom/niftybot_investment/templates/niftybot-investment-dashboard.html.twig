@@ -1,0 +1,76 @@
+<div class="niftybot-investment">
+  {% if not has_active %}
+    <div class="investment-alert alert--info">
+      {{ 'You have not started an FXC Global investment yet.'|t }}
+      <a href="{{ path('niftybot_investment.plans') }}" class="button button--primary">{{ 'Choose a plan'|t }}</a>
+    </div>
+  {% else %}
+    <div class="investment-hero">
+      <h2>{{ 'FXC Global Model'|t }}</h2>
+      <p class="investment-plan-name">{{ investment.name }}</p>
+    </div>
+
+    <div class="investment-stats">
+      <div class="stat-card">
+        <div class="stat-label">{{ 'Principal invested'|t }}</div>
+        <div class="stat-value">₹{{ investment.principal_amount|number_format(2) }}</div>
+      </div>
+      <div class="stat-card stat-card--highlight">
+        <div class="stat-label">{{ 'AI profit (this week)'|t }}</div>
+        <div class="stat-value pnl-positive">₹{{ investment.ai_profit_pending|number_format(2) }}</div>
+        <div class="stat-hint">{{ 'Accruing daily · credited Saturday'|t }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">{{ 'Last week gain'|t }}</div>
+        <div class="stat-value {{ investment.last_week_profit > 0 ? 'pnl-positive' : '' }}">
+          {% if investment.last_week_profit > 0 %}+{% endif %}₹{{ investment.last_week_profit|number_format(2) }}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">{{ 'Total AI profit earned'|t }}</div>
+        <div class="stat-value pnl-positive">₹{{ investment.total_profit_earned|number_format(2) }}</div>
+      </div>
+    </div>
+
+    <div class="investment-meta-bar">
+      <span>{{ 'Weekly target:'|t }}
+        <strong>₹{{ projected.min|number_format(2) }} – ₹{{ projected.max|number_format(2) }}</strong>
+        ({{ investment.weekly_return_min|number_format(1) }}% – {{ investment.weekly_return_max|number_format(1) }}%)
+      </span>
+      <span>{{ 'Next payout:'|t }} <strong>{{ next_payout_formatted }}</strong></span>
+    </div>
+
+    {% if profit_history|length > 0 %}
+      <div class="investment-card">
+        <h3>{{ 'Weekly payout history'|t }}</h3>
+        <table class="niftybot-table">
+          <thead>
+            <tr>
+              <th>{{ 'Week'|t }}</th>
+              <th>{{ 'Principal'|t }}</th>
+              <th>{{ 'Profit %'|t }}</th>
+              <th>{{ 'Amount'|t }}</th>
+              <th>{{ 'Credited'|t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in profit_history %}
+              <tr>
+                <td>{{ row.week_start }} – {{ row.week_end }}</td>
+                <td>₹{{ row.principal_amount|number_format(2) }}</td>
+                <td>{{ row.profit_percent|number_format(2) }}%</td>
+                <td class="pnl-positive">+₹{{ row.profit_amount|number_format(2) }}</td>
+                <td>{{ row.credited_at|date('d M Y') }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  <div class="investment-actions">
+    <a href="{{ path('niftybot_investment.platform_trades') }}" class="button">{{ 'View platform Nifty trades'|t }}</a>
+    <a href="{{ path('niftybot_investment.plans') }}" class="button">{{ 'Investment plans'|t }}</a>
+  </div>
+</div>

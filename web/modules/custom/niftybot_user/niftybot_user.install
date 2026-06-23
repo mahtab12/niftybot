@@ -231,6 +231,14 @@ function niftybot_user_schema() {
         'not null' => TRUE,
         'default' => 0,
       ],
+      'balance_applied' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Whether this transaction has been applied to the wallet balance.',
+      ],
     ],
     'primary key' => ['transaction_id'],
     'indexes' => [
@@ -247,5 +255,114 @@ function niftybot_user_schema() {
     ],
   ];
 
+  $schema['niftybot_user_member_ids'] = [
+    'description' => 'Unique platform member IDs assigned at registration.',
+    'fields' => [
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'User ID.',
+      ],
+      'member_id' => [
+        'type' => 'varchar',
+        'length' => 8,
+        'not null' => TRUE,
+        'description' => 'Unique member ID (3 letters + 5 digits, e.g. NBX00001).',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['uid'],
+    'unique keys' => [
+      'member_id' => ['member_id'],
+    ],
+    'indexes' => [
+      'member_id_lookup' => ['member_id'],
+    ],
+    'foreign keys' => [
+      'user' => [
+        'table' => 'users',
+        'columns' => ['uid' => 'uid'],
+      ],
+    ],
+  ];
+
   return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function niftybot_user_install() {
+  niftybot_user_ensure_kyc_upload_directories();
+}
+
+/**
+ * Create KYC upload directories for existing installations.
+ */
+function niftybot_user_update_9001() {
+  niftybot_user_ensure_kyc_upload_directories();
+}
+
+/**
+ * Add balance_applied flag and reconcile wallet balances from the ledger.
+ */
+function niftybot_user_update_9003() {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('niftybot_wallet_transactions', 'balance_applied')) {
+    $schema->addField('niftybot_wallet_transactions', 'balance_applied', [
+      'type' => 'int',
+      'size' => 'tiny',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => 'Whether this transaction has been applied to the wallet balance.',
+    ]);
+  }
+
+  \Drupal::database()->update('niftybot_wallet_transactions')
+    ->fields(['balance_applied' => 1])
+    ->condition('status', 'completed')
+    ->execute();
+
+  /** @var \Drupal\niftybot_user\Service\WalletService $wallet_service */
+  $wallet_service = \Drupal::service('niftybot_user.wallet_service');
+  $uids = \Drupal::database()->select('niftybot_wallet', 'w')
+    ->fields('w', ['uid'])
+    ->execute()
+    ->fetchCol();
+
+  foreach ($uids as $uid) {
+    $wallet_service->reconcileWalletBalance((int) $uid);
+  }
+}
+
+/**
+ * Add member ID table and assign IDs to existing users.
+ */
+function niftybot_user_update_9004() {
+  $schema_handler = \Drupal::database()->schema();
+  $table_schema = niftybot_user_schema()['niftybot_user_member_ids'];
+
+  if (!$schema_handler->tableExists('niftybot_user_member_ids')) {
+    $schema_handler->createTable('niftybot_user_member_ids', $table_schema);
+  }
+
+  /** @var \Drupal\niftybot_user\Service\MemberIdService $member_id_service */
+  $member_id_service = \Drupal::service('niftybot_user.member_id_service');
+
+  $uids = \Drupal::database()->select('users_field_data', 'u')
+    ->fields('u', ['uid'])
+    ->condition('uid', 0, '>')
+    ->orderBy('uid')
+    ->execute()
+    ->fetchCol();
+
+  foreach ($uids as $uid) {
+    $member_id_service->assignMemberId((int) $uid);
+  }
 }

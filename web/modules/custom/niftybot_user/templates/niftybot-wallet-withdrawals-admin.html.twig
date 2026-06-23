@@ -1,0 +1,47 @@
+<div class="niftybot-wallet-admin">
+  <h2>{{ 'Withdrawal Requests'|t }}</h2>
+  <p>{{ 'Approve withdrawal requests and debit user wallets after transferring funds to their bank account.'|t }}</p>
+
+  {% if withdrawals|length > 0 %}
+    <table class="niftybot-table">
+      <thead>
+        <tr>
+          <th>{{ 'ID'|t }}</th>
+          <th>{{ 'User'|t }}</th>
+          <th>{{ 'Email'|t }}</th>
+          <th>{{ 'Amount'|t }}</th>
+          <th>{{ 'Notes'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+          <th>{{ 'Requested'|t }}</th>
+          <th>{{ 'Actions'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for withdrawal in withdrawals %}
+          <tr>
+            <td>{{ withdrawal.transaction_id }}</td>
+            <td>{{ withdrawal.username }}</td>
+            <td>{{ withdrawal.email }}</td>
+            <td>₹{{ withdrawal.amount|number_format(2) }}</td>
+            <td>{{ withdrawal.notes ?: '—' }}</td>
+            <td>
+              <span class="txn-status txn-status--{{ withdrawal.status }}">
+                {{ withdrawal.status|replace({'_': ' '})|capitalize }}
+              </span>
+            </td>
+            <td>{{ withdrawal.created|date('d M Y, h:i A') }}</td>
+            <td>
+              {% if withdrawal.status == 'pending' %}
+                <a href="{{ withdrawal.review_url }}" class="button button--small">{{ 'Review'|t }}</a>
+              {% else %}
+                <a href="{{ withdrawal.review_url }}" class="button button--small">{{ 'View'|t }}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">{{ 'No withdrawal requests yet.'|t }}</p>
+  {% endif %}
+</div>

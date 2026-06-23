@@ -2,10 +2,10 @@
 
 namespace Drupal\niftybot_user\Form;
 
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\niftybot_user\Service\WalletService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -14,21 +14,24 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class WalletWithdrawForm extends FormBase {
 
   /**
-   * The database connection.
-   */
-  protected Connection $database;
-
-  /**
    * The current user.
    */
   protected AccountProxyInterface $currentUser;
 
   /**
+   * The wallet service.
+   */
+  protected WalletService $walletService;
+
+  /**
    * Constructs the form.
    */
-  public function __construct(Connection $database, AccountProxyInterface $current_user) {
-    $this->database = $database;
+  public function __construct(
+    AccountProxyInterface $current_user,
+    WalletService $wallet_service,
+  ) {
     $this->currentUser = $current_user;
+    $this->walletService = $wallet_service;
   }
 
   /**
@@ -36,8 +39,8 @@ class WalletWithdrawForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('database'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('niftybot_user.wallet_service')
     );
   }
 
@@ -52,19 +55,25 @@ class WalletWithdrawForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $wallet = $this->database->select('niftybot_wallet', 'w')
-      ->fields('w', ['balance'])
-      ->condition('uid', $this->currentUser->id())
-      ->execute()
-      ->fetchField();
+    $uid = $this->currentUser->id();
+    $balance = $this->walletService->getWalletBalance($uid);
+    $pending = $this->walletService->getPendingWithdrawalTotal($uid);
+    $available = $this->walletService->getAvailableBalance($uid);
 
-    $balance = (float) $wallet;
+    $balance_markup = '<div class="wallet-balance"><strong>' . $this->t('Wallet Balance:') . '</strong> ₹' . number_format($balance, 2) . '</div>';
+    if ($pending > 0) {
+      $balance_markup .= '<div class="wallet-balance-meta"><p>' . $this->t('Pending withdrawals: ₹@pending', [
+        '@pending' => number_format($pending, 2),
+      ]) . '</p><p>' . $this->t('Available to withdraw: ₹@available', [
+        '@available' => number_format($available, 2),
+      ]) . '</p></div>';
+    }
 
     $form['current_balance'] = [
-      '#markup' => '<div class="wallet-balance"><strong>' . $this->t('Available Balance:') . '</strong> ₹' . number_format($balance, 2) . '</div>',
-    ];
+      '#markup' => $balance_markup,
+    ] + WalletService::walletRenderCache($uid);
 
-    if ($balance < 100) {
+    if ($available < 100) {
       $form['insufficient'] = [
         '#markup' => '<div class="messages messages--warning">' .
           $this->t('Insufficient balance for withdrawal. Minimum withdrawal is ₹100.') . '</div>',
@@ -77,10 +86,10 @@ class WalletWithdrawForm extends FormBase {
       '#title' => $this->t('Withdrawal Amount (₹)'),
       '#required' => TRUE,
       '#min' => 100,
-      '#max' => $balance,
+      '#max' => $available,
       '#step' => '0.01',
       '#description' => $this->t('Minimum: ₹100. Maximum: ₹@max', [
-        '@max' => number_format($balance, 2),
+        '@max' => number_format($available, 2),
       ]),
     ];
 
@@ -92,7 +101,7 @@ class WalletWithdrawForm extends FormBase {
 
     $form['info'] = [
       '#markup' => '<p class="description">' .
-        $this->t('Withdrawal will be processed to your registered bank account within 2-3 business days.') . '</p>',
+        $this->t('Your request will be reviewed by an admin. The amount will be deducted from your wallet only after approval and transferred to your registered bank account within 2-3 business days.') . '</p>',
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -109,16 +118,11 @@ class WalletWithdrawForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $amount = $form_state->getValue('amount');
+    $amount = (float) $form_state->getValue('amount');
+    $available = $this->walletService->getAvailableBalance($this->currentUser->id());
 
-    $balance = (float) $this->database->select('niftybot_wallet', 'w')
-      ->fields('w', ['balance'])
-      ->condition('uid', $this->currentUser->id())
-      ->execute()
-      ->fetchField();
-
-    if ($amount > $balance) {
-      $form_state->setErrorByName('amount', $this->t('Insufficient balance.'));
+    if ($amount > $available) {
+      $form_state->setErrorByName('amount', $this->t('Insufficient available balance. You may have pending withdrawal requests.'));
     }
   }
 
@@ -127,28 +131,11 @@ class WalletWithdrawForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $uid = $this->currentUser->id();
-    $amount = $form_state->getValue('amount');
-    $now = \Drupal::time()->getRequestTime();
+    $amount = (float) $form_state->getValue('amount');
 
-    $this->database->update('niftybot_wallet')
-      ->expression('balance', 'balance - :amount', [':amount' => $amount])
-      ->condition('uid', $uid)
-      ->execute();
+    $this->walletService->createWithdrawalRequest($uid, $amount, $form_state->getValue('notes'));
 
-    $this->database->insert('niftybot_wallet_transactions')
-      ->fields([
-        'uid' => $uid,
-        'type' => 'withdrawal',
-        'amount' => $amount,
-        'status' => 'pending',
-        'payment_method' => 'bank_transfer',
-        'notes' => $form_state->getValue('notes'),
-        'created' => $now,
-        'updated' => $now,
-      ])
-      ->execute();
-
-    $this->messenger()->addStatus($this->t('Withdrawal request for ₹@amount has been submitted. It will be processed within 2-3 business days.', [
+    $this->messenger()->addStatus($this->t('Withdrawal request for ₹@amount has been submitted. Your wallet will be debited after admin approval.', [
       '@amount' => number_format($amount, 2),
     ]));
     $form_state->setRedirect('niftybot_user.wallet');

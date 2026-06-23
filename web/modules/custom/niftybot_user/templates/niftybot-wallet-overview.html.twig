@@ -1,8 +1,16 @@
 <div class="niftybot-wallet">
   <div class="wallet-header">
     <div class="wallet-balance-card">
-      <h3>{{ 'Available Balance'|t }}</h3>
+      <h3>{{ 'Wallet Balance'|t }}</h3>
       <div class="wallet-amount">₹{{ balance|number_format(2) }}</div>
+
+      {% if pending_withdrawals > 0 %}
+        <div class="wallet-balance-meta">
+          <p>{{ 'Pending withdrawals'|t }}: <strong>₹{{ pending_withdrawals|number_format(2) }}</strong></p>
+          <p>{{ 'Available to withdraw'|t }}: <strong>₹{{ available_balance|number_format(2) }}</strong></p>
+        </div>
+      {% endif %}
+
       <div class="wallet-actions">
         <a href="{{ path('niftybot_user.wallet_deposit') }}" class="button button--primary">{{ 'Deposit'|t }}</a>
         <a href="{{ path('niftybot_user.wallet_withdraw') }}" class="button">{{ 'Withdraw'|t }}</a>
@@ -38,7 +46,13 @@
             <td>{{ txn.payment_method|replace({'_': ' '})|capitalize }}</td>
             <td>
               <span class="txn-status txn-status--{{ txn.status }}">
-                {{ txn.status|capitalize }}
+                {% if txn.status == 'pending' and txn.type == 'deposit' %}
+                  {{ 'Awaiting verification'|t }}
+                {% elseif txn.status == 'pending' and txn.type == 'withdrawal' %}
+                  {{ 'Awaiting approval'|t }}
+                {% else %}
+                  {{ txn.status|capitalize }}
+                {% endif %}
               </span>
             </td>
           </tr>

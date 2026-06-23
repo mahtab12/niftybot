@@ -1,0 +1,4 @@
+services:
+  niftybot_investment.investment_service:
+    class: Drupal\niftybot_investment\Service\InvestmentService
+    arguments: ['@database', '@datetime.time', '@niftybot_user.wallet_service']

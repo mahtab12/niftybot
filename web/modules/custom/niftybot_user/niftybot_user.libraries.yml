@@ -1,0 +1,10 @@
+wallet:
+  version: 1.x
+  css:
+    theme:
+      css/wallet.css: {}
+  js:
+    js/wallet.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

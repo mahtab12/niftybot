@@ -1,0 +1,57 @@
+niftybot_investment.dashboard:
+  path: '/niftybot/investment'
+  defaults:
+    _controller: '\Drupal\niftybot_investment\Controller\InvestmentController::dashboard'
+    _title: 'FXC Investment'
+  requirements:
+    _permission: 'access fxc investment'
+
+niftybot_investment.plans:
+  path: '/niftybot/investment/plans'
+  defaults:
+    _controller: '\Drupal\niftybot_investment\Controller\InvestmentController::plans'
+    _title: 'Investment Plans'
+  requirements:
+    _permission: 'access fxc investment'
+
+niftybot_investment.invest:
+  path: '/niftybot/investment/invest/{plan_id}'
+  defaults:
+    _form: '\Drupal\niftybot_investment\Form\InvestForm'
+    _title: 'Start Investment'
+  requirements:
+    _permission: 'access fxc investment'
+    plan_id: '\d+'
+
+niftybot_investment.platform_trades:
+  path: '/niftybot/investment/trades'
+  defaults:
+    _controller: '\Drupal\niftybot_investment\Controller\PlatformTradeController::userView'
+    _title: 'Platform Nifty Trades'
+  requirements:
+    _permission: 'access fxc investment'
+
+niftybot_investment.admin_trades:
+  path: '/admin/niftybot/investment/trades'
+  defaults:
+    _controller: '\Drupal\niftybot_investment\Controller\PlatformTradeController::adminList'
+    _title: 'Platform Trades'
+  requirements:
+    _permission: 'administer fxc investment'
+
+niftybot_investment.admin_trade_add:
+  path: '/admin/niftybot/investment/trades/add'
+  defaults:
+    _form: '\Drupal\niftybot_investment\Form\PlatformTradeForm'
+    _title: 'Add Platform Trade'
+  requirements:
+    _permission: 'administer fxc investment'
+
+niftybot_investment.admin_trade_edit:
+  path: '/admin/niftybot/investment/trades/{trade_id}/edit'
+  defaults:
+    _form: '\Drupal\niftybot_investment\Form\PlatformTradeForm'
+    _title: 'Edit Platform Trade'
+  requirements:
+    _permission: 'administer fxc investment'
+    trade_id: '\d+'

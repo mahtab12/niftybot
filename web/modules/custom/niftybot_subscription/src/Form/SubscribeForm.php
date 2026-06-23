@@ -6,6 +6,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\niftybot_user\Service\WalletService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -25,11 +26,21 @@ class SubscribeForm extends FormBase {
   protected AccountProxyInterface $currentUser;
 
   /**
+   * The wallet service.
+   */
+  protected WalletService $walletService;
+
+  /**
    * Constructs the form.
    */
-  public function __construct(Connection $database, AccountProxyInterface $current_user) {
+  public function __construct(
+    Connection $database,
+    AccountProxyInterface $current_user,
+    WalletService $wallet_service,
+  ) {
     $this->database = $database;
     $this->currentUser = $current_user;
+    $this->walletService = $wallet_service;
   }
 
   /**
@@ -38,7 +49,8 @@ class SubscribeForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('database'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('niftybot_user.wallet_service')
     );
   }
 
@@ -167,10 +179,7 @@ class SubscribeForm extends FormBase {
     $end_date = $now + ($plan->duration_days * 86400);
 
     if ($form_state->getValue('payment_method') === 'wallet') {
-      $this->database->update('niftybot_wallet')
-        ->expression('balance', 'balance - :price', [':price' => $plan->price])
-        ->condition('uid', $uid)
-        ->execute();
+      $this->walletService->debitBalance($uid, (float) $plan->price);
 
       $this->database->insert('niftybot_wallet_transactions')
         ->fields([
@@ -180,6 +189,7 @@ class SubscribeForm extends FormBase {
           'status' => 'completed',
           'payment_method' => 'wallet',
           'notes' => 'Subscription: ' . $plan->name,
+          'balance_applied' => 1,
           'created' => $now,
           'updated' => $now,
         ])

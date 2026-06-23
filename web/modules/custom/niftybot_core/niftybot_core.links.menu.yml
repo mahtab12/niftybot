@@ -19,30 +19,44 @@ niftybot_user.kyc_admin_menu:
   parent: niftybot_core.admin
   weight: 1
 
+niftybot_user.wallet_deposits_admin_menu:
+  title: 'Wallet Deposits'
+  description: 'Verify UPI and NEFT deposit requests.'
+  route_name: niftybot_user.wallet_deposits_admin
+  parent: niftybot_core.admin
+  weight: 2
+
+niftybot_user.wallet_withdrawals_admin_menu:
+  title: 'Wallet Withdrawals'
+  description: 'Approve or reject withdrawal requests.'
+  route_name: niftybot_user.wallet_withdrawals_admin
+  parent: niftybot_core.admin
+  weight: 3
+
 niftybot_subscription.admin_plans_menu:
   title: 'Subscription Plans'
   description: 'Manage subscription plans.'
   route_name: niftybot_subscription.admin_plans
   parent: niftybot_core.admin
-  weight: 2
+  weight: 4
 
 niftybot_subscription.admin_subscribers_menu:
   title: 'Subscribers'
   description: 'View active subscribers.'
   route_name: niftybot_subscription.admin_subscribers
   parent: niftybot_core.admin
-  weight: 3
+  weight: 5
 
 niftybot_trading.admin_orders_menu:
   title: 'Order Management'
   description: 'View and manage all trading orders.'
   route_name: niftybot_trading.admin_orders
   parent: niftybot_core.admin
-  weight: 4
+  weight: 6
 
 niftybot_reports.admin_menu:
   title: 'Platform Reports'
   description: 'View platform-wide reports and analytics.'
   route_name: niftybot_reports.admin
   parent: niftybot_core.admin
-  weight: 5
+  weight: 7

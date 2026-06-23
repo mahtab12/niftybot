@@ -49,7 +49,7 @@ class SubscriptionController extends ControllerBase {
 
     $current_sub = $this->database->select('niftybot_user_subscriptions', 'us')
       ->fields('us')
-      ->condition('uid', $this->currentUser->id())
+      ->condition('uid', $this->currentUser()->id())
       ->condition('status', 'active')
       ->execute()
       ->fetchObject();
@@ -65,7 +65,7 @@ class SubscriptionController extends ControllerBase {
    * Display user's current subscription.
    */
   public function mySubscription() {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
 
     $subscription = $this->database->select('niftybot_user_subscriptions', 'us')
       ->fields('us')

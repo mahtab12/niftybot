@@ -1,0 +1,127 @@
+<?php
+
+/**
+ * @file
+ * Hooks for NiftyBot Investment module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_cron().
+ */
+function niftybot_investment_cron(): void {
+  /** @var \Drupal\niftybot_investment\Service\InvestmentService $service */
+  $service = \Drupal::service('niftybot_investment.investment_service');
+
+  // Accrue AI profit daily so pending balance grows through the week.
+  $service->accrueDailyProfit();
+
+  // Credit pending profit to wallet every Saturday morning.
+  if ($service->isPayoutWindow()) {
+    $service->processSaturdayPayouts();
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function niftybot_investment_theme(array $existing, string $type, string $theme, string $path): array {
+  return [
+    'niftybot_investment_dashboard' => [
+      'variables' => [
+        'investment' => NULL,
+        'profit_history' => [],
+        'projected' => [],
+        'next_payout' => 0,
+        'has_active' => FALSE,
+      ],
+      'template' => 'niftybot-investment-dashboard',
+    ],
+    'niftybot_investment_plans' => [
+      'variables' => [
+        'plans' => [],
+        'active_investment' => NULL,
+        'wallet_balance' => 0,
+      ],
+      'template' => 'niftybot-investment-plans',
+    ],
+    'niftybot_platform_trades' => [
+      'variables' => [
+        'grouped_trades' => [],
+        'daily_summary' => [],
+        'day_meta' => [],
+      ],
+      'template' => 'niftybot-platform-trades',
+    ],
+    'niftybot_platform_trades_admin' => [
+      'variables' => [
+        'trades' => [],
+        'add_link' => NULL,
+      ],
+      'template' => 'niftybot-platform-trades-admin',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for niftybot_investment_dashboard.
+ */
+function template_preprocess_niftybot_investment_dashboard(array &$variables): void {
+  $variables['next_payout_formatted'] = $variables['next_payout']
+    ? \Drupal::service('date.formatter')->format($variables['next_payout'], 'custom', 'l, j M Y \a\t g:i A')
+    : '';
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for niftybot_investment_plans.
+ */
+function template_preprocess_niftybot_investment_plans(array &$variables): void {
+  foreach ($variables['plans'] as $plan) {
+    $plan->amount_formatted = number_format((float) $plan->amount, 2);
+    $plan->weekly_range = sprintf(
+      '%s%% – %s%%',
+      number_format((float) $plan->weekly_return_min, 1),
+      number_format((float) $plan->weekly_return_max, 1),
+    );
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for niftybot_platform_trades.
+ */
+function template_preprocess_niftybot_platform_trades(array &$variables): void {
+  $formatter = \Drupal::service('date.formatter');
+
+  foreach ($variables['grouped_trades'] as $date => &$trades) {
+    $day_pnl = 0;
+    foreach ($trades as $trade) {
+      $trade->pnl_class = (float) $trade->pnl >= 0 ? 'profit' : 'loss';
+      $trade->pnl_formatted = number_format((float) $trade->pnl, 2);
+      $day_pnl += (float) $trade->pnl;
+    }
+    $variables['day_meta'][$date] = [
+      'label' => $formatter->format(strtotime($date . ' 12:00:00'), 'custom', 'l, d F Y'),
+      'pnl' => $day_pnl,
+      'pnl_class' => $day_pnl >= 0 ? 'pnl-positive' : 'pnl-negative',
+      'pnl_formatted' => number_format($day_pnl, 2),
+    ];
+  }
+
+  foreach ($variables['daily_summary'] as $date => &$summary) {
+    $summary['label'] = $formatter->format(strtotime($date . ' 12:00:00'), 'custom', 'D, d M Y');
+    $summary['pnl_class'] = $summary['pnl'] >= 0 ? 'pnl-positive' : 'pnl-negative';
+  }
+}
+
+/**
+ * Implements hook_help().
+ */
+function niftybot_investment_help(string $route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name === 'help.page.niftybot_investment') {
+    return '<p>' . t('FXC Global investment plans with weekly AI profit and platform trade transparency.') . '</p>';
+  }
+  return NULL;
+}

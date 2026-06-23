@@ -38,7 +38,7 @@ class OrderController extends ControllerBase {
   public function ordersList() {
     $orders = $this->database->select('niftybot_orders', 'o')
       ->fields('o')
-      ->condition('uid', $this->currentUser->id())
+      ->condition('uid', $this->currentUser()->id())
       ->orderBy('created', 'DESC')
       ->range(0, 100)
       ->execute()
@@ -72,7 +72,7 @@ class OrderController extends ControllerBase {
       throw new NotFoundHttpException();
     }
 
-    if ((int) $order->uid !== (int) $this->currentUser->id() && !$this->currentUser->hasPermission('administer niftybot')) {
+    if ((int) $order->uid !== (int) $this->currentUser()->id() && !$this->currentUser()->hasPermission('administer niftybot')) {
       throw new AccessDeniedHttpException();
     }
 

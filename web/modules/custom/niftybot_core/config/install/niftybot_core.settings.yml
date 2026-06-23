@@ -1,4 +1,5 @@
 platform_name: 'NiftyBot'
+member_id_prefix: 'NBX'
 enable_registration: true
 require_kyc: true
 require_subscription: true

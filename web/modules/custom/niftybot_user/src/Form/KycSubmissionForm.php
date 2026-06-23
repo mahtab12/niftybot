@@ -68,6 +68,17 @@ class KycSubmissionForm extends FormBase {
       return $form;
     }
 
+    if (!\Drupal\Core\Site\Settings::get('file_private_path')) {
+      $form['private_files_warning'] = [
+        '#markup' => '<div class="messages messages--error">' .
+          $this->t('Document uploads are unavailable because the private files directory is not configured. Please contact the site administrator.') .
+          '</div>',
+      ];
+      return $form;
+    }
+
+    niftybot_user_ensure_kyc_upload_directories();
+
     $form['#attributes']['class'][] = 'niftybot-kyc-form';
     $form['#attributes']['enctype'] = 'multipart/form-data';
 
@@ -133,7 +144,7 @@ class KycSubmissionForm extends FormBase {
     $form['identity']['pan_document'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('PAN Card Copy'),
-      '#required' => TRUE,
+      // '#required' => TRUE,
       '#upload_location' => 'private://kyc/pan/',
       '#upload_validators' => [
         'file_validate_extensions' => ['jpg jpeg png pdf'],
@@ -145,7 +156,7 @@ class KycSubmissionForm extends FormBase {
     $form['identity']['aadhaar_document'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Aadhaar Card Copy'),
-      '#required' => TRUE,
+      // '#required' => TRUE,
       '#upload_location' => 'private://kyc/aadhaar/',
       '#upload_validators' => [
         'file_validate_extensions' => ['jpg jpeg png pdf'],
@@ -192,7 +203,7 @@ class KycSubmissionForm extends FormBase {
     $form['selfie'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Selfie with PAN Card'),
-      '#required' => TRUE,
+      // '#required' => TRUE,
       '#upload_location' => 'private://kyc/selfie/',
       '#upload_validators' => [
         'file_validate_extensions' => ['jpg jpeg png'],

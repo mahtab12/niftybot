@@ -33,7 +33,7 @@ class TradeHistoryController extends ControllerBase {
    * Display trade history.
    */
   public function history() {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
 
     $trades = $this->database->select('niftybot_orders', 'o')
       ->fields('o')

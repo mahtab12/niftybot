@@ -7,6 +7,12 @@
     <div class="profile-card">
       <h3>{{ 'Account Details'|t }}</h3>
       <table>
+        {% if member_id %}
+        <tr>
+          <td><strong>{{ 'Member ID'|t }}</strong></td>
+          <td><span class="member-id">{{ member_id }}</span></td>
+        </tr>
+        {% endif %}
         <tr>
           <td><strong>{{ 'Username'|t }}</strong></td>
           <td>{{ user.getAccountName() }}</td>

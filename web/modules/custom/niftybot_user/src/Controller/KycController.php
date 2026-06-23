@@ -39,7 +39,7 @@ class KycController extends ControllerBase {
   public function status() {
     $kyc = $this->database->select('niftybot_kyc', 'k')
       ->fields('k')
-      ->condition('uid', $this->currentUser->id())
+      ->condition('uid', $this->currentUser()->id())
       ->execute()
       ->fetchObject();
 

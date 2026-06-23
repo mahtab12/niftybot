@@ -1,0 +1,49 @@
+<div class="niftybot-wallet-admin">
+  <h2>{{ 'Deposit Verification'|t }}</h2>
+  <p>{{ 'Verify UPI and NEFT deposit requests before crediting user wallets.'|t }}</p>
+
+  {% if deposits|length > 0 %}
+    <table class="niftybot-table">
+      <thead>
+        <tr>
+          <th>{{ 'ID'|t }}</th>
+          <th>{{ 'User'|t }}</th>
+          <th>{{ 'Email'|t }}</th>
+          <th>{{ 'Method'|t }}</th>
+          <th>{{ 'Amount'|t }}</th>
+          <th>{{ 'Reference'|t }}</th>
+          <th>{{ 'Status'|t }}</th>
+          <th>{{ 'Requested'|t }}</th>
+          <th>{{ 'Actions'|t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for deposit in deposits %}
+          <tr>
+            <td>{{ deposit.transaction_id }}</td>
+            <td>{{ deposit.username }}</td>
+            <td>{{ deposit.email }}</td>
+            <td>{{ deposit.payment_method|replace({'_': ' '})|upper }}</td>
+            <td>₹{{ deposit.amount|number_format(2) }}</td>
+            <td>{{ deposit.payment_reference }}</td>
+            <td>
+              <span class="txn-status txn-status--{{ deposit.status }}">
+                {{ deposit.status|replace({'_': ' '})|capitalize }}
+              </span>
+            </td>
+            <td>{{ deposit.created|date('d M Y, h:i A') }}</td>
+            <td>
+              {% if deposit.status == 'pending' %}
+                <a href="{{ deposit.review_url }}" class="button button--small">{{ 'Review'|t }}</a>
+              {% else %}
+                <a href="{{ deposit.review_url }}" class="button button--small">{{ 'View'|t }}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">{{ 'No deposit requests yet.'|t }}</p>
+  {% endif %}
+</div>

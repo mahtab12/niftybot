@@ -20,6 +20,7 @@ function niftybot_dashboard_theme($existing, $type, $theme, $path) {
         'positions' => [],
         'recent_orders' => [],
         'stats' => [],
+        'fxc_investment' => NULL,
       ],
       'template' => 'niftybot-dashboard',
     ],

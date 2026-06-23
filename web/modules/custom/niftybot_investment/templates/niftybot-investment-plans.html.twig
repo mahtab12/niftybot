@@ -1,0 +1,37 @@
+<div class="niftybot-investment">
+  <p class="investment-intro">
+    {{ 'FXC Global Model — choose a plan. Principal is debited from your wallet. AI profit of 4–5% accrues weekly and is credited every Saturday morning.'|t }}
+  </p>
+
+  <p class="wallet-balance-meta">
+    {{ 'Your wallet balance:'|t }} <strong>₹{{ wallet_balance|number_format(2) }}</strong>
+    <a href="{{ path('niftybot_user.wallet_deposit') }}">{{ 'Deposit'|t }}</a>
+  </p>
+
+  {% if active_investment %}
+    <div class="investment-alert alert--warning">
+      {{ 'You already have an active investment on @plan.'|t({'@plan': active_investment.name}) }}
+      <a href="{{ path('niftybot_investment.dashboard') }}">{{ 'View dashboard'|t }}</a>
+    </div>
+  {% endif %}
+
+  <div class="plan-grid">
+    {% for plan in plans %}
+      <div class="plan-card">
+        <h3>{{ plan.name }}</h3>
+        <div class="plan-amount">₹{{ plan.amount|number_format(0) }}</div>
+        <p class="plan-weekly">{{ 'Weekly AI profit'|t }}: <strong>{{ plan.weekly_range }}</strong></p>
+        {% if plan.description %}
+          <p class="plan-desc">{{ plan.description }}</p>
+        {% endif %}
+        {% if not active_investment and wallet_balance >= plan.amount %}
+          <a href="{{ path('niftybot_investment.invest', {'plan_id': plan.plan_id}) }}" class="button button--primary">
+            {{ 'Invest now'|t }}
+          </a>
+        {% elseif not active_investment %}
+          <span class="plan-insufficient">{{ 'Insufficient wallet balance'|t }}</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>

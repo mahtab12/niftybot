@@ -1,0 +1,121 @@
+.wallet-payment-panel {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid #d8dee4;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.wallet-payment-help {
+  margin-top: 1rem;
+  color: #475569;
+}
+
+.wallet-balance-meta {
+  margin: 0.75rem 0 1rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.wallet-balance-meta p {
+  margin: 0.25rem 0;
+}
+
+.upi-payment-demo {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(180px, 220px) 1fr;
+  align-items: center;
+}
+
+.upi-qr-scanner__frame {
+  position: relative;
+  overflow: hidden;
+  padding: 1rem;
+  border: 2px solid #0f766e;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.upi-qr-scanner__pattern {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.upi-qr-scanner__cell {
+  aspect-ratio: 1;
+  border-radius: 1px;
+}
+
+.upi-qr-scanner__cell--dark {
+  background: #111827;
+}
+
+.upi-qr-scanner__cell--light {
+  background: #fff;
+}
+
+.upi-qr-scanner__scan-line {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #14b8a6, transparent);
+  animation: wallet-upi-scan 2.4s ease-in-out infinite;
+}
+
+@keyframes wallet-upi-scan {
+  0% {
+    top: 1rem;
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    top: calc(100% - 1rem);
+    opacity: 0.2;
+  }
+}
+
+.upi-qr-scanner__label {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.upi-payment-details p {
+  margin: 0 0 0.75rem;
+}
+
+.upi-payment-details span {
+  display: block;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.upi-payment-details strong {
+  font-size: 1.125rem;
+}
+
+#wallet-upi-id {
+  color: #0f766e;
+}
+
+.neft-bank-details h4 {
+  margin-top: 0;
+}
+
+.neft-bank-details table {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .upi-payment-demo {
+    grid-template-columns: 1fr;
+  }
+}

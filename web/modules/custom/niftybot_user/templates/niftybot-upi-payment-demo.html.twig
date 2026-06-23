@@ -1,0 +1,25 @@
+<div class="upi-payment-demo">
+  <div class="upi-qr-scanner" aria-hidden="true">
+    <div class="upi-qr-scanner__frame">
+      <div class="upi-qr-scanner__pattern">
+        {% for i in 1..49 %}
+          <span class="upi-qr-scanner__cell upi-qr-scanner__cell--{{ loop.index0 is even ? 'dark' : 'light' }}"></span>
+        {% endfor %}
+      </div>
+      <div class="upi-qr-scanner__scan-line"></div>
+    </div>
+    <p class="upi-qr-scanner__label">{{ 'Demo UPI Scanner'|t }}</p>
+  </div>
+
+  <div class="upi-payment-details">
+    <p class="upi-payment-amount">
+      <span>{{ 'Amount'|t }}</span>
+      <strong class="wallet-upi-amount-display">{% if amount %}₹{{ amount|number_format(2) }}{% else %}—{% endif %}</strong>
+    </p>
+    <p class="upi-payment-id">
+      <span>{{ 'UPI ID'|t }}</span>
+      <strong id="wallet-upi-id">{{ upi_id }}</strong>
+    </p>
+    <button type="button" class="button wallet-upi-copy" data-upi-id="{{ upi_id }}">{{ 'Copy UPI ID'|t }}</button>
+  </div>
+</div>

@@ -3,7 +3,7 @@
 namespace Drupal\niftybot_user\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Database\Connection;
+use Drupal\niftybot_user\Service\WalletService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -12,15 +12,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class WalletController extends ControllerBase {
 
   /**
-   * The database connection.
+   * The wallet service.
    */
-  protected Connection $database;
+  protected WalletService $walletService;
 
   /**
    * Constructs the controller.
    */
-  public function __construct(Connection $database) {
-    $this->database = $database;
+  public function __construct(WalletService $wallet_service) {
+    $this->walletService = $wallet_service;
   }
 
   /**
@@ -28,7 +28,7 @@ class WalletController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('database')
+      $container->get('niftybot_user.wallet_service')
     );
   }
 
@@ -36,27 +36,20 @@ class WalletController extends ControllerBase {
    * Wallet overview page.
    */
   public function overview() {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
+    $balance = $this->walletService->getWalletBalance($uid);
+    $pending_withdrawals = $this->walletService->getPendingWithdrawalTotal($uid);
+    $available = $this->walletService->getAvailableBalance($uid);
 
-    $balance = $this->database->select('niftybot_wallet', 'w')
-      ->fields('w', ['balance'])
-      ->condition('uid', $uid)
-      ->execute()
-      ->fetchField();
-
-    $transactions = $this->database->select('niftybot_wallet_transactions', 'wt')
-      ->fields('wt')
-      ->condition('uid', $uid)
-      ->orderBy('created', 'DESC')
-      ->range(0, 50)
-      ->execute()
-      ->fetchAll();
+    $transactions = $this->walletService->getUserTransactions($uid);
 
     return [
       '#theme' => 'niftybot_wallet_overview',
-      '#balance' => (float) ($balance ?? 0),
+      '#balance' => $balance,
+      '#available_balance' => $available,
+      '#pending_withdrawals' => $pending_withdrawals,
       '#transactions' => $transactions,
-    ];
+    ] + WalletService::walletRenderCache($uid);
   }
 
 }

@@ -1,0 +1,158 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for NiftyBot Investment.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ */
+function niftybot_investment_schema(): array {
+  $schema = [];
+
+  $schema['niftybot_investment_plans'] = [
+    'description' => 'FXC Global investment plan definitions.',
+    'fields' => [
+      'plan_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'name' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
+      'machine_name' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE],
+      'amount' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
+      'weekly_return_min' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => '4.00'],
+      'weekly_return_max' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE, 'default' => '5.00'],
+      'description' => ['type' => 'text', 'size' => 'medium'],
+      'status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'active'],
+      'weight' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['plan_id'],
+    'unique keys' => [
+      'machine_name' => ['machine_name'],
+    ],
+    'indexes' => [
+      'status' => ['status'],
+      'weight' => ['weight'],
+    ],
+  ];
+
+  $schema['niftybot_user_investments'] = [
+    'description' => 'User FXC investment enrollments.',
+    'fields' => [
+      'investment_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'plan_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'principal_amount' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
+      'status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'active'],
+      'ai_profit_pending' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE, 'default' => '0.00'],
+      'last_week_profit' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE, 'default' => '0.00'],
+      'total_profit_earned' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE, 'default' => '0.00'],
+      'started_at' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'last_payout_at' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['investment_id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'plan_id' => ['plan_id'],
+      'status' => ['status'],
+      'uid_status' => ['uid', 'status'],
+    ],
+  ];
+
+  $schema['niftybot_investment_profits'] = [
+    'description' => 'Weekly AI profit payout history.',
+    'fields' => [
+      'profit_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'investment_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'principal_amount' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
+      'profit_amount' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
+      'profit_percent' => ['type' => 'numeric', 'precision' => 5, 'scale' => 2, 'not null' => TRUE],
+      'week_start' => ['type' => 'varchar', 'length' => 10, 'not null' => TRUE],
+      'week_end' => ['type' => 'varchar', 'length' => 10, 'not null' => TRUE],
+      'status' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'credited'],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'credited_at' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['profit_id'],
+    'indexes' => [
+      'investment_id' => ['investment_id'],
+      'uid' => ['uid'],
+      'week_end' => ['week_end'],
+    ],
+  ];
+
+  $schema['niftybot_platform_trades'] = [
+    'description' => 'Platform Nifty trades shown to investors.',
+    'fields' => [
+      'trade_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'trade_date' => ['type' => 'varchar', 'length' => 10, 'not null' => TRUE],
+      'symbol' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'NIFTY'],
+      'strategy' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'FXC Global'],
+      'transaction_type' => ['type' => 'varchar', 'length' => 16, 'not null' => TRUE],
+      'quantity' => ['type' => 'int', 'not null' => TRUE, 'default' => 1],
+      'entry_price' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
+      'exit_price' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
+      'pnl' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
+      'pnl_percentage' => ['type' => 'numeric', 'precision' => 6, 'scale' => 2],
+      'notes' => ['type' => 'text', 'size' => 'medium'],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['trade_id'],
+    'indexes' => [
+      'trade_date' => ['trade_date'],
+      'symbol' => ['symbol'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function niftybot_investment_install(): void {
+  $now = \Drupal::time()->getRequestTime();
+  $plans = [
+    [
+      'name' => 'Investment Plan A',
+      'machine_name' => 'plan_a',
+      'amount' => 10000.00,
+      'weekly_return_min' => 4.00,
+      'weekly_return_max' => 5.00,
+      'description' => 'FXC Global Model — ₹10,000 principal with 4–5% weekly AI profit.',
+      'status' => 'active',
+      'weight' => 0,
+    ],
+    [
+      'name' => 'Investment Plan B',
+      'machine_name' => 'plan_b',
+      'amount' => 20000.00,
+      'weekly_return_min' => 4.00,
+      'weekly_return_max' => 5.00,
+      'description' => 'FXC Global Model — ₹20,000 principal with 4–5% weekly AI profit.',
+      'status' => 'active',
+      'weight' => 1,
+    ],
+    [
+      'name' => 'Investment Plan C',
+      'machine_name' => 'plan_c',
+      'amount' => 50000.00,
+      'weekly_return_min' => 4.00,
+      'weekly_return_max' => 5.00,
+      'description' => 'FXC Global Model — ₹50,000 principal with 4–5% weekly AI profit.',
+      'status' => 'active',
+      'weight' => 2,
+    ],
+  ];
+
+  foreach ($plans as $plan) {
+    $plan['created'] = $now;
+    $plan['updated'] = $now;
+    \Drupal::database()->insert('niftybot_investment_plans')->fields($plan)->execute();
+  }
+}

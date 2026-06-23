@@ -33,7 +33,7 @@ class PositionController extends ControllerBase {
    * List user's current positions.
    */
   public function positionsList() {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
 
     $positions = $this->database->select('niftybot_positions', 'p')
       ->fields('p')

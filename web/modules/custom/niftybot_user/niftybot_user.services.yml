@@ -1,0 +1,7 @@
+services:
+  niftybot_user.wallet_service:
+    class: Drupal\niftybot_user\Service\WalletService
+    arguments: ['@database', '@datetime.time', '@cache_tags.invalidator']
+  niftybot_user.member_id_service:
+    class: Drupal\niftybot_user\Service\MemberIdService
+    arguments: ['@database', '@state', '@lock', '@config.factory']

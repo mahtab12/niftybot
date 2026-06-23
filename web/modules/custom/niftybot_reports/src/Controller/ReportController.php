@@ -35,7 +35,7 @@ class ReportController extends ControllerBase {
    * User reports overview.
    */
   public function userReports() {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
 
     $total_orders = (int) $this->database->select('niftybot_orders', 'o')
       ->condition('uid', $uid)
@@ -90,7 +90,7 @@ class ReportController extends ControllerBase {
    * P&L report page.
    */
   public function pnlReport() {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
 
     $trades = $this->database->select('niftybot_orders', 'o')
       ->fields('o')
@@ -147,7 +147,7 @@ class ReportController extends ControllerBase {
    * Export data as CSV.
    */
   public function exportCsv(string $type): Response {
-    $uid = $this->currentUser->id();
+    $uid = $this->currentUser()->id();
     $filename = "niftybot_{$type}_" . date('Y-m-d') . '.csv';
 
     $response = new StreamedResponse(function () use ($type, $uid) {

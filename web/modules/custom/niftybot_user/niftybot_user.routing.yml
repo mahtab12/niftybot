@@ -70,3 +70,37 @@ niftybot_user.wallet_withdraw:
     _title: 'Withdraw Funds'
   requirements:
     _permission: 'manage wallet'
+
+niftybot_user.wallet_deposits_admin:
+  path: '/admin/niftybot/wallet/deposits'
+  defaults:
+    _controller: '\Drupal\niftybot_user\Controller\WalletAdminController::pendingDeposits'
+    _title: 'Wallet Deposits'
+  requirements:
+    _permission: 'administer wallets'
+
+niftybot_user.wallet_deposit_review:
+  path: '/admin/niftybot/wallet/deposits/{transaction_id}/review'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\WalletDepositReviewForm'
+    _title: 'Verify Deposit'
+  requirements:
+    _permission: 'administer wallets'
+    transaction_id: \d+
+
+niftybot_user.wallet_withdrawals_admin:
+  path: '/admin/niftybot/wallet/withdrawals'
+  defaults:
+    _controller: '\Drupal\niftybot_user\Controller\WalletAdminController::pendingWithdrawals'
+    _title: 'Wallet Withdrawals'
+  requirements:
+    _permission: 'administer wallets'
+
+niftybot_user.wallet_withdrawal_review:
+  path: '/admin/niftybot/wallet/withdrawals/{transaction_id}/review'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\WalletWithdrawalReviewForm'
+    _title: 'Review Withdrawal'
+  requirements:
+    _permission: 'administer wallets'
+    transaction_id: \d+
