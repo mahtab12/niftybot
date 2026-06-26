@@ -58,6 +58,9 @@ class SubscriptionController extends ControllerBase {
       '#theme' => 'niftybot_subscription_plans',
       '#plans' => $plans,
       '#current_subscription' => $current_sub,
+      '#attached' => [
+        'library' => ['niftybot_subscription/subscription'],
+      ],
     ];
   }
 
@@ -74,13 +77,26 @@ class SubscriptionController extends ControllerBase {
       ->execute()
       ->fetchObject();
 
+    $pending_subscription = NULL;
+    if (!$subscription) {
+      $pending_subscription = $this->database->select('niftybot_user_subscriptions', 'us')
+        ->fields('us')
+        ->condition('uid', $uid)
+        ->condition('status', 'pending_payment')
+        ->orderBy('created', 'DESC')
+        ->range(0, 1)
+        ->execute()
+        ->fetchObject();
+    }
+
+    $display_subscription = $subscription ?: $pending_subscription;
     $plan = NULL;
     $days_remaining = 0;
 
-    if ($subscription) {
+    if ($display_subscription) {
       $plan = $this->database->select('niftybot_subscription_plans', 'sp')
         ->fields('sp')
-        ->condition('plan_id', $subscription->plan_id)
+        ->condition('plan_id', $display_subscription->plan_id)
         ->execute()
         ->fetchObject();
 
@@ -88,14 +104,19 @@ class SubscriptionController extends ControllerBase {
         $plan->features_list = json_decode($plan->features, TRUE) ?? [];
       }
 
-      $days_remaining = max(0, (int) ceil(($subscription->end_date - \Drupal::time()->getRequestTime()) / 86400));
+      if ($subscription) {
+        $days_remaining = max(0, (int) ceil(($subscription->end_date - \Drupal::time()->getRequestTime()) / 86400));
+      }
     }
 
     return [
       '#theme' => 'niftybot_my_subscription',
-      '#subscription' => $subscription,
+      '#subscription' => $display_subscription,
       '#plan' => $plan,
       '#days_remaining' => $days_remaining,
+      '#attached' => [
+        'library' => ['niftybot_subscription/subscription'],
+      ],
     ];
   }
 

@@ -1,0 +1,63 @@
+<div class="niftybot-faq-page">
+  <div class="card niftybot-support-hero mb-4">
+    <div class="card-body">
+      <div class="d-flex align-items-start gap-3">
+        <div class="niftybot-support-hero__icon" aria-hidden="true">
+          <i class="bi bi-question-circle"></i>
+        </div>
+        <div>
+          <h2 class="niftybot-support-hero__title">{{ 'Frequently Asked Questions'|t }}</h2>
+          <p class="niftybot-support-hero__text mb-0">
+            {{ 'Browse common questions about your account, wallet, trading, and subscriptions.'|t }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <p class="niftybot-faq-intro mb-0">
+      {{ 'Still need help?'|t }}
+      <a href="{{ path('niftybot_core.support') }}">{{ 'Contact support'|t }}</a>
+    </p>
+  </div>
+
+  {% for section in faq_sections %}
+    <div class="card niftybot-faq-section mb-4">
+      <div class="card-header">
+        <h3 class="niftybot-faq-section__title mb-0">{{ section.title }}</h3>
+      </div>
+      <div class="card-body p-0">
+        <div class="accordion accordion-flush niftybot-faq-accordion" id="faq-accordion-{{ section.id }}">
+          {% for item in section.items %}
+            {% set item_id = section.id ~ '-' ~ loop.index %}
+            <div class="accordion-item">
+              <h4 class="accordion-header" id="faq-heading-{{ item_id }}">
+                <button
+                  class="accordion-button{% if not loop.first %} collapsed{% endif %}"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#faq-collapse-{{ item_id }}"
+                  aria-expanded="{{ loop.first ? 'true' : 'false' }}"
+                  aria-controls="faq-collapse-{{ item_id }}"
+                >
+                  {{ item.question }}
+                </button>
+              </h4>
+              <div
+                id="faq-collapse-{{ item_id }}"
+                class="accordion-collapse collapse{% if loop.first %} show{% endif %}"
+                aria-labelledby="faq-heading-{{ item_id }}"
+                data-bs-parent="#faq-accordion-{{ section.id }}"
+              >
+                <div class="accordion-body">
+                  {{ item.answer }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>

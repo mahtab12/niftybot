@@ -43,18 +43,7 @@ class KycController extends ControllerBase {
       ->execute()
       ->fetchObject();
 
-    $status_labels = [
-      'pending' => $this->t('Pending Review'),
-      'under_review' => $this->t('Under Review'),
-      'approved' => $this->t('Approved'),
-      'rejected' => $this->t('Rejected'),
-    ];
-
-    return [
-      '#theme' => 'niftybot_kyc_status',
-      '#kyc' => $kyc,
-      '#status_label' => $kyc ? ($status_labels[$kyc->status] ?? $kyc->status) : $this->t('Not Submitted'),
-    ];
+    return niftybot_user_kyc_status_render($kyc);
   }
 
   /**

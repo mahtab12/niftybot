@@ -44,17 +44,35 @@ class OrderController extends ControllerBase {
       ->execute()
       ->fetchAll();
 
+    $summary = [
+      'total' => count($orders),
+      'pending' => 0,
+      'executed' => 0,
+      'cancelled' => 0,
+    ];
+
     foreach ($orders as &$order) {
       $order->detail_url = Url::fromRoute('niftybot_trading.order_detail', ['order_id' => $order->order_id])->toString();
-      if (in_array($order->status, ['pending', 'placed'])) {
+      if (in_array($order->status, ['pending', 'placed'], TRUE)) {
         $order->cancel_url = Url::fromRoute('niftybot_trading.order_cancel', ['order_id' => $order->order_id])->toString();
+        $summary['pending']++;
+      }
+      elseif (in_array($order->status, ['executed', 'partially_executed'], TRUE)) {
+        $summary['executed']++;
+      }
+      elseif ($order->status === 'cancelled') {
+        $summary['cancelled']++;
       }
     }
 
     return [
       '#theme' => 'niftybot_orders_list',
       '#orders' => $orders,
+      '#summary' => $summary,
       '#is_admin' => FALSE,
+      '#attached' => [
+        'library' => ['niftybot_trading/orders'],
+      ],
     ];
   }
 
@@ -99,10 +117,32 @@ class OrderController extends ControllerBase {
       $order->detail_url = Url::fromRoute('niftybot_trading.order_detail', ['order_id' => $order->order_id])->toString();
     }
 
+    $summary = [
+      'total' => count($orders),
+      'pending' => 0,
+      'executed' => 0,
+      'cancelled' => 0,
+    ];
+    foreach ($orders as $order) {
+      if (in_array($order->status, ['pending', 'placed'], TRUE)) {
+        $summary['pending']++;
+      }
+      elseif (in_array($order->status, ['executed', 'partially_executed'], TRUE)) {
+        $summary['executed']++;
+      }
+      elseif ($order->status === 'cancelled') {
+        $summary['cancelled']++;
+      }
+    }
+
     return [
       '#theme' => 'niftybot_orders_list',
       '#orders' => $orders,
+      '#summary' => $summary,
       '#is_admin' => TRUE,
+      '#attached' => [
+        'library' => ['niftybot_trading/orders'],
+      ],
     ];
   }
 

@@ -1,0 +1,91 @@
+<div class="niftybot-smart-orders">
+  <h2>{{ 'Smart Orders'|t }}</h2>
+  <p>
+    {{ 'GTT (Good Till Triggered) and OCO (One Cancels Other) orders via Groww. Auto-trade uses OCO for SL/target on Nifty options (FNO).'|t }}
+  </p>
+
+  {% if not api_configured %}
+    <p class="messages messages--warning">
+      {{ 'Trading Service API Key is not configured.'|t }}
+      <a href="{{ path('niftybot_core.settings') }}">{{ 'Add it in NiftyBot Settings'|t }}</a>
+    </p>
+  {% else %}
+
+    {% if message %}
+      <p class="messages messages--error">{{ message }}</p>
+    {% endif %}
+
+    <h3>{{ 'Active OCO Orders (FNO)'|t }}</h3>
+    <p class="niftybot-smart-orders__hint">{{ 'Used by Auto Trade for stop-loss and target exits.'|t }}</p>
+    {% if oco_orders is not empty %}
+      <table class="niftybot-smart-orders__table">
+        <thead>
+          <tr>
+            <th>{{ 'ID'|t }}</th>
+            <th>{{ 'Symbol'|t }}</th>
+            <th>{{ 'Qty'|t }}</th>
+            <th>{{ 'Status'|t }}</th>
+            <th>{{ 'Target'|t }}</th>
+            <th>{{ 'Stop Loss'|t }}</th>
+            <th>{{ 'LTP'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in oco_orders %}
+            <tr>
+              <td><code>{{ order.smart_order_id }}</code></td>
+              <td><code>{{ order.trading_symbol }}</code></td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.status }}</td>
+              <td>{{ order.target.trigger_price|default('—') }}</td>
+              <td>{{ order.stop_loss.trigger_price|default('—') }}</td>
+              <td>{{ order.ltp|default('—') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No active OCO orders.'|t }}</p>
+    {% endif %}
+
+    <h3>{{ 'Active GTT Orders (FNO)'|t }}</h3>
+    {% if gtt_orders is not empty %}
+      <table class="niftybot-smart-orders__table">
+        <thead>
+          <tr>
+            <th>{{ 'ID'|t }}</th>
+            <th>{{ 'Symbol'|t }}</th>
+            <th>{{ 'Qty'|t }}</th>
+            <th>{{ 'Status'|t }}</th>
+            <th>{{ 'Trigger'|t }}</th>
+            <th>{{ 'Direction'|t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in gtt_orders %}
+            <tr>
+              <td><code>{{ order.smart_order_id }}</code></td>
+              <td><code>{{ order.trading_symbol }}</code></td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.status }}</td>
+              <td>{{ order.trigger_price|default('—') }}</td>
+              <td>{{ order.trigger_direction|default('—') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>{{ 'No active GTT orders.'|t }}</p>
+    {% endif %}
+
+    <h3>{{ 'API Reference'|t }}</h3>
+    <ul class="niftybot-smart-orders__api">
+      <li><code>POST /api/v1/smart-orders</code> — {{ 'Create GTT or OCO'|t }}</li>
+      <li><code>GET /api/v1/smart-orders</code> — {{ 'List by type & segment'|t }}</li>
+      <li><code>GET /api/v1/smart-orders/{id}</code> — {{ 'Get one order'|t }}</li>
+      <li><code>PUT /api/v1/smart-orders/modify</code> — {{ 'Modify active order'|t }}</li>
+      <li><code>DELETE /api/v1/smart-orders/{id}</code> — {{ 'Cancel order'|t }}</li>
+    </ul>
+
+  {% endif %}
+</div>

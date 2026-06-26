@@ -1,0 +1,303 @@
+<div class="niftybot-auto-trade niftybot-auto-trade--live{% if is_user %} niftybot-auto-trade--user{% endif %}" data-instrument="{{ instrument }}">
+  <div class="niftybot-auto-trade__toolbar">
+    <h2>{{ page_title }}</h2>
+    {% if api_configured %}
+      <div class="niftybot-auto-trade__live-meta">
+        <span class="niftybot-live-status niftybot-live-status--reconnecting" id="niftybot-auto-trade-live-badge">{{ 'Connecting…'|t }}</span>
+        <span class="niftybot-live-updated">{{ 'Updated'|t }}: <span class="niftybot-live-updated__time" id="niftybot-auto-trade-updated">—</span></span>
+      </div>
+    {% endif %}
+  </div>
+
+  <p class="niftybot-auto-trade__intro">{{ intro }}</p>
+
+  {% if is_user and not broker_connected %}
+    <div class="alert alert-warning" role="alert">
+      {{ 'Connect your Groww broker account before activating auto-trade.'|t }}
+      <a href="{{ path('niftybot_core.user_broker') }}" class="alert-link">{{ 'Broker connection'|t }}</a>
+    </div>
+  {% endif %}
+
+  {% if not api_configured %}
+    <p class="messages messages--warning">
+      {% if is_user %}
+        {{ 'The trading service is not fully configured. Please contact support if auto-trade controls are unavailable.'|t }}
+      {% else %}
+        {{ 'Trading Service API Key is not configured.'|t }}
+        <a href="{{ path('niftybot_core.settings') }}">{{ 'Add it in NiftyBot Settings'|t }}</a>
+      {% endif %}
+    </p>
+  {% else %}
+
+    <div class="niftybot-auto-trade__hero">
+      <div class="niftybot-auto-trade__nifty">
+        <div class="stat-label">{{ index_label }}</div>
+        <div class="stat-value" id="niftybot-auto-trade-index-ltp">
+          {% set ltp = status.underlying_ltp|default(status.nifty_ltp) %}
+          {% if ltp is not null %}
+            {{ ltp|number_format(2) }}
+          {% else %}
+            —
+          {% endif %}
+        </div>
+      </div>
+      <div class="niftybot-auto-trade__controls">
+        <fieldset class="niftybot-auto-trade__mode" id="niftybot-auto-trade-mode-fieldset">
+          <legend>{{ 'Strategy'|t }}</legend>
+          <label>
+            <input type="radio" name="niftybot-auto-trade-mode" value="buy"{% if status.trade_mode|default('buy') == 'buy' %} checked{% endif %}{% if status.active %} disabled{% endif %}>
+            {{ 'Option Buying (ATM)'|t }}
+          </label>
+          <label>
+            <input type="radio" name="niftybot-auto-trade-mode" value="sell"{% if status.trade_mode|default('buy') == 'sell' %} checked{% endif %}{% if status.active %} disabled{% endif %}>
+            {{ 'Option Selling (OTM ±3)'|t }}
+          </label>
+        </fieldset>
+        <p class="niftybot-auto-trade__mode-help">
+          {{ 'Buying: ATM entry. Selling: OTM 3 strikes away (PE below / CE above ATM). One trade per activation.'|t }}
+        </p>
+        <button type="button" class="button button--primary" id="niftybot-auto-trade-activate"{% if status.active %} disabled{% endif %}>
+          {{ 'Activate Auto Trade'|t }}
+        </button>
+        <button type="button" class="button" id="niftybot-auto-trade-deactivate">
+          {{ 'Deactivate'|t }}
+        </button>
+        <span class="niftybot-auto-trade__state" id="niftybot-auto-trade-state">
+          {% if status.active %}
+            <span class="niftybot-auto-trade__state--on">{{ 'ACTIVE'|t }}</span>
+          {% else %}
+            <span class="niftybot-auto-trade__state--off">{{ 'INACTIVE'|t }}</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <p class="niftybot-auto-trade__message" id="niftybot-auto-trade-message">
+      {{ status.message|default('') }}
+    </p>
+
+    <div class="niftybot-auto-trade__panels">
+      <div class="niftybot-auto-trade__panel">
+        <h3>{{ 'Strategy Signal'|t }}</h3>
+        <table class="niftybot-auto-trade__table">
+          <tbody>
+            <tr>
+              <th>{{ 'Mode'|t }}</th>
+              <td id="niftybot-auto-trade-trade-mode">{{ status.trade_mode|default('buy')|upper }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Action'|t }}</th>
+              <td id="niftybot-auto-trade-signal-action">{{ status.last_signal.action|default('HOLD') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Confidence'|t }}</th>
+              <td id="niftybot-auto-trade-signal-confidence">
+                {% if status.last_signal.confidence is defined %}
+                  {{ (status.last_signal.confidence * 100)|number_format(0) }}%
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'OI Buildup'|t }}</th>
+              <td id="niftybot-auto-trade-oi">{{ status.last_signal.indicators.oi_buildup|default('—') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'EMA'|t }}</th>
+              <td id="niftybot-auto-trade-ema">{{ status.last_signal.indicators.ema_signal|default('—') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'RSI Divergence'|t }}</th>
+              <td id="niftybot-auto-trade-rsi">{{ status.last_signal.indicators.rsi_divergence|default('—') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Core setup'|t }}</th>
+              <td id="niftybot-auto-trade-core-setup">—</td>
+            </tr>
+            <tr>
+              <th>{{ 'VWAP'|t }}</th>
+              <td id="niftybot-auto-trade-vwap">
+                {% if status.last_signal.indicators.session_vwap is defined %}
+                  {{ status.last_signal.indicators.session_vwap|number_format(2) }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'Volume'|t }}</th>
+              <td id="niftybot-auto-trade-volume">—</td>
+            </tr>
+            <tr>
+              <th>{{ 'Chain OI'|t }}</th>
+              <td id="niftybot-auto-trade-chain-oi">{{ status.last_signal.indicators.chain_oi_summary|default('—') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Advanced'|t }}</th>
+              <td id="niftybot-auto-trade-advanced">—</td>
+            </tr>
+            <tr>
+              <th>{{ 'Reasons'|t }}</th>
+              <td id="niftybot-auto-trade-reasons">
+                {% if status.last_signal.reasons is not empty %}
+                  {{ status.last_signal.reasons|join(', ') }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="niftybot-auto-trade__panel">
+        <h3>{{ 'Active Trade'|t }}</h3>
+        <div id="niftybot-auto-trade-no-position"{% if status.current_trade and status.current_trade.status == 'open' %} hidden{% endif %}>
+          <p>{{ 'No open auto-trade position.'|t }}</p>
+        </div>
+        <div class="niftybot-auto-trade__levels" id="niftybot-auto-trade-levels"{% if not status.current_trade or status.current_trade.status|default('') != 'open' %} hidden{% endif %}>
+          <div class="niftybot-auto-trade__level niftybot-auto-trade__level--sl">
+            <span class="niftybot-auto-trade__level-label">{{ 'Stop Loss'|t }}</span>
+            <span class="niftybot-auto-trade__level-price" id="niftybot-auto-trade-sl-price">
+              {% if status.current_trade and status.current_trade.stop_loss is not null %}₹{{ status.current_trade.stop_loss|number_format(2) }}{% else %}—{% endif %}
+            </span>
+            <span class="niftybot-auto-trade__level-points" id="niftybot-auto-trade-sl-points">
+              {% if status.current_trade and status.current_trade.sl_points is not null %}{{ status.current_trade.sl_points|number_format(0) }} {{ 'pts'|t }}{% endif %}
+            </span>
+            <span class="niftybot-auto-trade__level-away" id="niftybot-auto-trade-sl-away"></span>
+          </div>
+          <div class="niftybot-auto-trade__level niftybot-auto-trade__level--entry">
+            <span class="niftybot-auto-trade__level-label">{{ 'Entry'|t }}</span>
+            <span class="niftybot-auto-trade__level-price" id="niftybot-auto-trade-level-entry">
+              {% if status.current_trade and status.current_trade.entry_price is not null %}₹{{ status.current_trade.entry_price|number_format(2) }}{% else %}—{% endif %}
+            </span>
+          </div>
+          <div class="niftybot-auto-trade__level niftybot-auto-trade__level--target">
+            <span class="niftybot-auto-trade__level-label">{{ 'Target'|t }}</span>
+            <span class="niftybot-auto-trade__level-price" id="niftybot-auto-trade-target-price">
+              {% if status.current_trade and status.current_trade.target is not null %}₹{{ status.current_trade.target|number_format(2) }}{% else %}—{% endif %}
+            </span>
+            <span class="niftybot-auto-trade__level-points" id="niftybot-auto-trade-target-points">
+              {% if status.current_trade and status.current_trade.target_points is not null %}{{ status.current_trade.target_points|number_format(0) }} {{ 'pts'|t }}{% endif %}
+            </span>
+            <span class="niftybot-auto-trade__level-away" id="niftybot-auto-trade-target-away"></span>
+          </div>
+        </div>
+        <table class="niftybot-auto-trade__table" id="niftybot-auto-trade-position-table"{% if not status.current_trade or status.current_trade.status|default('') != 'open' %} hidden{% endif %}>
+          <tbody>
+            <tr>
+              <th>{{ 'Symbol'|t }}</th>
+              <td id="niftybot-auto-trade-symbol">{{ status.current_trade.symbol|default('') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Side'|t }}</th>
+              <td id="niftybot-auto-trade-position-side">{{ status.current_trade.position_side|default('')|upper }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Type'|t }}</th>
+              <td id="niftybot-auto-trade-type">{{ status.current_trade.option_type|default('') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Strike / Expiry'|t }}</th>
+              <td id="niftybot-auto-trade-strike">
+                {% if status.current_trade %}
+                  {{ status.current_trade.strike|default('') }} / {{ status.current_trade.expiry_date|default('') }}
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'Qty (lots)'|t }}</th>
+              <td id="niftybot-auto-trade-qty">{{ status.current_trade.quantity|default('') }}</td>
+            </tr>
+            <tr>
+              <th>{{ 'Entry Price'|t }}</th>
+              <td id="niftybot-auto-trade-entry">
+                {% if status.current_trade.entry_price is not null %}
+                  ₹{{ status.current_trade.entry_price|number_format(2) }}
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'Current Price'|t }}</th>
+              <td id="niftybot-auto-trade-current">
+                {% if status.current_trade.current_price is not null %}
+                  ₹{{ status.current_trade.current_price|number_format(2) }}
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'Stop Loss'|t }}</th>
+              <td id="niftybot-auto-trade-sl">
+                {% if status.current_trade.stop_loss is not null %}
+                  ₹{{ status.current_trade.stop_loss|number_format(2) }}
+                  {% if status.current_trade.sl_points is not null %} ({{ status.current_trade.sl_points|number_format(0) }} {{ 'pts'|t }}){% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'Target'|t }}</th>
+              <td id="niftybot-auto-trade-target">
+                {% if status.current_trade.target is not null %}
+                  ₹{{ status.current_trade.target|number_format(2) }}
+                  {% if status.current_trade.target_points is not null %} ({{ status.current_trade.target_points|number_format(0) }} {{ 'pts'|t }}){% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'OCO Smart Order'|t }}</th>
+              <td id="niftybot-auto-trade-oco">
+                {% if status.current_trade.smart_order_id %}
+                  <code>{{ status.current_trade.smart_order_id }}</code>
+                  ({{ status.current_trade.smart_order_status|default('ACTIVE') }})
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>{{ 'Live P&L'|t }}</th>
+              <td id="niftybot-auto-trade-pnl" class="{% if status.current_trade.pnl > 0 %}niftybot-pnl--positive{% elseif status.current_trade.pnl < 0 %}niftybot-pnl--negative{% endif %}">
+                {% if status.current_trade.pnl is not null %}
+                  ₹{{ status.current_trade.pnl|number_format(2) }} ({{ status.current_trade.pnl_percentage|number_format(2) }}%)
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" class="button niftybot-auto-trade__exit-btn" id="niftybot-auto-trade-exit"{% if not status.current_trade or status.current_trade.status|default('') != 'open' %} hidden{% endif %}>
+          {{ 'Exit Position Now'|t }}
+        </button>
+      </div>
+    </div>
+
+    <h3>{{ 'Recent Trades'|t }}</h3>
+    <table class="niftybot-auto-trade__history" id="niftybot-auto-trade-history">
+      <thead>
+        <tr>
+          <th>{{ 'Symbol'|t }}</th>
+          <th>{{ 'Type'|t }}</th>
+          <th>{{ 'Entry'|t }}</th>
+          <th>{{ 'Exit'|t }}</th>
+          <th>{{ 'P&L'|t }}</th>
+          <th>{{ 'Reason'|t }}</th>
+        </tr>
+      </thead>
+      <tbody id="niftybot-auto-trade-history-body">
+        {% for trade in status.trade_history|default([]) %}
+          <tr>
+            <td><code>{{ trade.symbol }}</code></td>
+            <td>{{ trade.option_type }}</td>
+            <td>₹{{ trade.entry_price|number_format(2) }}</td>
+            <td>₹{{ trade.current_price|number_format(2) }}</td>
+            <td class="{% if trade.pnl > 0 %}niftybot-pnl--positive{% elseif trade.pnl < 0 %}niftybot-pnl--negative{% endif %}">
+              ₹{{ trade.pnl|number_format(2) }}
+            </td>
+            <td>{{ trade.exit_reason|default('—') }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  {% endif %}
+</div>

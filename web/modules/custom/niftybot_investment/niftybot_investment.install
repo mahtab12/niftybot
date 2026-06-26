@@ -14,7 +14,7 @@ function niftybot_investment_schema(): array {
   $schema = [];
 
   $schema['niftybot_investment_plans'] = [
-    'description' => 'FXC Global investment plan definitions.',
+    'description' => 'StrikeFlow Investment plan definitions.',
     'fields' => [
       'plan_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
       'name' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
@@ -39,7 +39,7 @@ function niftybot_investment_schema(): array {
   ];
 
   $schema['niftybot_user_investments'] = [
-    'description' => 'User FXC investment enrollments.',
+    'description' => 'User StrikeFlow Investment enrollments.',
     'fields' => [
       'investment_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
       'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
@@ -91,7 +91,7 @@ function niftybot_investment_schema(): array {
       'trade_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
       'trade_date' => ['type' => 'varchar', 'length' => 10, 'not null' => TRUE],
       'symbol' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'NIFTY'],
-      'strategy' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'FXC Global'],
+      'strategy' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'StrikeFlow Investment'],
       'transaction_type' => ['type' => 'varchar', 'length' => 16, 'not null' => TRUE],
       'quantity' => ['type' => 'int', 'not null' => TRUE, 'default' => 1],
       'entry_price' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
@@ -119,32 +119,32 @@ function niftybot_investment_install(): void {
   $now = \Drupal::time()->getRequestTime();
   $plans = [
     [
-      'name' => 'Investment Plan A',
+      'name' => 'Starter',
       'machine_name' => 'plan_a',
-      'amount' => 10000.00,
+      'amount' => 20000.00,
       'weekly_return_min' => 4.00,
       'weekly_return_max' => 5.00,
-      'description' => 'FXC Global Model — ₹10,000 principal with 4–5% weekly AI profit.',
+      'description' => 'StrikeFlow Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
       'status' => 'active',
       'weight' => 0,
     ],
     [
-      'name' => 'Investment Plan B',
+      'name' => 'Growth',
       'machine_name' => 'plan_b',
-      'amount' => 20000.00,
+      'amount' => 50000.00,
       'weekly_return_min' => 4.00,
       'weekly_return_max' => 5.00,
-      'description' => 'FXC Global Model — ₹20,000 principal with 4–5% weekly AI profit.',
+      'description' => 'StrikeFlow Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
       'status' => 'active',
       'weight' => 1,
     ],
     [
-      'name' => 'Investment Plan C',
+      'name' => 'Elite',
       'machine_name' => 'plan_c',
-      'amount' => 50000.00,
+      'amount' => 100000.00,
       'weekly_return_min' => 4.00,
       'weekly_return_max' => 5.00,
-      'description' => 'FXC Global Model — ₹50,000 principal with 4–5% weekly AI profit.',
+      'description' => 'StrikeFlow Investment — ₹1,00,000 principal with 4–5% weekly AI algo profit.',
       'status' => 'active',
       'weight' => 2,
     ],
@@ -154,5 +154,86 @@ function niftybot_investment_install(): void {
     $plan['created'] = $now;
     $plan['updated'] = $now;
     \Drupal::database()->insert('niftybot_investment_plans')->fields($plan)->execute();
+  }
+}
+
+/**
+ * Rebrand FXC Global to StrikeFlow Investment in stored plan and trade data.
+ */
+function niftybot_investment_update_9001(): void {
+  $database = \Drupal::database();
+
+  $replacements = [
+    'FXC Global Model — ₹10,000 principal with 4–5% weekly AI profit.' =>
+      'StrikeFlow Investment — ₹10,000 principal with 4–5% weekly AI algo profit.',
+    'FXC Global Model — ₹20,000 principal with 4–5% weekly AI profit.' =>
+      'StrikeFlow Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
+    'FXC Global Model — ₹50,000 principal with 4–5% weekly AI profit.' =>
+      'StrikeFlow Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
+  ];
+
+  foreach ($replacements as $old => $new) {
+    $database->update('niftybot_investment_plans')
+      ->fields(['description' => $new])
+      ->condition('description', $old)
+      ->execute();
+  }
+
+  if ($database->schema()->tableExists('niftybot_platform_trades')) {
+    $database->update('niftybot_platform_trades')
+      ->fields(['strategy' => 'StrikeFlow Investment'])
+      ->condition('strategy', 'FXC Global')
+      ->execute();
+  }
+
+  $wallet_txns = $database->select('niftybot_wallet_transactions', 'wt')
+    ->fields('wt', ['transaction_id', 'notes'])
+    ->condition('notes', '%FXC Global investment%', 'LIKE')
+    ->execute();
+
+  foreach ($wallet_txns as $txn) {
+    if (empty($txn->notes)) {
+      continue;
+    }
+    $database->update('niftybot_wallet_transactions')
+      ->fields([
+        'notes' => str_replace('FXC Global investment', 'StrikeFlow Investment', (string) $txn->notes),
+      ])
+      ->condition('transaction_id', $txn->transaction_id)
+      ->execute();
+  }
+}
+
+/**
+ * Update investment plan tiers to ₹20k, ₹50k, and ₹1L.
+ */
+function niftybot_investment_update_9002(): void {
+  $database = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+
+  $plans = [
+    'plan_a' => [
+      'name' => 'Starter',
+      'amount' => 20000.00,
+      'description' => 'StrikeFlow Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
+    ],
+    'plan_b' => [
+      'name' => 'Growth',
+      'amount' => 50000.00,
+      'description' => 'StrikeFlow Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
+    ],
+    'plan_c' => [
+      'name' => 'Elite',
+      'amount' => 100000.00,
+      'description' => 'StrikeFlow Investment — ₹1,00,000 principal with 4–5% weekly AI algo profit.',
+    ],
+  ];
+
+  foreach ($plans as $machine_name => $fields) {
+    $fields['updated'] = $now;
+    $database->update('niftybot_investment_plans')
+      ->fields($fields)
+      ->condition('machine_name', $machine_name)
+      ->execute();
   }
 }

@@ -1,14 +1,14 @@
 _core:
   default_config_hash: ijfbzDTN4CbE7Sr-6ubWzy_t1vH4OtU1doNCLssVz-4
 langcode: en
-uuid: f7e61bb3-0217-47e3-a498-7979f6bfd194
-name: 'Drush Site-Install'
+uuid: 9db5afa2-19d9-48a7-a3f8-7d195a159b95
+name: StrikeFlow
 mail: admin@example.com
-slogan: ''
+slogan: 'Automated trading bot'
 page:
   403: ''
   404: ''
-  front: /node
+  front: /home
 admin_compact_mode: false
 weight_select_max: 100
 default_langcode: en

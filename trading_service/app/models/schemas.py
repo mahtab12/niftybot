@@ -28,6 +28,7 @@ class Exchange(str, Enum):
     NSE = "NSE"
     BSE = "BSE"
     NFO = "NFO"
+    BFO = "BFO"
     MCX = "MCX"
 
 
@@ -149,6 +150,10 @@ class PositionItem(BaseModel):
     pnl: float = 0
     pnl_percentage: float = 0
     product_type: str = "CNC"
+    segment: Optional[str] = None
+    unrealised_pnl: float = 0
+    day_return: float = 0
+    day_return_percentage: float = 0
 
 
 class PositionsResponse(BaseModel):
@@ -164,11 +169,64 @@ class HoldingItem(BaseModel):
     average_price: float
     current_price: Optional[float] = None
     pnl: float = 0
+    pnl_percentage: float = 0
+    day_return: float = 0
+    day_return_percentage: float = 0
+    invested_value: float = 0
+    current_value: float = 0
+    isin: Optional[str] = None
 
 
 class HoldingsResponse(BaseModel):
     success: bool
     holdings: list[HoldingItem] = []
+    message: str = ""
+
+
+class PortfolioFinancialSummary(BaseModel):
+    """Aggregated portfolio financial metrics."""
+    clear_cash: float = 0
+    collateral_available: float = 0
+    collateral_used: float = 0
+    net_margin_used: float = 0
+    brokerage_and_charges: float = 0
+    adhoc_margin: float = 0
+    total_balance_available: float = 0
+    equity_cnc_available: float = 0
+    equity_mis_available: float = 0
+    fno_future_available: float = 0
+    fno_option_buy_available: float = 0
+    fno_option_sell_available: float = 0
+    commodity_unrealised_m2m: float = 0
+    commodity_realised_m2m: float = 0
+    holdings_invested: float = 0
+    holdings_current_value: float = 0
+    holdings_pnl: float = 0
+    holdings_pnl_percentage: float = 0
+    holdings_day_return: float = 0
+    holdings_day_return_percentage: float = 0
+    positions_realised_pnl: float = 0
+    positions_unrealised_pnl: float = 0
+    positions_day_return: float = 0
+    positions_day_return_percentage: float = 0
+    fno_realised_pnl: float = 0
+    fno_unrealised_pnl: float = 0
+    fno_total_pnl: float = 0
+    fno_total_pnl_percentage: float = 0
+    fno_day_return: float = 0
+    fno_day_return_percentage: float = 0
+    overall_pnl: float = 0
+    overall_pnl_percentage: float = 0
+    day_return: float = 0
+    day_return_percentage: float = 0
+    total_portfolio_value: float = 0
+
+
+class PortfolioSummaryResponse(BaseModel):
+    success: bool
+    summary: PortfolioFinancialSummary = Field(default_factory=PortfolioFinancialSummary)
+    holdings: list[HoldingItem] = []
+    positions: list[PositionItem] = []
     message: str = ""
 
 
@@ -227,7 +285,7 @@ class QuoteResponse(BaseModel):
     last_trade_quantity: Optional[int] = None
     last_trade_time: Optional[int] = None
     open_interest: Optional[int] = None
-    oi_day_change: Optional[int] = None
+    oi_day_change: Optional[float] = None
     oi_day_change_percentage: Optional[float] = None
     week_52_high: Optional[float] = None
     week_52_low: Optional[float] = None
@@ -263,6 +321,7 @@ class OptionData(BaseModel):
     trading_symbol: str = ""
     ltp: Optional[float] = None
     open_interest: Optional[int] = None
+    oi_change_percentage: Optional[float] = None
     volume: Optional[int] = None
     greeks: Optional[Greeks] = None
 
@@ -276,8 +335,44 @@ class OptionChainResponse(BaseModel):
     """Full option chain for an underlying + expiry."""
     success: bool
     underlying: str = ""
+    expiry_date: Optional[str] = None
     underlying_ltp: Optional[float] = None
     strikes: dict[str, StrikeData] = {}
+    message: str = ""
+
+
+class MarketWatchItem(BaseModel):
+    """Single instrument on the market watch dashboard."""
+    id: str
+    label: str
+    symbol: str
+    exchange: str
+    segment: str
+    has_option_chain: bool = False
+    option_exchange: Optional[str] = None
+    last_price: Optional[float] = None
+    day_change: Optional[float] = None
+    day_change_perc: Optional[float] = None
+    open: Optional[float] = None
+    high: Optional[float] = None
+    low: Optional[float] = None
+    close: Optional[float] = None
+    message: str = ""
+
+
+class MarketDashboardResponse(BaseModel):
+    success: bool
+    items: list[MarketWatchItem] = []
+    message: str = ""
+
+
+class ExpiriesResponse(BaseModel):
+    success: bool
+    underlying: str = ""
+    exchange: str = ""
+    expiry_type: str = "weekly"
+    expiries: list[str] = []
+    nearest_expiry: Optional[str] = None
     message: str = ""
 
 
@@ -439,6 +534,11 @@ class SmartOrderSummary(BaseModel):
     trading_symbol: str = ""
     exchange: str = ""
     quantity: int = 0
+    trigger_price: Optional[str] = None
+    trigger_direction: Optional[str] = None
+    target: Optional[SmartOrderOCOLegResponse] = None
+    stop_loss: Optional[SmartOrderOCOLegResponse] = None
+    ltp: Optional[float] = None
 
 
 class SmartOrderListResponse(BaseModel):
@@ -536,3 +636,132 @@ class HealthResponse(BaseModel):
     service: str
     broker_connected: bool
     version: str
+
+
+class BrokerCredentialsVerifyRequest(BaseModel):
+    """Verify user-supplied broker API credentials."""
+    broker: BrokerType = BrokerType.GROWW
+    api_key: str = Field(..., min_length=1)
+    api_secret: str = Field(..., min_length=1)
+
+
+class BrokerCredentialsVerifyResponse(BaseModel):
+    """Result of broker credential verification."""
+    success: bool
+    message: str = ""
+    profile: Optional[UserProfileResponse] = None
+    margin: Optional[AvailableMarginResponse] = None
+
+
+class BrokerCredentialsOrderBookRequest(BaseModel):
+    """Fetch order book using user-supplied broker credentials."""
+    broker: BrokerType = BrokerType.GROWW
+    api_key: str = Field(..., min_length=1)
+    api_secret: str = Field(..., min_length=1)
+    instrument: Optional[str] = None
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class BrokerOrderHistoryItem(BaseModel):
+    """Normalized broker order for user trade history."""
+    symbol: str = ""
+    option_type: str = ""
+    transaction_type: str = ""
+    quantity: int = 0
+    entry_price: Optional[float] = None
+    order_status: str = ""
+    order_time: str = ""
+    broker_order_id: str = ""
+
+
+class BrokerCredentialsOrderBookResponse(BaseModel):
+    """Order book for a specific Groww user account."""
+    success: bool
+    message: str = ""
+    broker_user_id: str = ""
+    orders: list[BrokerOrderHistoryItem] = []
+
+
+# --- Auto Trade ---
+
+
+class AutoTradePosition(BaseModel):
+    """Active or closed auto-trade position."""
+    record_id: Optional[int] = None
+    trade_id: str
+    status: str = "open"  # open, closed, exiting
+    trade_mode: str = "buy"  # buy or sell
+    position_side: str = "long"  # long or short
+    option_type: str = ""  # CE or PE
+    symbol: str = ""
+    strike: Optional[float] = None
+    expiry_date: str = ""
+    quantity: int = 0
+    entry_price: Optional[float] = None
+    current_price: Optional[float] = None
+    stop_loss: Optional[float] = None
+    target: Optional[float] = None
+    sl_points: Optional[float] = None
+    target_points: Optional[float] = None
+    sl_distance: Optional[float] = None
+    target_distance: Optional[float] = None
+    pnl: Optional[float] = None
+    pnl_percentage: Optional[float] = None
+    broker_order_id: Optional[str] = None
+    smart_order_id: Optional[str] = None
+    smart_order_status: Optional[str] = None
+    exit_reason: Optional[str] = None
+    signal_reasons: list[str] = []
+    opened_at: Optional[str] = None
+    closed_at: Optional[str] = None
+
+
+class AutoTradeSignalInfo(BaseModel):
+    action: str = "HOLD"
+    confidence: float = 0.0
+    reasons: list[str] = []
+    indicators: dict = {}
+
+
+class AutoTradeStatusResponse(BaseModel):
+    success: bool
+    instrument: str = "nifty"
+    instrument_label: str = "Nifty 50"
+    trade_mode: str = "buy"
+    active: bool = False
+    message: str = ""
+    underlying_ltp: Optional[float] = None
+    nifty_ltp: Optional[float] = None
+    last_check_at: Optional[str] = None
+    last_signal: Optional[AutoTradeSignalInfo] = None
+    current_trade: Optional[AutoTradePosition] = None
+    trade_history: list[AutoTradePosition] = []
+    config: dict = {}
+
+
+class AutoTradeHistoryResponse(BaseModel):
+    """Closed auto-trades from database (for UI and ML export)."""
+    success: bool
+    instrument: str = "nifty"
+    count: int = 0
+    trades: list[AutoTradePosition] = []
+
+
+class AutoTradeActionResponse(BaseModel):
+    success: bool
+    active: bool = False
+    trade_mode: str = "buy"
+    message: str = ""
+
+
+class AutoTradeActivateRequest(BaseModel):
+    """Activate auto-trade with buy or sell mode."""
+    mode: str = "buy"
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, v: str) -> str:
+        key = v.strip().lower()
+        if key not in ("buy", "sell"):
+            raise ValueError("mode must be buy or sell")
+        return key

@@ -1,0 +1,253 @@
+<div class="niftybot-portfolio niftybot-portfolio--live">
+  <div class="niftybot-portfolio__toolbar">
+    <h2>{{ 'Portfolio'|t }}</h2>
+    {% if api_configured and summary_success %}
+      <div class="niftybot-portfolio__live-meta">
+        <span class="niftybot-live-status niftybot-live-status--reconnecting">{{ 'Connecting…'|t }}</span>
+        <span class="niftybot-live-updated">{{ 'Updated'|t }}: <span class="niftybot-live-updated__time">—</span></span>
+      </div>
+    {% endif %}
+  </div>
+  <p>{{ 'Live portfolio data from the trading API.'|t }} ({{ broker|upper }})</p>
+
+  {% if not api_configured %}
+    <p class="messages messages--warning">
+      {{ 'Trading Service API Key is not configured.'|t }}
+      <a href="{{ path('niftybot_core.settings') }}">{{ 'Add it in NiftyBot Settings'|t }}</a>
+    </p>
+  {% else %}
+
+    {% if not summary_success %}
+      <p class="messages messages--error">{{ summary_message|default('Portfolio summary could not be loaded.'|t) }}</p>
+    {% else %}
+
+      <div class="niftybot-fno-hero">
+        <div class="niftybot-fno-hero__header">
+          <h3>{{ 'F&O Trading'|t }}</h3>
+          <span class="niftybot-fno-hero__badge">{{ 'NSE F&O'|t }}</span>
+        </div>
+        <div class="niftybot-fno-hero__grid">
+          <div class="niftybot-fno-hero__metric niftybot-fno-hero__metric--primary">
+            <div class="stat-label">{{ 'Total F&O P&L'|t }}</div>
+            <div class="stat-value {% if summary.fno_total_pnl > 0 %}niftybot-pnl--positive{% elseif summary.fno_total_pnl < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="fno_total_pnl">
+              ₹{{ summary.fno_total_pnl|number_format(2) }}
+              <span class="niftybot-fno-hero__pct">({{ summary.fno_total_pnl_percentage|number_format(2) }}%)</span>
+            </div>
+          </div>
+          <div class="niftybot-fno-hero__metric">
+            <div class="stat-label">{{ 'Realised P&L'|t }}</div>
+            <div class="stat-value {% if summary.fno_realised_pnl > 0 %}niftybot-pnl--positive{% elseif summary.fno_realised_pnl < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="fno_realised_pnl">
+              ₹{{ summary.fno_realised_pnl|number_format(2) }}
+            </div>
+          </div>
+          <div class="niftybot-fno-hero__metric">
+            <div class="stat-label">{{ 'Unrealised P&L'|t }}</div>
+            <div class="stat-value {% if summary.fno_unrealised_pnl > 0 %}niftybot-pnl--positive{% elseif summary.fno_unrealised_pnl < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="fno_unrealised_pnl">
+              ₹{{ summary.fno_unrealised_pnl|number_format(2) }}
+            </div>
+          </div>
+          <div class="niftybot-fno-hero__metric">
+            <div class="stat-label">{{ 'F&O 1 Day Return'|t }}</div>
+            <div class="stat-value {% if summary.fno_day_return > 0 %}niftybot-pnl--positive{% elseif summary.fno_day_return < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="fno_day_return">
+              ₹{{ summary.fno_day_return|number_format(2) }}
+              <span class="niftybot-fno-hero__pct">({{ summary.fno_day_return_percentage|number_format(2) }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>{{ 'Financial Overview'|t }}</h3>
+      <div class="niftybot-stats-grid niftybot-portfolio__summary">
+        <div class="niftybot-stat-card">
+          <div class="stat-label">{{ 'Total Balance Available'|t }}</div>
+          <div class="stat-value" data-niftybot-field="total_balance_available">₹{{ summary.total_balance_available|number_format(2) }}</div>
+        </div>
+        <div class="niftybot-stat-card">
+          <div class="stat-label">{{ 'Total Portfolio Value'|t }}</div>
+          <div class="stat-value" data-niftybot-field="total_portfolio_value">₹{{ summary.total_portfolio_value|number_format(2) }}</div>
+        </div>
+        <div class="niftybot-stat-card">
+          <div class="stat-label">{{ 'Overall P&L'|t }}</div>
+          <div class="stat-value {% if summary.overall_pnl > 0 %}niftybot-pnl--positive{% elseif summary.overall_pnl < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="overall_pnl">
+            ₹{{ summary.overall_pnl|number_format(2) }} ({{ summary.overall_pnl_percentage|number_format(2) }}%)
+          </div>
+        </div>
+        <div class="niftybot-stat-card">
+          <div class="stat-label">{{ '1 Day Return'|t }}</div>
+          <div class="stat-value {% if summary.day_return > 0 %}niftybot-pnl--positive{% elseif summary.day_return < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="day_return">
+            ₹{{ summary.day_return|number_format(2) }} ({{ summary.day_return_percentage|number_format(2) }}%)
+          </div>
+        </div>
+      </div>
+
+      <h3>{{ 'Balances & Margin'|t }}</h3>
+      <table class="niftybot-portfolio__table niftybot-portfolio__table--summary">
+        <tbody>
+          <tr>
+            <th>{{ 'Clear Cash'|t }}</th>
+            <td data-niftybot-field="clear_cash">₹{{ summary.clear_cash|number_format(2) }}</td>
+            <th>{{ 'Collateral Available'|t }}</th>
+            <td data-niftybot-field="collateral_available">₹{{ summary.collateral_available|number_format(2) }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'Net Margin Used'|t }}</th>
+            <td data-niftybot-field="net_margin_used">₹{{ summary.net_margin_used|number_format(2) }}</td>
+            <th>{{ 'Collateral Used'|t }}</th>
+            <td data-niftybot-field="collateral_used">₹{{ summary.collateral_used|number_format(2) }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'Brokerage & Charges'|t }}</th>
+            <td data-niftybot-field="brokerage_and_charges">₹{{ summary.brokerage_and_charges|number_format(2) }}</td>
+            <th>{{ 'Adhoc Margin'|t }}</th>
+            <td data-niftybot-field="adhoc_margin">₹{{ summary.adhoc_margin|number_format(2) }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'Equity CNC Available'|t }}</th>
+            <td data-niftybot-field="equity_cnc_available">₹{{ summary.equity_cnc_available|number_format(2) }}</td>
+            <th>{{ 'Equity MIS Available'|t }}</th>
+            <td data-niftybot-field="equity_mis_available">₹{{ summary.equity_mis_available|number_format(2) }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'F&O Future Available'|t }}</th>
+            <td data-niftybot-field="fno_future_available">₹{{ summary.fno_future_available|number_format(2) }}</td>
+            <th>{{ 'F&O Option Buy Available'|t }}</th>
+            <td data-niftybot-field="fno_option_buy_available">₹{{ summary.fno_option_buy_available|number_format(2) }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'F&O Option Sell Available'|t }}</th>
+            <td data-niftybot-field="fno_option_sell_available">₹{{ summary.fno_option_sell_available|number_format(2) }}</td>
+            <th>{{ 'Commodity Unrealised M2M'|t }}</th>
+            <td data-niftybot-field="commodity_unrealised_m2m">₹{{ summary.commodity_unrealised_m2m|number_format(2) }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'Commodity Realised M2M'|t }}</th>
+            <td colspan="3" data-niftybot-field="commodity_realised_m2m">₹{{ summary.commodity_realised_m2m|number_format(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>{{ 'P&L Breakdown'|t }}</h3>
+      <table class="niftybot-portfolio__table niftybot-portfolio__table--summary">
+        <tbody>
+          <tr>
+            <th>{{ 'Holdings Invested'|t }}</th>
+            <td data-niftybot-field="holdings_invested">₹{{ summary.holdings_invested|number_format(2) }}</td>
+            <th>{{ 'Holdings Current Value'|t }}</th>
+            <td data-niftybot-field="holdings_current_value">₹{{ summary.holdings_current_value|number_format(2) }}</td>
+          </tr>
+          <tr>
+            <th>{{ 'Holdings P&L'|t }}</th>
+            <td class="{% if summary.holdings_pnl > 0 %}niftybot-pnl--positive{% elseif summary.holdings_pnl < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="holdings_pnl">
+              ₹{{ summary.holdings_pnl|number_format(2) }} ({{ summary.holdings_pnl_percentage|number_format(2) }}%)
+            </td>
+            <th>{{ 'Holdings 1 Day Return'|t }}</th>
+            <td class="{% if summary.holdings_day_return > 0 %}niftybot-pnl--positive{% elseif summary.holdings_day_return < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="holdings_day_return">
+              ₹{{ summary.holdings_day_return|number_format(2) }} ({{ summary.holdings_day_return_percentage|number_format(2) }}%)
+            </td>
+          </tr>
+          <tr>
+            <th>{{ 'Positions Realised P&L'|t }}</th>
+            <td class="{% if summary.positions_realised_pnl > 0 %}niftybot-pnl--positive{% elseif summary.positions_realised_pnl < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="positions_realised_pnl">
+              ₹{{ summary.positions_realised_pnl|number_format(2) }}
+            </td>
+            <th>{{ 'Positions Unrealised P&L'|t }}</th>
+            <td class="{% if summary.positions_unrealised_pnl > 0 %}niftybot-pnl--positive{% elseif summary.positions_unrealised_pnl < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="positions_unrealised_pnl">
+              ₹{{ summary.positions_unrealised_pnl|number_format(2) }}
+            </td>
+          </tr>
+          <tr>
+            <th>{{ 'Positions 1 Day Return'|t }}</th>
+            <td colspan="3" class="{% if summary.positions_day_return > 0 %}niftybot-pnl--positive{% elseif summary.positions_day_return < 0 %}niftybot-pnl--negative{% endif %}" data-niftybot-field="positions_day_return">
+              ₹{{ summary.positions_day_return|number_format(2) }} ({{ summary.positions_day_return_percentage|number_format(2) }}%)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    {% endif %}
+
+    <h3>{{ 'Holdings'|t }} <span id="niftybot-holdings-count">({{ holdings|length }})</span></h3>
+    <table class="niftybot-portfolio__table">
+      <thead>
+        <tr>
+          <th>{{ 'Symbol'|t }}</th>
+          <th>{{ 'ISIN'|t }}</th>
+          <th>{{ 'Exchange'|t }}</th>
+          <th>{{ 'Qty'|t }}</th>
+          <th>{{ 'Avg Price'|t }}</th>
+          <th>{{ 'LTP'|t }}</th>
+          <th>{{ 'Invested'|t }}</th>
+          <th>{{ 'Current Value'|t }}</th>
+          <th>{{ 'P&L'|t }}</th>
+          <th>{{ '1 Day Return'|t }}</th>
+        </tr>
+      </thead>
+      <tbody id="niftybot-holdings-tbody">
+        {% for item in holdings %}
+          <tr>
+            <td><code>{{ item.symbol }}</code></td>
+            <td>{{ item.isin|default('-') }}</td>
+            <td>{{ item.exchange }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.average_price|number_format(2) }}</td>
+            <td>{% if item.current_price is not null %}₹{{ item.current_price|number_format(2) }}{% else %}-{% endif %}</td>
+            <td>₹{{ item.invested_value|number_format(2) }}</td>
+            <td>₹{{ item.current_value|number_format(2) }}</td>
+            <td class="{% if item.pnl > 0 %}niftybot-pnl--positive{% elseif item.pnl < 0 %}niftybot-pnl--negative{% endif %}">
+              ₹{{ item.pnl|number_format(2) }} ({{ item.pnl_percentage|number_format(2) }}%)
+            </td>
+            <td class="{% if item.day_return > 0 %}niftybot-pnl--positive{% elseif item.day_return < 0 %}niftybot-pnl--negative{% endif %}">
+              ₹{{ item.day_return|number_format(2) }} ({{ item.day_return_percentage|number_format(2) }}%)
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>{{ 'Open Positions'|t }} <span id="niftybot-positions-count">({{ positions|length }})</span></h3>
+    <table class="niftybot-portfolio__table">
+      <thead>
+        <tr>
+          <th>{{ 'Symbol'|t }}</th>
+          <th>{{ 'Segment'|t }}</th>
+          <th>{{ 'Exchange'|t }}</th>
+          <th>{{ 'Product'|t }}</th>
+          <th>{{ 'Qty'|t }}</th>
+          <th>{{ 'Net Price'|t }}</th>
+          <th>{{ 'LTP'|t }}</th>
+          <th>{{ 'Realised P&L'|t }}</th>
+          <th>{{ 'Unrealised P&L'|t }}</th>
+          <th>{{ '1 Day Return'|t }}</th>
+        </tr>
+      </thead>
+      <tbody id="niftybot-positions-tbody">
+        {% for item in positions %}
+          <tr>
+            <td><code>{{ item.symbol }}</code></td>
+            <td>{{ item.segment|default('-') }}</td>
+            <td>{{ item.exchange }}</td>
+            <td>{{ item.product_type }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.average_price|number_format(2) }}</td>
+            <td>{% if item.current_price is not null %}₹{{ item.current_price|number_format(2) }}{% else %}-{% endif %}</td>
+            <td class="{% if item.pnl > 0 %}niftybot-pnl--positive{% elseif item.pnl < 0 %}niftybot-pnl--negative{% endif %}">
+              ₹{{ item.pnl|number_format(2) }}
+            </td>
+            <td class="{% if item.unrealised_pnl > 0 %}niftybot-pnl--positive{% elseif item.unrealised_pnl < 0 %}niftybot-pnl--negative{% endif %}">
+              ₹{{ item.unrealised_pnl|number_format(2) }}
+            </td>
+            <td class="{% if item.day_return > 0 %}niftybot-pnl--positive{% elseif item.day_return < 0 %}niftybot-pnl--negative{% endif %}">
+              ₹{{ item.day_return|number_format(2) }} ({{ item.day_return_percentage|number_format(2) }}%)
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <details class="niftybot-portfolio__raw">
+      <summary>{{ 'Raw API response'|t }}</summary>
+      <pre id="niftybot-portfolio-raw">{{ api_response|json_encode(constant('JSON_PRETTY_PRINT'))|e }}</pre>
+    </details>
+
+  {% endif %}
+</div>

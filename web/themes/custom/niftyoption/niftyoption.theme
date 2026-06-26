@@ -1,0 +1,939 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Theme hooks for NiftyOption.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Menu\MenuTreeParameters;
+use Drupal\Core\Url;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+
+/**
+ * Routes that use the standalone auth page shell (no dashboard chrome).
+ *
+ * @return string[]
+ */
+function _niftyoption_auth_routes(): array {
+  return [
+    'user.login',
+    'user.register',
+    'user.pass',
+    'user.reset',
+    'user.reset.form',
+    'niftybot_user.register',
+  ];
+}
+
+/**
+ * Whether the current request is the public landing / front page.
+ */
+function _niftyoption_is_landing_page(?string $route = NULL): bool {
+  $route ??= \Drupal::routeMatch()->getRouteName();
+  if ($route === '<front>' || $route === 'niftybot_core.landing') {
+    return TRUE;
+  }
+  try {
+    return \Drupal::service('path.matcher')->isFrontPage();
+  }
+  catch (\Exception) {
+    return FALSE;
+  }
+}
+
+/**
+ * Sets theme asset base path and portal brand name on template variables.
+ */
+function _niftyoption_apply_brand_variables(array &$variables): void {
+  if (empty($variables['theme_assets_base'])) {
+    $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
+    $variables['theme_assets_base'] = base_path() . ltrim($theme_path, '/');
+  }
+
+  if (empty($variables['site_name'])) {
+    $variables['site_name'] = (string) \Drupal::config('system.site')->get('name');
+  }
+
+  $site_name = $variables['site_name'];
+  if ($site_name === '' || $site_name === 'Drush Site-Install') {
+    $variables['niftyoption_brand_name'] = 'StrikeFlow';
+  }
+  else {
+    $variables['niftyoption_brand_name'] = $site_name;
+  }
+
+  $asset_version = _niftyoption_asset_version();
+  $variables['niftyoption_logo_version'] = $asset_version;
+  $base = $variables['theme_assets_base'];
+  $variables['niftyoption_logo_icon_url'] = $base . '/assets/images/logo-sm.svg?v=' . $asset_version;
+  $variables['niftyoption_favicon_url'] = $base . '/favicon.ico?v=' . $asset_version;
+  $variables['niftyoption_favicon_svg_url'] = $base . '/assets/images/favicon.svg?v=' . $asset_version;
+  $variables['niftyoption_favicon_ico_url'] = $base . '/favicon.ico?v=' . $asset_version;
+  $variables['niftyoption_favicon_png_32_url'] = $base . '/assets/images/favicon-32x32.png?v=' . $asset_version;
+  $variables['niftyoption_apple_touch_icon_url'] = $base . '/assets/images/apple-touch-icon.png?v=' . $asset_version;
+}
+
+/**
+ * Cache-busting token for static brand assets (SVG/ICO/PNG are heavily cached).
+ */
+function _niftyoption_asset_version(): string {
+  static $version = NULL;
+  if ($version !== NULL) {
+    return $version;
+  }
+
+  $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
+  $candidates = [
+    $theme_path . '/assets/images/logo-sm.svg',
+    $theme_path . '/favicon.ico',
+    $theme_path . '/assets/images/favicon.svg',
+  ];
+
+  $mtime = 0;
+  foreach ($candidates as $relative) {
+    $full = DRUPAL_ROOT . '/' . $relative;
+    if (is_file($full)) {
+      $mtime = max($mtime, (int) filemtime($full));
+    }
+  }
+
+  $version = $mtime > 0 ? (string) $mtime : '1';
+  return $version;
+}
+
+/**
+ * @deprecated Use _niftyoption_asset_version().
+ */
+function _niftyoption_logo_version(): string {
+  return _niftyoption_asset_version();
+}
+
+/**
+ * Attaches StrikeFlow favicon link tags and removes the default Drupal icon.
+ */
+function _niftyoption_attach_favicon(array &$variables): void {
+  if (!empty($variables['#attached']['html_head_link'])) {
+    $variables['#attached']['html_head_link'] = array_values(array_filter(
+      $variables['#attached']['html_head_link'],
+      static function (array $link): bool {
+        $rel = $link[0]['rel'] ?? '';
+        return !in_array($rel, ['icon', 'shortcut icon'], TRUE);
+      }
+    ));
+  }
+
+  $variables['#attached']['html_head_link'][] = [
+    [
+      'rel' => 'icon',
+      'href' => $variables['niftyoption_favicon_svg_url'],
+      'type' => 'image/svg+xml',
+    ],
+  ];
+  $variables['#attached']['html_head_link'][] = [
+    [
+      'rel' => 'icon',
+      'href' => $variables['niftyoption_favicon_ico_url'],
+      'sizes' => 'any',
+    ],
+  ];
+  $variables['#attached']['html_head_link'][] = [
+    [
+      'rel' => 'icon',
+      'type' => 'image/png',
+      'sizes' => '32x32',
+      'href' => $variables['niftyoption_favicon_png_32_url'],
+    ],
+  ];
+  $variables['#attached']['html_head_link'][] = [
+    [
+      'rel' => 'apple-touch-icon',
+      'href' => $variables['niftyoption_apple_touch_icon_url'],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function niftyoption_preprocess_html(array &$variables): void {
+  $route = \Drupal::routeMatch()->getRouteName();
+  $login_routes = _niftyoption_auth_routes();
+  $is_landing = _niftyoption_is_landing_page($route);
+
+  _niftyoption_apply_brand_variables($variables);
+
+  if (in_array($route, $login_routes, TRUE) || _niftyoption_anonymous_access_denied()) {
+    $variables['attributes']['class'][] = 'login-container';
+    $variables['#attached']['library'][] = 'niftyoption/login';
+    $variables['niftyoption_layout'] = 'login';
+  }
+  elseif ($is_landing) {
+    $variables['#attached']['library'][] = 'niftyoption/landing';
+    $variables['niftyoption_layout'] = 'landing';
+  }
+  else {
+    $variables['#attached']['library'][] = 'niftyoption/dashboard';
+    $variables['niftyoption_layout'] = 'dashboard';
+  }
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function niftyoption_page_attachments_alter(array &$attachments): void {
+  if (\Drupal::theme()->getActiveTheme()->getName() !== 'niftyoption') {
+    return;
+  }
+
+  if (!empty($attachments['#attached']['html_head_link'])) {
+    $attachments['#attached']['html_head_link'] = array_values(array_filter(
+      $attachments['#attached']['html_head_link'],
+      static function (array $link): bool {
+        $rel = $link[0]['rel'] ?? '';
+        return !in_array($rel, ['icon', 'shortcut icon', 'apple-touch-icon'], TRUE);
+      }
+    ));
+  }
+
+  $brand = [];
+  _niftyoption_apply_brand_variables($brand);
+  _niftyoption_attach_favicon($brand);
+
+  $attachments['#attached']['html_head_link'] = array_merge(
+    $attachments['#attached']['html_head_link'] ?? [],
+    $brand['#attached']['html_head_link'] ?? []
+  );
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function niftyoption_preprocess_page(array &$variables): void {
+  $account = \Drupal::currentUser();
+  if ($account->isAuthenticated()) {
+    $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
+    $variables['niftyoption_user_name'] = $user ? niftybot_user_display_name($user) : $account->getDisplayName();
+  }
+  else {
+    $variables['niftyoption_user_name'] = '';
+  }
+
+  _niftyoption_apply_brand_variables($variables);
+
+  $route = \Drupal::routeMatch()->getRouteName();
+  $login_routes = _niftyoption_auth_routes();
+  $is_landing = _niftyoption_is_landing_page($route);
+
+  $access_denied = _niftyoption_anonymous_access_denied();
+  $variables['niftyoption_access_denied'] = $access_denied;
+  $variables['niftyoption_show_notifications'] = FALSE;
+
+  if (
+    $account->isAuthenticated()
+    && !$access_denied
+    && !$is_landing
+    && !in_array($route, $login_routes, TRUE)
+    && $account->hasPermission('access niftybot platform')
+  ) {
+    $variables['niftyoption_show_notifications'] = TRUE;
+    $variables['#attached']['library'][] = 'niftybot_core/notifications';
+    $variables['#attached']['drupalSettings']['niftybotNotifications'] = [
+      'csrfToken' => \Drupal::csrfToken()->get('niftybot_notifications'),
+      'readUrlTemplate' => Url::fromRoute('niftybot_core.user_notifications_mark_read', ['alert_id' => 0])->toString(),
+    ];
+  }
+
+  if ($route === 'niftybot_dashboard.main') {
+    $variables['title'] = '';
+  }
+
+  if ($route === 'niftybot_user.profile') {
+    $variables['title'] = '';
+  }
+
+  if ($route === 'niftybot_trading.order_form') {
+    $variables['title'] = '';
+  }
+
+  $hide_title_routes = [
+    'niftybot_core.user_broker',
+    'niftybot_core.user_auto_trade',
+    'niftybot_core.user_auto_trade_nifty',
+    'niftybot_core.user_auto_trade_sensex',
+    'niftybot_subscription.subscribe',
+  ];
+  if (in_array($route, $hide_title_routes, TRUE)) {
+    $variables['title'] = '';
+  }
+
+  if ($access_denied) {
+    $variables['niftyoption_dashboard_menu'] = [];
+    $variables['niftyoption_login_url'] = Url::fromRoute('user.login', [], [
+      'query' => ['destination' => \Drupal::service('path.current')->getPath()],
+    ])->toString();
+  }
+  elseif (!$is_landing && !in_array($route, $login_routes, TRUE)) {
+    $variables['niftyoption_dashboard_menu'] = _niftyoption_build_dashboard_menu();
+  }
+  else {
+    $variables['niftyoption_dashboard_menu'] = [];
+  }
+}
+
+/**
+ * Implements hook_preprocess_menu_local_tasks().
+ */
+function niftyoption_preprocess_menu_local_tasks(array &$variables): void {
+  $route = \Drupal::routeMatch()->getRouteName();
+  if (!in_array($route, _niftyoption_auth_routes(), TRUE)) {
+    return;
+  }
+
+  $variables['niftyoption_auth_tabs'] = TRUE;
+
+  if (!empty($variables['primary'])) {
+    foreach (Element::children($variables['primary']) as $key) {
+      if (($variables['primary'][$key]['#link']['url']->getRouteName() ?? '') === 'user.register') {
+        $variables['primary'][$key]['#link']['url'] = Url::fromRoute('niftybot_user.register');
+        $variables['primary'][$key]['#link']['title'] = t('Create new account');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_menu_local_task().
+ */
+function niftyoption_preprocess_menu_local_task(array &$variables): void {
+  $route = \Drupal::routeMatch()->getRouteName();
+  if (!in_array($route, _niftyoption_auth_routes(), TRUE)) {
+    return;
+  }
+
+  $variables['attributes']['class'][] = 'niftyoption-auth-tabs__item';
+  $variables['link']['#options']['attributes']['class'][] = 'btn';
+  $variables['link']['#options']['attributes']['class'][] = 'btn-sm';
+  $variables['link']['#options']['attributes']['class'][] = !empty($variables['is_active'])
+    ? 'btn-primary'
+    : 'btn-outline-primary';
+}
+
+/**
+ * Builds the dashboard sidebar menu render array.
+ */
+function _niftyoption_build_dashboard_menu(): array {
+  $menu_tree = \Drupal::menuTree();
+  $parameters = new MenuTreeParameters();
+  $parameters->onlyEnabledLinks();
+  $tree = $menu_tree->load('dashboard-menu', $parameters);
+  $manipulators = [
+    ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+    ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+  ];
+  $tree = $menu_tree->transform($tree, $manipulators);
+  return $menu_tree->build($tree);
+}
+
+/**
+ * Maps dashboard menu links to Bootstrap Icons classes.
+ *
+ * @return array<string, string>
+ */
+function _niftyoption_menu_icon_map(): array {
+  return [
+    'niftybot_dashboard.main' => 'bi-house',
+    'user_dashboard.dashboard' => 'bi-house',
+    'niftybot_user.profile' => 'bi-person',
+    'niftybot_user.wallet' => 'bi-wallet2',
+    'niftybot_user.wallet_deposit' => 'bi-wallet2',
+    'niftybot_user.wallet_withdraw' => 'bi-wallet2',
+    'niftybot_user.kyc_submit' => 'bi-shield-check',
+    'niftybot_user.kyc_status' => 'bi-shield-check',
+    'niftybot_trading.orders' => 'bi-receipt',
+    'niftybot_trading.positions' => 'bi-bar-chart',
+    'niftybot_trading.history' => 'bi-clock-history',
+    'niftybot_reports.user' => 'bi-file-earmark-bar-graph',
+    'niftybot_subscription.plans' => 'bi-tags',
+    'niftybot_subscription.my_subscription' => 'bi-tags',
+    'niftybot_investment.dashboard' => 'bi-graph-up-arrow',
+    'niftybot_investment.platform_trades' => 'bi-graph-up-arrow',
+    'niftybot_core.auto_trade' => 'bi-lightning-charge',
+    'niftybot_core.auto_trade_sensex' => 'bi-lightning-charge',
+    'niftybot_core.user_auto_trade' => 'bi-robot',
+    'niftybot_core.user_auto_trade_nifty' => 'bi-graph-up',
+    'niftybot_core.user_auto_trade_sensex' => 'bi-bar-chart-line',
+    'niftybot_core.user_broker' => 'bi-plug',
+    'niftybot_core.market' => 'bi-graph-up',
+    'niftybot_core.portfolio' => 'bi-briefcase',
+    'niftybot_core.smart_orders' => 'bi-sliders',
+    'niftybot_core.support' => 'bi-headset',
+    'niftybot_core.faq' => 'bi-question-circle',
+    'contact.site_page' => 'bi-code-square',
+  ];
+}
+
+/**
+ * Implements hook_preprocess_menu().
+ */
+function niftyoption_preprocess_menu(array &$variables): void {
+  if (($variables['menu_name'] ?? '') !== 'dashboard-menu') {
+    return;
+  }
+  $icon_map = _niftyoption_menu_icon_map();
+  $variables['items'] = _niftyoption_menu_apply_icons($variables['items'], $icon_map);
+  $variables['items'] = _niftyoption_menu_mark_active_items($variables['items']);
+}
+
+/**
+ * Marks the menu item that matches the current route as active.
+ *
+ * Drupal menu items expose in_active_trail but not is_active in Twig; the custom
+ * sidebar template needs is_active for highlighting the selected link.
+ *
+ * @param array<int, array<string, mixed>> $items
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function _niftyoption_menu_mark_active_items(array $items): array {
+  $route_match = \Drupal::routeMatch();
+  $route_name = $route_match->getRouteName() ?? '';
+  $route_params = $route_match->getRawParameters()->all();
+
+  foreach ($items as $key => $item) {
+    if (!empty($item['below'])) {
+      $item['below'] = _niftyoption_menu_mark_active_items($item['below']);
+      $child_active = _niftyoption_menu_has_active_item($item['below']);
+      $item['is_active'] = !$child_active && _niftyoption_menu_link_is_active($item['url'], $route_name, $route_params);
+      $item['expand_submenu'] = $child_active || !empty($item['in_active_trail']);
+    }
+    else {
+      $item['is_active'] = _niftyoption_menu_link_is_active($item['url'], $route_name, $route_params);
+    }
+    $items[$key] = $item;
+  }
+
+  return $items;
+}
+
+/**
+ * @param array<int, array<string, mixed>> $items
+ */
+function _niftyoption_menu_has_active_item(array $items): bool {
+  foreach ($items as $item) {
+    if (!empty($item['is_active'])) {
+      return TRUE;
+    }
+    if (!empty($item['below']) && _niftyoption_menu_has_active_item($item['below'])) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * @param \Drupal\Core\Url $url
+ * @param array<string, mixed> $route_params
+ */
+function _niftyoption_menu_link_is_active(Url $url, string $route_name, array $route_params): bool {
+  if ($route_name === '' || !$url->isRouted()) {
+    return FALSE;
+  }
+  if ($url->getRouteName() !== $route_name) {
+    return FALSE;
+  }
+  foreach ($url->getRouteParameters() as $key => $value) {
+    if (!array_key_exists($key, $route_params) || (string) $route_params[$key] !== (string) $value) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+/**
+ * @param array<int, array<string, mixed>> $items
+ * @param array<string, string> $icon_map
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function _niftyoption_menu_apply_icons(array $items, array $icon_map): array {
+  foreach ($items as $key => $item) {
+    $route = $item['url']->isRouted() ? $item['url']->getRouteName() : '';
+    $options = $item['url']->getOptions();
+    $option_classes = $options['attributes']['class'] ?? [];
+    if (!is_array($option_classes)) {
+      $option_classes = [$option_classes];
+    }
+    $custom_icon = NULL;
+    foreach ($option_classes as $class) {
+      if (is_string($class) && str_starts_with($class, 'menu-icon-')) {
+        $custom_icon = substr($class, strlen('menu-icon-'));
+        break;
+      }
+    }
+    $items[$key]['icon'] = $custom_icon ?? ($icon_map[$route] ?? 'bi-circle');
+    if (!empty($item['below'])) {
+      $items[$key]['below'] = _niftyoption_menu_apply_icons($item['below'], $icon_map);
+    }
+  }
+  return $items;
+}
+
+/**
+ * Implements hook_preprocess_input().
+ */
+function niftyoption_preprocess_input(array &$variables): void {
+  $route = \Drupal::routeMatch()->getRouteName();
+  $auth_routes = _niftyoption_auth_routes();
+  $variables['niftyoption_auth'] = in_array($route, $auth_routes, TRUE);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function niftyoption_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if ($form_id === 'user_login_form') {
+    $form['#attributes']['class'][] = 'niftyoption-login-form';
+    _niftyoption_style_auth_form($form);
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary', 'w-100'];
+      $form['actions']['submit']['#value'] = t('Login');
+    }
+  }
+  if ($form_id === 'user_pass') {
+    $form['#attributes']['class'][] = 'niftyoption-login-form';
+    _niftyoption_style_password_request_form($form);
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary', 'w-100'];
+      $form['actions']['submit']['#value'] = t('Send reset link');
+    }
+  }
+  if ($form_id === 'user_pass_reset') {
+    $form['#attributes']['class'][] = 'niftyoption-login-form';
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary', 'w-100'];
+    }
+    if (isset($form['message'])) {
+      $form['message']['#prefix'] = '<div class="niftyoption-auth-message mb-3">';
+      $form['message']['#suffix'] = '</div>';
+    }
+    if (isset($form['help'])) {
+      $form['help']['#prefix'] = '<div class="niftyoption-auth-help text-secondary small mb-3">';
+      $form['help']['#suffix'] = '</div>';
+    }
+  }
+  if ($form_id === 'user_register_form') {
+    $form['#attributes']['class'][] = 'niftyoption-login-form';
+    _niftyoption_style_auth_form($form);
+  }
+  if ($form_id === 'niftybot_user_registration_form') {
+    $form['#attributes']['class'][] = 'niftyoption-login-form';
+    _niftyoption_registration_form_layout($form);
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary', 'w-100'];
+    }
+  }
+  if ($form_id === 'niftybot_wallet_deposit_form' || $form_id === 'niftybot_wallet_withdraw_form') {
+    $form['#attributes']['class'][] = 'niftybot-wallet-form';
+    _niftyoption_style_wallet_form($form);
+    foreach (['submit', 'submit_neft'] as $submit_key) {
+      if (isset($form['actions'][$submit_key])) {
+        $form['actions'][$submit_key]['#attributes']['class'] = ['btn', 'btn-primary', 'btn-lg', 'niftybot-wallet-form__submit'];
+      }
+    }
+  }
+  if ($form_id === 'niftybot_kyc_submission_form') {
+    _niftyoption_style_kyc_form($form);
+  }
+  if ($form_id === 'niftybot_order_form') {
+    _niftyoption_style_order_form($form);
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary', 'niftybot-order-form__submit'];
+    }
+  }
+  if ($form_id === 'niftybot_broker_connection_form') {
+    _niftyoption_style_broker_form($form);
+    if (isset($form['layout']['credentials']['body']['actions']['submit'])) {
+      $form['layout']['credentials']['body']['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary'];
+    }
+    if (isset($form['layout']['credentials']['body']['actions']['refresh'])) {
+      $form['layout']['credentials']['body']['actions']['refresh']['#attributes']['class'] = ['btn', 'btn-outline-secondary'];
+    }
+  }
+  if ($form_id === 'niftybot_subscribe_form') {
+    _niftyoption_style_subscribe_form($form);
+    if (isset($form['layout']['checkout']['body']['actions']['submit'])) {
+      $form['layout']['checkout']['body']['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary'];
+    }
+  }
+
+  $form['#after_build'][] = '_niftyoption_form_after_build_error_states';
+}
+
+/**
+ * Applies dashboard form classes to wallet forms.
+ */
+function _niftyoption_style_wallet_form(array &$form): void {
+  foreach (Element::children($form) as $key) {
+    if (!isset($form[$key]) || !is_array($form[$key])) {
+      continue;
+    }
+    $type = $form[$key]['#type'] ?? '';
+    if (in_array($type, ['textfield', 'number', 'textarea', 'email', 'tel'], TRUE)) {
+      $form[$key]['#attributes']['class'][] = 'form-control';
+      $form[$key]['#wrapper_attributes']['class'][] = 'mb-3';
+    }
+    if ($type === 'radios') {
+      $form[$key]['#attributes']['class'][] = 'niftybot-wallet-form__radios';
+    }
+    if (!in_array($type, ['submit', 'button', 'hidden', 'token', 'actions', 'markup'], TRUE)) {
+      _niftyoption_style_wallet_form($form[$key]);
+    }
+  }
+}
+
+/**
+ * Applies dashboard form classes to the subscribe form.
+ */
+function _niftyoption_style_subscribe_form(array &$form): void {
+  foreach (Element::children($form) as $key) {
+    if (!isset($form[$key]) || !is_array($form[$key])) {
+      continue;
+    }
+    $type = $form[$key]['#type'] ?? '';
+    if ($type === 'checkbox') {
+      $form[$key]['#title_display'] = 'after';
+    }
+    if (!in_array($type, ['submit', 'button', 'hidden', 'token', 'actions', 'markup', 'link'], TRUE)) {
+      _niftyoption_style_subscribe_form($form[$key]);
+    }
+  }
+}
+
+/**
+ * Applies dashboard form classes to the broker connection form.
+ */
+function _niftyoption_style_broker_form(array &$form): void {
+  $text_types = ['textfield', 'password', 'textarea'];
+  foreach (Element::children($form) as $key) {
+    if (!isset($form[$key]) || !is_array($form[$key])) {
+      continue;
+    }
+    $type = $form[$key]['#type'] ?? '';
+    if (in_array($type, $text_types, TRUE)) {
+      $form[$key]['#attributes']['class'][] = 'form-control';
+    }
+    if (!in_array($type, ['submit', 'button', 'hidden', 'token', 'actions', 'markup'], TRUE)) {
+      _niftyoption_style_broker_form($form[$key]);
+    }
+  }
+}
+
+/**
+ * Applies dashboard form classes to the order placement form.
+ */
+function _niftyoption_style_order_form(array &$form): void {
+  $text_types = ['textfield', 'number', 'textarea', 'email', 'tel'];
+  foreach (Element::children($form) as $key) {
+    if (!isset($form[$key]) || !is_array($form[$key])) {
+      continue;
+    }
+    $type = $form[$key]['#type'] ?? '';
+    if (in_array($type, $text_types, TRUE)) {
+      $form[$key]['#attributes']['class'][] = 'form-control';
+    }
+    if ($type === 'select') {
+      $form[$key]['#attributes']['class'][] = 'form-select';
+    }
+    if (!in_array($type, ['submit', 'button', 'hidden', 'token', 'actions', 'markup'], TRUE)) {
+      _niftyoption_style_order_form($form[$key]);
+    }
+  }
+}
+
+/**
+ * Applies Bloom-style classes to the KYC submission form.
+ */
+function _niftyoption_style_kyc_form(array &$form): void {
+  $text_types = ['textfield', 'number', 'textarea', 'email', 'tel', 'date'];
+  foreach (Element::children($form) as $key) {
+    if (!isset($form[$key]) || !is_array($form[$key])) {
+      continue;
+    }
+    $type = $form[$key]['#type'] ?? '';
+    if (in_array($type, $text_types, TRUE)) {
+      $form[$key]['#attributes']['class'][] = 'form-control';
+    }
+    if ($type === 'checkbox') {
+      $form[$key]['#title_display'] = 'after';
+    }
+    if ($type === 'managed_file') {
+      if (!isset($form[$key]['#wrapper_attributes']['class'])) {
+        $form[$key]['#wrapper_attributes']['class'] = [];
+      }
+      if (!in_array('niftybot-kyc-form__file', $form[$key]['#wrapper_attributes']['class'], TRUE)) {
+        $form[$key]['#wrapper_attributes']['class'][] = 'niftybot-kyc-form__file';
+      }
+    }
+    if (!in_array($type, ['submit', 'button', 'hidden', 'token', 'actions', 'markup'], TRUE)) {
+      _niftyoption_style_kyc_form($form[$key]);
+    }
+  }
+}
+
+/**
+ * Adds Bootstrap invalid state classes after form errors are attached.
+ */
+function _niftyoption_form_after_build_error_states(array $form, FormStateInterface $form_state): array {
+  _niftyoption_apply_form_field_error_states($form);
+  return $form;
+}
+
+/**
+ * Adds Bootstrap invalid state classes to fields with validation errors.
+ */
+function _niftyoption_apply_form_field_error_states(array &$element): void {
+  $skip_types = ['submit', 'button', 'hidden', 'token', 'actions', 'markup', 'value'];
+  $input_types = [
+    'textfield', 'number', 'textarea', 'email', 'tel', 'date',
+    'password', 'select', 'url', 'search', 'managed_file',
+  ];
+
+  foreach (Element::children($element) as $key) {
+    if (!isset($element[$key]) || !is_array($element[$key])) {
+      continue;
+    }
+
+    $type = $element[$key]['#type'] ?? '';
+    if (!empty($element[$key]['#errors']) && in_array($type, $input_types, TRUE)) {
+      $element[$key]['#attributes']['class'][] = 'is-invalid';
+      $element[$key]['#attributes']['aria-invalid'] = 'true';
+    }
+
+    if (!in_array($type, $skip_types, TRUE)) {
+      _niftyoption_apply_form_field_error_states($element[$key]);
+    }
+  }
+}
+
+/**
+ * Two-column field layout for registration (desktop).
+ */
+function _niftyoption_registration_form_layout(array &$form): void {
+  foreach (['full_name'] as $key) {
+    if (!isset($form[$key]) || !is_array($form[$key])) {
+      continue;
+    }
+    $form[$key]['#attributes']['class'][] = 'form-control';
+    $form[$key]['#wrapper_attributes']['class'][] = 'mb-3';
+  }
+
+  foreach (['email', 'phone'] as $key) {
+    if (!isset($form['contact_row'][$key]) || !is_array($form['contact_row'][$key])) {
+      continue;
+    }
+    $form['contact_row'][$key]['#attributes']['class'][] = 'form-control';
+    $form['contact_row'][$key]['#wrapper_attributes']['class'][] = 'mb-3';
+  }
+
+  if (isset($form['password_row']['password']['pass1'])) {
+    $form['password_row']['password']['pass1']['#attributes']['class'][] = 'form-control';
+    $form['password_row']['password']['pass1']['#wrapper_attributes']['class'][] = 'mb-3';
+    $form['password_row']['password']['pass1']['#wrapper_attributes']['class'][] = 'col-md-6';
+    $form['password_row']['password']['pass2']['#attributes']['class'][] = 'form-control';
+    $form['password_row']['password']['pass2']['#wrapper_attributes']['class'][] = 'mb-3';
+    $form['password_row']['password']['pass2']['#wrapper_attributes']['class'][] = 'col-md-6';
+  }
+
+  if (isset($form['terms'])) {
+    $form['terms']['#wrapper_attributes']['class'][] = 'mb-3';
+    $form['terms']['#title_display'] = 'after';
+  }
+}
+
+/**
+ * Apply theme form classes to the password request form.
+ */
+function _niftyoption_style_password_request_form(array &$form): void {
+  if (isset($form['name']) && is_array($form['name']) && ($form['name']['#type'] ?? '') !== 'value') {
+    $form['name']['#title'] = t('Your Email or username');
+    $form['name']['#attributes']['class'][] = 'form-control';
+    $form['name']['#attributes']['placeholder'] = t('Enter your email');
+    $form['name']['#attributes']['inputmode'] = 'email';
+    $form['name']['#wrapper_attributes']['class'][] = 'mb-3';
+  }
+  if (isset($form['mail'])) {
+    $form['mail']['#prefix'] = '<div class="niftyoption-auth-help text-secondary small mb-3">';
+    $form['mail']['#suffix'] = '</div>';
+  }
+}
+
+/**
+ * Apply theme form classes to login / register forms.
+ */
+function _niftyoption_style_auth_form(array &$form): void {
+  if (isset($form['name'])) {
+    $form['name']['#title'] = t('Your Email');
+    $form['name']['#attributes']['class'][] = 'form-control';
+    $form['name']['#attributes']['placeholder'] = t('Enter your email');
+  }
+  if (isset($form['pass'])) {
+    $form['pass']['#title'] = t('Your Password');
+    $form['pass']['#attributes']['class'][] = 'form-control';
+    $form['pass']['#attributes']['placeholder'] = t('Enter password');
+  }
+  if (isset($form['mail'])) {
+    $form['mail']['#attributes']['class'][] = 'form-control';
+  }
+  foreach (['name', 'mail', 'pass'] as $key) {
+    if (!isset($form[$key]) || !is_array($form[$key])) {
+      continue;
+    }
+    $form[$key]['#wrapper_attributes']['class'][] = 'mb-3';
+  }
+  if (isset($form['persistent_login'])) {
+    $form['persistent_login']['#wrapper_attributes']['class'][] = 'form-check m-0';
+    $form['persistent_login']['#title_display'] = 'after';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for register submit label.
+ */
+function niftyoption_form_user_register_form_alter(array &$form, FormStateInterface $form_state): void {
+  if (isset($form['actions']['submit'])) {
+    $form['actions']['submit']['#attributes']['class'] = ['btn', 'btn-lg', 'btn-primary', 'w-100'];
+    $form['actions']['submit']['#value'] = t('Create account');
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_page_alter().
+ */
+function niftyoption_theme_suggestions_page_alter(array &$suggestions, array $variables): void {
+  $route = \Drupal::routeMatch()->getRouteName();
+  if (_niftyoption_is_landing_page($route)) {
+    $suggestions[] = 'page__front';
+  }
+
+  if ($route === 'user.login') {
+    $suggestions[] = 'page__user__login';
+  }
+  elseif ($route === 'user.register' || $route === 'niftybot_user.register') {
+    $suggestions[] = 'page__user__register';
+  }
+  elseif (in_array($route, ['user.pass', 'user.reset', 'user.reset.form'], TRUE)) {
+    $suggestions[] = 'page__user__password';
+  }
+
+  if (_niftyoption_anonymous_access_denied()) {
+    $suggestions[] = 'page__access_denied';
+  }
+}
+
+/**
+ * Whether the current request should show the anonymous access-denied page.
+ */
+function _niftyoption_anonymous_access_denied(): bool {
+  if (\Drupal::currentUser()->isAuthenticated()) {
+    return FALSE;
+  }
+
+  $route = \Drupal::routeMatch()->getRouteName();
+  if (_niftyoption_route_requires_login($route)) {
+    return TRUE;
+  }
+
+  $path = \Drupal::service('path.current')->getPath();
+  if (_niftyoption_path_requires_login($path)) {
+    return TRUE;
+  }
+
+  $exception = \Drupal::request()->attributes->get('exception');
+  return $exception instanceof AccessDeniedHttpException;
+}
+
+/**
+ * Route names that require authentication for anonymous users.
+ */
+function _niftyoption_route_requires_login(?string $route): bool {
+  if ($route === NULL || $route === '') {
+    return FALSE;
+  }
+
+  $public_routes = [
+    'user.login',
+    'user.register',
+    'user.pass',
+    'niftybot_user.register',
+    'niftybot_core.landing',
+    '<front>',
+    'system.404',
+  ];
+  if (in_array($route, $public_routes, TRUE)) {
+    return FALSE;
+  }
+
+  if (str_starts_with($route, 'niftybot_')) {
+    return TRUE;
+  }
+
+  return in_array($route, [
+    'user_dashboard.dashboard',
+    'user_dashboard.profile',
+    'user_dashboard.node_edit',
+    'user_dashboard.user_profile_edit',
+  ], TRUE);
+}
+
+/**
+ * Path prefixes that require authentication for anonymous users.
+ */
+function _niftyoption_path_requires_login(string $path): bool {
+  $path = '/' . ltrim($path, '/');
+
+  $public_paths = [
+    '/niftybot/register',
+    '/home',
+    '/user/login',
+    '/user/register',
+    '/user/password',
+  ];
+  foreach ($public_paths as $public) {
+    if ($path === $public) {
+      return FALSE;
+    }
+  }
+
+  $protected_prefixes = [
+    '/niftybot',
+    '/admin/niftybot',
+    '/admin/config/niftybot',
+    '/user/dashboard',
+    '/user/profile',
+    '/user/my-profile',
+    '/product-edit',
+  ];
+  foreach ($protected_prefixes as $prefix) {
+    if ($path === $prefix || str_starts_with($path, $prefix . '/')) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for form elements.
+ *
+ * Surfaces inline validation errors (same behavior as inline_form_errors).
+ */
+function niftyoption_preprocess_form_element(array &$variables): void {
+  $element = $variables['element'];
+  if (!empty($element['#errors']) && empty($element['#error_no_message'])) {
+    $variables['errors'] = $element['#errors'];
+  }
+}

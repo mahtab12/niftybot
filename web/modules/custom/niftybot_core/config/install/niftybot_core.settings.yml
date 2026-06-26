@@ -3,7 +3,7 @@ member_id_prefix: 'NBX'
 enable_registration: true
 require_kyc: true
 require_subscription: true
-trading_api_base_url: 'http://localhost:8000'
+trading_api_base_url: 'http://trading:8000'
 trading_api_key: ''
 max_orders_per_day: 50
 supported_exchanges:
@@ -12,3 +12,5 @@ supported_exchanges:
 email_notifications: true
 notify_on_order_execution: true
 notify_on_kyc_status: true
+auto_trade_per_trade_fee: 100
+auto_trade_min_wallet_balance: 100

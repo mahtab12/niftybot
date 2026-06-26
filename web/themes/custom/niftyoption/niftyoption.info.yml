@@ -1,0 +1,17 @@
+name: NiftyOption
+type: theme
+description: 'StrikeFlow frontend theme — landing, login, and dashboard layouts.'
+core_version_requirement: ^10.3 || ^11.0
+base theme: false
+
+libraries:
+  - niftyoption/global
+
+regions:
+  header: Header
+  sidebar: Sidebar
+  breadcrumb: Breadcrumb
+  highlighted: Highlighted
+  help: Help
+  content: Content
+  footer: Footer

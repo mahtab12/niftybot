@@ -4,6 +4,7 @@ namespace Drupal\niftybot_user\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\niftybot_user\Service\WalletService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -55,19 +56,33 @@ class WalletWithdrawForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $form['#attached']['library'][] = 'niftybot_user/wallet';
+    $form['#attributes']['class'][] = 'niftybot-wallet-form';
+    $form['#prefix'] = Markup::create(
+      '<div class="niftybot-wallet-page">'
+      . '<div class="card niftybot-wallet-form-card mb-4">'
+      . '<div class="card-header">'
+      . '<h3 class="card-title mb-1">' . $this->t('Withdraw Funds') . '</h3>'
+      . '<p class="card-subtitle mb-0">' . $this->t('Request a withdrawal to your bank account') . '</p>'
+      . '</div><div class="card-body">'
+    );
+    $form['#suffix'] = Markup::create('</div></div></div>');
+
     $uid = $this->currentUser->id();
     $balance = $this->walletService->getWalletBalance($uid);
     $pending = $this->walletService->getPendingWithdrawalTotal($uid);
     $available = $this->walletService->getAvailableBalance($uid);
 
-    $balance_markup = '<div class="wallet-balance"><strong>' . $this->t('Wallet Balance:') . '</strong> ₹' . number_format($balance, 2) . '</div>';
+    $balance_markup = '<div class="niftybot-wallet-form__balance-strip">'
+      . '<div class="niftybot-wallet-form__balance-label">' . $this->t('Available Balance') . '</div>'
+      . '<div class="niftybot-wallet-form__balance-value">₹' . number_format($available, 2) . '</div>';
     if ($pending > 0) {
-      $balance_markup .= '<div class="wallet-balance-meta"><p>' . $this->t('Pending withdrawals: ₹@pending', [
-        '@pending' => number_format($pending, 2),
-      ]) . '</p><p>' . $this->t('Available to withdraw: ₹@available', [
-        '@available' => number_format($available, 2),
-      ]) . '</p></div>';
+      $balance_markup .= '<div class="niftybot-wallet-form__balance-meta">'
+        . '<span>' . $this->t('Pending withdrawals: ₹@pending', ['@pending' => number_format($pending, 2)]) . '</span>'
+        . '<span>' . $this->t('Wallet total: ₹@balance', ['@balance' => number_format($balance, 2)]) . '</span>'
+        . '</div>';
     }
+    $balance_markup .= '</div>';
 
     $form['current_balance'] = [
       '#markup' => $balance_markup,
@@ -91,24 +106,32 @@ class WalletWithdrawForm extends FormBase {
       '#description' => $this->t('Minimum: ₹100. Maximum: ₹@max', [
         '@max' => number_format($available, 2),
       ]),
+      '#attributes' => [
+        'class' => ['form-control'],
+        'placeholder' => '500',
+      ],
+      '#wrapper_attributes' => ['class' => ['mb-3']],
     ];
 
     $form['notes'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Notes (optional)'),
       '#rows' => 2,
+      '#attributes' => ['class' => ['form-control']],
+      '#wrapper_attributes' => ['class' => ['mb-3']],
     ];
 
     $form['info'] = [
-      '#markup' => '<p class="description">' .
-        $this->t('Your request will be reviewed by an admin. The amount will be deducted from your wallet only after approval and transferred to your registered bank account within 2-3 business days.') . '</p>',
+      '#markup' => '<div class="alert alert-info niftybot-wallet-form__info mb-4" role="status">'
+        . $this->t('Your request will be reviewed by an admin. The amount will be deducted from your wallet only after approval and transferred to your registered bank account within 2-3 business days.')
+        . '</div>',
     ];
 
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Request Withdrawal'),
-      '#attributes' => ['class' => ['button--primary']],
+      '#attributes' => ['class' => ['btn', 'btn-primary']],
     ];
 
     return $form;

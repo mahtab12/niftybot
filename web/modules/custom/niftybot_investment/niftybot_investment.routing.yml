@@ -2,7 +2,7 @@ niftybot_investment.dashboard:
   path: '/niftybot/investment'
   defaults:
     _controller: '\Drupal\niftybot_investment\Controller\InvestmentController::dashboard'
-    _title: 'FXC Investment'
+    _title: 'StrikeFlow Investment'
   requirements:
     _permission: 'access fxc investment'
 
@@ -10,7 +10,7 @@ niftybot_investment.plans:
   path: '/niftybot/investment/plans'
   defaults:
     _controller: '\Drupal\niftybot_investment\Controller\InvestmentController::plans'
-    _title: 'Investment Plans'
+    _title: 'StrikeFlow Plans'
   requirements:
     _permission: 'access fxc investment'
 

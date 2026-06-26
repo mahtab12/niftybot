@@ -288,8 +288,8 @@ corepack_enable: true
 # See https://docs.ddev.com/en/stable/users/extend/custom-commands/ for more
 # information on the commands that can be extended and the tasks you can define
 # for them. Example:
-#hooks:
-# post-import-db:
-#   - exec: drush sql:sanitize
-#   - exec: drush updatedb
-#   - exec: drush cache:rebuild
+hooks:
+  post-start:
+    - exec-host: mkdir -p private && chmod 775 private
+    - exec: |
+        grep -q 'settings.niftybot.php' web/sites/default/settings.php || printf '\n// NiftyBot site settings.\nif (file_exists(__DIR__ . "/settings.niftybot.php")) {\n  include __DIR__ . "/settings.niftybot.php";\n}\n' >> web/sites/default/settings.php

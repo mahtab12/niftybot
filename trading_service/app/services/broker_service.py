@@ -12,6 +12,8 @@ from app.models.schemas import (
     CancelSmartOrderRequest,
     CreateSmartOrderRequest,
     HoldingsResponse,
+    ExpiriesResponse,
+    MarketDashboardResponse,
     ModifyOrderRequest,
     ModifyOrderResponse,
     ModifySmartOrderRequest,
@@ -21,6 +23,7 @@ from app.models.schemas import (
     PlaceOrderRequest,
     PlaceOrderResponse,
     PositionsResponse,
+    PortfolioSummaryResponse,
     SmartOrderListResponse,
     SmartOrderResponse,
     UserProfileResponse,
@@ -135,6 +138,26 @@ class BrokerService:
                 message=f"Holdings error: {e}",
             )
 
+    def get_portfolio_summary(
+        self, broker_type: BrokerType
+    ) -> PortfolioSummaryResponse:
+        """Get portfolio summary with P&L, day return, and balances."""
+        try:
+            broker = self.get_broker(broker_type)
+            get_summary = getattr(broker, "get_portfolio_summary", None)
+            if callable(get_summary):
+                return get_summary()
+            return PortfolioSummaryResponse(
+                success=False,
+                message="Portfolio summary not supported for this broker",
+            )
+        except Exception as e:
+            logger.exception("Broker service: portfolio summary failed")
+            return PortfolioSummaryResponse(
+                success=False,
+                message=f"Portfolio summary error: {e}",
+            )
+
     def get_ltp(
         self, symbol: str, exchange: str, broker_type: BrokerType
     ) -> Optional[float]:
@@ -145,6 +168,54 @@ class BrokerService:
         except Exception:
             logger.exception("Broker service: LTP failed for %s", symbol)
             return None
+
+    def get_market_dashboard(self, broker_type: BrokerType) -> MarketDashboardResponse:
+        """Get market watch dashboard quotes."""
+        try:
+            broker = self.get_broker(broker_type)
+            get_dashboard = getattr(broker, "get_market_dashboard", None)
+            if callable(get_dashboard):
+                return get_dashboard()
+            return MarketDashboardResponse(
+                success=False,
+                message="Market dashboard not supported for this broker",
+            )
+        except Exception as e:
+            logger.exception("Broker service: market dashboard failed")
+            return MarketDashboardResponse(
+                success=False,
+                message=f"Dashboard error: {e}",
+            )
+
+    def get_expiries(
+        self,
+        exchange: str,
+        underlying: str,
+        broker_type: BrokerType,
+        expiry_type: str = "weekly",
+    ) -> ExpiriesResponse:
+        """Get option expiry dates for an underlying."""
+        try:
+            broker = self.get_broker(broker_type)
+            get_expiries = getattr(broker, "get_expiries", None)
+            if callable(get_expiries):
+                return get_expiries(exchange, underlying, expiry_type)
+            return ExpiriesResponse(
+                success=False,
+                underlying=underlying,
+                exchange=exchange,
+                expiry_type=expiry_type,
+                message="Expiries not supported for this broker",
+            )
+        except Exception as e:
+            logger.exception("Broker service: expiries failed")
+            return ExpiriesResponse(
+                success=False,
+                underlying=underlying,
+                exchange=exchange,
+                expiry_type=expiry_type,
+                message=f"Expiries error: {e}",
+            )
 
     def get_user_profile(self, broker_type: BrokerType) -> UserProfileResponse:
         """Get broker user profile."""
@@ -281,6 +352,41 @@ class BrokerService:
             return broker.is_connected()
         except Exception:
             return False
+
+    def verify_credentials(
+        self,
+        broker_type: BrokerType,
+        api_key: str,
+        api_secret: str,
+    ) -> tuple[UserProfileResponse, AvailableMarginResponse]:
+        """Verify user-supplied credentials without affecting the singleton broker."""
+        if broker_type == BrokerType.GROWW:
+            return GrowwBroker.verify_credentials(api_key, api_secret)
+        return (
+            UserProfileResponse(
+                success=False,
+                message=f"Unsupported broker: {broker_type.value}",
+            ),
+            AvailableMarginResponse(
+                success=False,
+                message=f"Unsupported broker: {broker_type.value}",
+            ),
+        )
+
+    def get_order_book_for_credentials(
+        self,
+        broker_type: BrokerType,
+        api_key: str,
+        api_secret: str,
+    ) -> list[dict]:
+        """Fetch today's order book for user-supplied credentials."""
+        if broker_type != BrokerType.GROWW:
+            return []
+        try:
+            return GrowwBroker.get_order_book_for_credentials(api_key, api_secret)
+        except Exception:
+            logger.exception("Broker service: user order book failed")
+            return []
 
 
 broker_service = BrokerService()

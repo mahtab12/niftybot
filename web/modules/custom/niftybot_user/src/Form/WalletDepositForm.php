@@ -5,6 +5,7 @@ namespace Drupal\niftybot_user\Form;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\niftybot_user\Service\WalletService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -65,6 +66,16 @@ class WalletDepositForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['#attached']['library'][] = 'niftybot_user/wallet';
+    $form['#attributes']['class'][] = 'niftybot-wallet-form';
+    $form['#prefix'] = Markup::create(
+      '<div class="niftybot-wallet-page">'
+      . '<div class="card niftybot-wallet-form-card mb-4">'
+      . '<div class="card-header">'
+      . '<h3 class="card-title mb-1">' . $this->t('Deposit Funds') . '</h3>'
+      . '<p class="card-subtitle mb-0">' . $this->t('Add money via UPI or bank transfer') . '</p>'
+      . '</div><div class="card-body">'
+    );
+    $form['#suffix'] = Markup::create('</div></div></div>');
 
     $uid = $this->currentUser->id();
     $wallet = $this->database->select('niftybot_wallet', 'w')
@@ -74,7 +85,10 @@ class WalletDepositForm extends FormBase {
       ->fetchField();
 
     $form['current_balance'] = [
-      '#markup' => '<div class="wallet-balance"><strong>' . $this->t('Current Balance:') . '</strong> ₹' . number_format((float) $wallet, 2) . '</div>',
+      '#markup' => '<div class="niftybot-wallet-form__balance-strip">'
+        . '<div class="niftybot-wallet-form__balance-label">' . $this->t('Current Balance') . '</div>'
+        . '<div class="niftybot-wallet-form__balance-value">₹' . number_format((float) $wallet, 2) . '</div>'
+        . '</div>',
     ] + WalletService::walletRenderCache($uid);
 
     $form['amount'] = [
@@ -85,7 +99,11 @@ class WalletDepositForm extends FormBase {
       '#max' => 1000000,
       '#step' => '0.01',
       '#description' => $this->t('Minimum deposit: ₹100. Maximum: ₹10,00,000.'),
-      '#attributes' => ['class' => ['wallet-deposit-amount']],
+      '#attributes' => [
+        'class' => ['form-control', 'wallet-deposit-amount'],
+        'placeholder' => '1000',
+      ],
+      '#wrapper_attributes' => ['class' => ['mb-3']],
     ];
 
     $form['payment_method'] = [
@@ -97,7 +115,8 @@ class WalletDepositForm extends FormBase {
       ],
       '#required' => TRUE,
       '#default_value' => 'upi',
-      '#attributes' => ['class' => ['wallet-deposit-method']],
+      '#attributes' => ['class' => ['niftybot-wallet-form__radios', 'wallet-deposit-method']],
+      '#wrapper_attributes' => ['class' => ['mb-4', 'niftybot-wallet-form__method']],
     ];
 
     $form['upi_payment'] = [
@@ -145,7 +164,7 @@ class WalletDepositForm extends FormBase {
     $form['bank_transfer']['instructions'] = [
       '#markup' => '<div class="neft-bank-details">'
         . '<h4>' . $this->t('NEFT / RTGS Bank Details') . '</h4>'
-        . '<table class="niftybot-table compact">'
+        . '<table class="table table-striped niftybot-table compact">'
         . '<tr><td><strong>' . $this->t('Account Name') . '</strong></td><td>NiftyBot Trading Pvt Ltd</td></tr>'
         . '<tr><td><strong>' . $this->t('Account Number') . '</strong></td><td>50200012345678</td></tr>'
         . '<tr><td><strong>' . $this->t('IFSC Code') . '</strong></td><td>ICIC0001234</td></tr>'
@@ -172,7 +191,7 @@ class WalletDepositForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Submit UPI deposit request'),
       '#name' => 'submit_upi',
-      '#attributes' => ['class' => ['button--primary', 'wallet-deposit-submit-upi']],
+      '#attributes' => ['class' => ['btn', 'btn-primary', 'wallet-deposit-submit-upi']],
       '#states' => [
         'visible' => [
           ':input[name="payment_method"]' => ['value' => 'upi'],
@@ -184,7 +203,7 @@ class WalletDepositForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Submit NEFT deposit request'),
       '#name' => 'submit_neft',
-      '#attributes' => ['class' => ['button--primary', 'wallet-deposit-submit-neft']],
+      '#attributes' => ['class' => ['btn', 'btn-primary', 'wallet-deposit-submit-neft']],
       '#states' => [
         'visible' => [
           ':input[name="payment_method"]' => ['value' => 'bank_transfer'],

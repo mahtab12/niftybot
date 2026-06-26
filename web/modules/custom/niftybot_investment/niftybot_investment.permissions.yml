@@ -1,8 +1,8 @@
 access fxc investment:
-  title: 'Access FXC Investment'
-  description: 'View investment plans, AI profit dashboard, and platform trades.'
+  title: 'Access StrikeFlow Investment'
+  description: 'View StrikeFlow Investment plans, AI profit dashboard, and platform trades.'
 
 administer fxc investment:
-  title: 'Administer FXC Investment'
+  title: 'Administer StrikeFlow Investment'
   description: 'Manage investment plans and platform Nifty trades.'
   restrict access: true

@@ -366,3 +366,44 @@ function niftybot_user_update_9004() {
     $member_id_service->assignMemberId((int) $uid);
   }
 }
+
+/**
+ * Set Drupal usernames to member IDs for existing users.
+ */
+function niftybot_user_update_9005() {
+  $database = \Drupal::database();
+  $storage = \Drupal::entityTypeManager()->getStorage('user');
+
+  $rows = $database->select('niftybot_user_member_ids', 'm')
+    ->fields('m', ['uid', 'member_id'])
+    ->execute()
+    ->fetchAll();
+
+  foreach ($rows as $row) {
+    $user = $storage->load((int) $row->uid);
+    if (!$user || $user->getAccountName() === $row->member_id) {
+      continue;
+    }
+    $user->setUsername($row->member_id);
+    $user->save();
+  }
+}
+
+/**
+ * Install user profile fields and backfill full names from KYC data.
+ */
+function niftybot_user_update_9006() {
+  niftybot_user_backfill_profile_full_names();
+}
+
+/**
+ * Reclassify subscription wallet debits as investment payment method.
+ */
+function niftybot_user_update_9007() {
+  \Drupal::database()->update('niftybot_wallet_transactions')
+    ->fields(['payment_method' => 'subscription'])
+    ->condition('type', 'withdrawal')
+    ->condition('payment_method', 'wallet')
+    ->condition('notes', 'Subscription:%', 'LIKE')
+    ->execute();
+}

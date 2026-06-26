@@ -1,0 +1,11 @@
+{#
+/**
+ * @file
+ * Auth submit button (login / register only).
+ */
+#}
+{% if niftyoption_auth %}
+  <button{{ attributes.addClass('btn', 'btn-lg', 'btn-primary', 'w-100') }}>{{ element['#value'] }}</button>{{ children }}
+{% else %}
+  <input{{ attributes }} />{{ children }}
+{% endif %}

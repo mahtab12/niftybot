@@ -1,76 +1,185 @@
-<div class="niftybot-investment">
-  {% if not has_active %}
-    <div class="investment-alert alert--info">
-      {{ 'You have not started an FXC Global investment yet.'|t }}
-      <a href="{{ path('niftybot_investment.plans') }}" class="button button--primary">{{ 'Choose a plan'|t }}</a>
-    </div>
-  {% else %}
-    <div class="investment-hero">
-      <h2>{{ 'FXC Global Model'|t }}</h2>
-      <p class="investment-plan-name">{{ investment.name }}</p>
-    </div>
+{#
+/**
+ * @file
+ * StrikeFlow Investment dashboard — AI algo profit summary.
+ */
+#}
+<div class="niftybot-investment-page niftybot-dashboard">
+  <div class="card niftybot-investment-page__hero mb-4">
+    <div class="niftybot-investment-page__hero-bg" aria-hidden="true"></div>
+    <div class="card-body position-relative">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <div class="d-flex align-items-start gap-3">
+            <div class="niftybot-investment-page__hero-icon" aria-hidden="true">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div>
+              <p class="niftybot-investment-page__hero-label mb-2">{{ 'StrikeFlow Investment'|t }}</p>
+              {% if has_active %}
+                <h2 class="niftybot-investment-page__hero-title mb-1">{{ investment.name }}</h2>
+                <p class="niftybot-investment-page__hero-hint mb-0">
+                  {{ 'Your capital is deployed in our AI and algorithmic Nifty strategies. Profit accrues daily and is credited every Saturday.'|t }}
+                </p>
+              {% else %}
+                <h2 class="niftybot-investment-page__hero-title mb-1">{{ 'AI-powered capital growth'|t }}</h2>
+                <p class="niftybot-investment-page__hero-hint mb-0">
+                  {{ 'Invest in StrikeFlow — institutional-grade algo trading on Nifty with weekly AI profit payouts and full trade transparency.'|t }}
+                </p>
+              {% endif %}
+            </div>
+          </div>
 
-    <div class="investment-stats">
-      <div class="stat-card">
-        <div class="stat-label">{{ 'Principal invested'|t }}</div>
-        <div class="stat-value">₹{{ investment.principal_amount|number_format(2) }}</div>
-      </div>
-      <div class="stat-card stat-card--highlight">
-        <div class="stat-label">{{ 'AI profit (this week)'|t }}</div>
-        <div class="stat-value pnl-positive">₹{{ investment.ai_profit_pending|number_format(2) }}</div>
-        <div class="stat-hint">{{ 'Accruing daily · credited Saturday'|t }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">{{ 'Last week gain'|t }}</div>
-        <div class="stat-value {{ investment.last_week_profit > 0 ? 'pnl-positive' : '' }}">
-          {% if investment.last_week_profit > 0 %}+{% endif %}₹{{ investment.last_week_profit|number_format(2) }}
+          {% if has_active %}
+            <div class="niftybot-investment-page__hero-meta">
+              <div class="niftybot-investment-page__hero-stat">
+                <span class="niftybot-investment-page__hero-stat-label">{{ 'AI profit (this week)'|t }}</span>
+                <span class="niftybot-investment-page__hero-stat-value is-positive">₹{{ investment.ai_profit_pending|number_format(2) }}</span>
+              </div>
+              <div class="niftybot-investment-page__hero-stat">
+                <span class="niftybot-investment-page__hero-stat-label">{{ 'Principal'|t }}</span>
+                <span class="niftybot-investment-page__hero-stat-value">₹{{ investment.principal_amount|number_format(2) }}</span>
+              </div>
+              <div class="niftybot-investment-page__hero-stat">
+                <span class="niftybot-investment-page__hero-stat-label">{{ 'Total AI profit'|t }}</span>
+                <span class="niftybot-investment-page__hero-stat-value is-positive">₹{{ investment.total_profit_earned|number_format(2) }}</span>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-lg-4 text-lg-end">
+          {% if has_active %}
+            <div class="niftybot-investment-page__hero-payout">
+              <span class="niftybot-investment-page__hero-payout-label">{{ 'Next payout'|t }}</span>
+              <strong class="niftybot-investment-page__hero-payout-value">{{ next_payout_formatted }}</strong>
+            </div>
+          {% else %}
+            <a href="{{ path('niftybot_investment.plans') }}" class="btn btn-light btn-lg niftybot-investment-page__hero-cta">
+              <i class="bi bi-rocket-takeoff me-2" aria-hidden="true"></i>
+              {{ 'Explore plans'|t }}
+            </a>
+          {% endif %}
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">{{ 'Total AI profit earned'|t }}</div>
-        <div class="stat-value pnl-positive">₹{{ investment.total_profit_earned|number_format(2) }}</div>
+    </div>
+  </div>
+
+  <div class="niftybot-investment-page__algo-strip card mb-4">
+    <div class="card-body">
+      <h3 class="niftybot-investment-page__algo-title">
+        <i class="bi bi-cpu" aria-hidden="true"></i>
+        {{ 'How StrikeFlow algo trading works'|t }}
+      </h3>
+      <div class="niftybot-investment-page__algo-grid">
+        <div class="niftybot-investment-page__algo-item">
+          <div class="niftybot-investment-page__algo-icon" aria-hidden="true"><i class="bi bi-robot"></i></div>
+          <h4>{{ 'AI signal engine'|t }}</h4>
+          <p>{{ 'Machine-learning models analyse Nifty momentum, open interest, and volatility to generate high-probability trade setups.'|t }}</p>
+        </div>
+        <div class="niftybot-investment-page__algo-item">
+          <div class="niftybot-investment-page__algo-icon" aria-hidden="true"><i class="bi bi-lightning-charge"></i></div>
+          <h4>{{ 'Automated execution'|t }}</h4>
+          <p>{{ 'Algorithms execute entries and exits with disciplined risk rules — no emotional trading, consistent position sizing.'|t }}</p>
+        </div>
+        <div class="niftybot-investment-page__algo-item">
+          <div class="niftybot-investment-page__algo-icon" aria-hidden="true"><i class="bi bi-eye"></i></div>
+          <h4>{{ 'Transparent results'|t }}</h4>
+          <p>{{ 'Every platform trade is logged publicly. Weekly AI profit is calculated from live performance and credited to your wallet.'|t }}</p>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="investment-meta-bar">
-      <span>{{ 'Weekly target:'|t }}
-        <strong>₹{{ projected.min|number_format(2) }} – ₹{{ projected.max|number_format(2) }}</strong>
-        ({{ investment.weekly_return_min|number_format(1) }}% – {{ investment.weekly_return_max|number_format(1) }}%)
-      </span>
-      <span>{{ 'Next payout:'|t }} <strong>{{ next_payout_formatted }}</strong></span>
+  {% if not has_active %}
+    <div class="card niftybot-investment-page__empty mb-4">
+      <div class="card-body text-center">
+        <div class="niftybot-investment-page__empty-icon" aria-hidden="true">
+          <i class="bi bi-piggy-bank"></i>
+        </div>
+        <h3 class="h5 mb-2">{{ 'No active investment yet'|t }}</h3>
+        <p class="text-secondary mb-3">
+          {{ 'Choose a StrikeFlow plan, fund your wallet, and let our AI algo strategies work for you — target 4–5% weekly profit.'|t }}
+        </p>
+        <a href="{{ path('niftybot_investment.plans') }}" class="btn btn-primary">
+          {{ 'Choose a plan'|t }}
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="niftybot-investment-page__stats">
+      <div class="niftybot-investment-page__stat-card">
+        <span class="niftybot-investment-page__stat-label">{{ 'Principal invested'|t }}</span>
+        <strong class="niftybot-investment-page__stat-value">₹{{ investment.principal_amount|number_format(2) }}</strong>
+      </div>
+      <div class="niftybot-investment-page__stat-card niftybot-investment-page__stat-card--highlight">
+        <span class="niftybot-investment-page__stat-label">{{ 'AI profit (this week)'|t }}</span>
+        <strong class="niftybot-investment-page__stat-value is-positive">₹{{ investment.ai_profit_pending|number_format(2) }}</strong>
+        <span class="niftybot-investment-page__stat-hint">{{ 'Accruing daily · credited Saturday'|t }}</span>
+      </div>
+      <div class="niftybot-investment-page__stat-card">
+        <span class="niftybot-investment-page__stat-label">{{ 'Last week gain'|t }}</span>
+        <strong class="niftybot-investment-page__stat-value {{ investment.last_week_profit > 0 ? 'is-positive' : '' }}">
+          {% if investment.last_week_profit > 0 %}+{% endif %}₹{{ investment.last_week_profit|number_format(2) }}
+        </strong>
+      </div>
+      <div class="niftybot-investment-page__stat-card">
+        <span class="niftybot-investment-page__stat-label">{{ 'Weekly target'|t }}</span>
+        <strong class="niftybot-investment-page__stat-value is-positive">
+          ₹{{ projected.min|number_format(0) }} – ₹{{ projected.max|number_format(0) }}
+        </strong>
+        <span class="niftybot-investment-page__stat-hint">
+          {{ investment.weekly_return_min|number_format(1) }}% – {{ investment.weekly_return_max|number_format(1) }}%
+        </span>
+      </div>
     </div>
 
     {% if profit_history|length > 0 %}
-      <div class="investment-card">
-        <h3>{{ 'Weekly payout history'|t }}</h3>
-        <table class="niftybot-table">
-          <thead>
-            <tr>
-              <th>{{ 'Week'|t }}</th>
-              <th>{{ 'Principal'|t }}</th>
-              <th>{{ 'Profit %'|t }}</th>
-              <th>{{ 'Amount'|t }}</th>
-              <th>{{ 'Credited'|t }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in profit_history %}
-              <tr>
-                <td>{{ row.week_start }} – {{ row.week_end }}</td>
-                <td>₹{{ row.principal_amount|number_format(2) }}</td>
-                <td>{{ row.profit_percent|number_format(2) }}%</td>
-                <td class="pnl-positive">+₹{{ row.profit_amount|number_format(2) }}</td>
-                <td>{{ row.credited_at|date('d M Y') }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="card niftybot-investment-page__history">
+        <div class="card-header niftybot-investment-page__history-header">
+          <h3 class="mb-0">
+            <i class="bi bi-calendar-week me-2" aria-hidden="true"></i>
+            {{ 'Weekly payout history'|t }}
+          </h3>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover niftybot-table mb-0">
+              <thead>
+                <tr>
+                  <th>{{ 'Week'|t }}</th>
+                  <th>{{ 'Principal'|t }}</th>
+                  <th>{{ 'Profit %'|t }}</th>
+                  <th>{{ 'Amount'|t }}</th>
+                  <th>{{ 'Credited'|t }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in profit_history %}
+                  <tr>
+                    <td>{{ row.week_start }} – {{ row.week_end }}</td>
+                    <td>₹{{ row.principal_amount|number_format(2) }}</td>
+                    <td>{{ row.profit_percent|number_format(2) }}%</td>
+                    <td class="is-positive">+₹{{ row.profit_amount|number_format(2) }}</td>
+                    <td>{{ row.credited_at|date('d M Y') }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     {% endif %}
   {% endif %}
 
-  <div class="investment-actions">
-    <a href="{{ path('niftybot_investment.platform_trades') }}" class="button">{{ 'View platform Nifty trades'|t }}</a>
-    <a href="{{ path('niftybot_investment.plans') }}" class="button">{{ 'Investment plans'|t }}</a>
+  <div class="niftybot-investment-page__actions">
+    <a href="{{ path('niftybot_investment.platform_trades') }}" class="btn btn-outline-primary">
+      <i class="bi bi-bar-chart-line me-1" aria-hidden="true"></i>
+      {{ 'View algo trades'|t }}
+    </a>
+    <a href="{{ path('niftybot_investment.plans') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-grid me-1" aria-hidden="true"></i>
+      {{ 'Investment plans'|t }}
+    </a>
   </div>
 </div>

@@ -1,0 +1,39 @@
+{#
+/**
+ * @file
+ * Full-page sign-in required shell (no dashboard sidebar).
+ */
+#}
+<div class="niftyoption-auth-container niftyoption-auth-container--access-denied">
+  <div class="login-box rounded-2 p-4 p-md-5">
+    <div class="login-form">
+      {% include directory ~ '/templates/includes/brand-logo.html.twig' with {
+        modifier: 'login-logo mb-3',
+        icon_height: 36,
+        show_wordmark: true,
+        link_url: front_page,
+      } %}
+
+      <div class="alert alert-warning niftyoption-access-denied-alert mb-4" role="alert">
+        <div class="d-flex gap-3 align-items-start">
+          <i class="bi bi-exclamation-triangle-fill fs-4 flex-shrink-0" aria-hidden="true"></i>
+          <div>
+            <strong class="d-block mb-2">{{ 'Sign in required'|t }}</strong>
+            <p class="mb-0">{{ 'You are not authorized to access this page. Please sign in to continue.'|t }}</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="{{ niftyoption_login_url|default(path('user.login')) }}" class="btn btn-lg btn-primary w-100">
+        {{ 'Sign in'|t }}
+      </a>
+
+      <div class="text-center pt-4">
+        <span>{{ 'Not registered?'|t }}</span>
+        <a href="{{ path('niftybot_user.register') }}" class="text-blue text-decoration-underline ms-2">
+          {{ 'Create an account'|t }}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

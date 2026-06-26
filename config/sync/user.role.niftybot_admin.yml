@@ -1,9 +1,10 @@
-uuid: c6d040eb-5a15-4a87-a338-60f62d8cd0ee
+uuid: 97ee4ef8-9fee-46c7-8155-1d31a7fc50c3
 langcode: en
 status: true
 dependencies:
   module:
     - niftybot_core
+    - niftybot_investment
     - niftybot_user
 _core:
   default_config_hash: cqEtjrDg8_w6eEkvVDybKIrf9crQIbqK-B53oxK3alw
@@ -12,7 +13,9 @@ label: 'NiftyBot Admin'
 weight: 2
 is_admin: false
 permissions:
+  - 'access fxc investment'
   - 'access niftybot platform'
+  - 'administer fxc investment'
   - 'administer kyc'
   - 'administer niftybot'
   - 'administer wallets'

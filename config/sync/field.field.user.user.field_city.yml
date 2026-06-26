@@ -1,4 +1,4 @@
-uuid: 7bae0b22-4c6f-4855-a81d-377ef6b556ff
+uuid: 7c74f57c-7106-4c09-90ca-3a8baf1334c7
 langcode: en
 status: true
 dependencies:
@@ -13,7 +13,7 @@ bundle: user
 label: City
 description: ''
 required: false
-translatable: false
+translatable: true
 default_value: {  }
 default_value_callback: ''
 settings: {  }

@@ -18,6 +18,8 @@ permissions:
   - 'view niftybot dashboard'
   - 'place niftybot orders'
   - 'view niftybot reports'
+  - 'access niftybot auto trade'
+  - 'manage niftybot broker'
   - 'submit kyc'
   - 'view own kyc'
   - 'manage wallet'

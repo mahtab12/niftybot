@@ -1,0 +1,10 @@
+dashboard:
+  version: 1.x
+  css:
+    theme:
+      css/dashboard.css: {}
+  js:
+    js/dashboard.js: {}
+  dependencies:
+    - niftyoption/global
+    - core/once

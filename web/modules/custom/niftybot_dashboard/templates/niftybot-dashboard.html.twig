@@ -1,12 +1,26 @@
 <div class="niftybot-dashboard">
-  {# Alerts Section #}
+  <div class="niftybot-dashboard__welcome">
+    <h2 class="niftybot-dashboard__welcome-title">
+      {{ 'Welcome back!'|t }}
+      <span class="niftybot-dashboard__welcome-name">{{ display_name }}</span>
+    </h2>
+    <div class="niftybot-dashboard__welcome-actions">
+      <a href="{{ path('niftybot_trading.order_form') }}" class="btn btn-sm btn-primary">
+        <i class="bi bi-graph-up-arrow me-1" aria-hidden="true"></i>{{ 'Place order'|t }}
+      </a>
+      <a href="{{ path('niftybot_user.wallet_deposit') }}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-wallet2 me-1" aria-hidden="true"></i>{{ 'Deposit'|t }}
+      </a>
+    </div>
+  </div>
+
   {% if kyc_status != 'approved' %}
-    <div class="dashboard-alert alert--warning">
+    <div class="alert alert-warning niftybot-dashboard__alert mb-3" role="alert">
       {% if kyc_status == 'not_submitted' %}
         {{ 'KYC verification is required before trading.'|t }}
         <a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'Complete KYC'|t }}</a>
       {% elseif kyc_status == 'pending' or kyc_status == 'under_review' %}
-        {{ 'Your KYC is under review. You will be notified once approved.'|t }}
+        {{ 'Your KYC is under review.'|t }}
       {% elseif kyc_status == 'rejected' %}
         {{ 'Your KYC was rejected.'|t }}
         <a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'Re-submit'|t }}</a>
@@ -15,150 +29,316 @@
   {% endif %}
 
   {% if not subscription %}
-    <div class="dashboard-alert alert--info">
+    <div class="alert alert-info niftybot-dashboard__alert mb-3" role="status">
       {{ 'No active subscription.'|t }}
       <a href="{{ path('niftybot_subscription.plans') }}">{{ 'Subscribe now'|t }}</a>
     </div>
   {% endif %}
 
-  {# Stats Cards #}
-  <div class="dashboard-stats">
-    <div class="stat-card">
-      <div class="stat-icon">💰</div>
-      <div class="stat-content">
-        <div class="stat-value">₹{{ wallet_balance|number_format(2) }}</div>
-        <div class="stat-label">{{ 'Wallet Balance'|t }}</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">📊</div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats.open_positions }}</div>
-        <div class="stat-label">{{ 'Open Positions'|t }}</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">📋</div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats.orders_today }}</div>
-        <div class="stat-label">{{ 'Orders Today'|t }}</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">{{ stats.total_pnl >= 0 ? '📈' : '📉' }}</div>
-      <div class="stat-content">
-        <div class="stat-value {{ stats.total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
-          {{ stats.total_pnl >= 0 ? '+' : '' }}₹{{ stats.total_pnl|number_format(2) }}
+  <div class="row g-3 g-lg-4 niftybot-dashboard__grid">
+    <div class="col-xl-5">
+      <div class="niftybot-dashboard__panel niftybot-dashboard__profile">
+        <div class="niftybot-dashboard__profile-head">
+          <div class="niftybot-dashboard__avatar">
+            <img src="/themes/custom/niftyoption/assets/images/user7.png" alt="" />
+          </div>
+          <div>
+            <div class="niftybot-dashboard__profile-name">{{ display_name }}</div>
+            {% if member_id %}
+              <div class="niftybot-dashboard__member-id">{{ member_id }}</div>
+            {% endif %}
+            <div class="niftybot-dashboard__badges">
+              <span class="niftybot-dashboard__badge niftybot-dashboard__badge--kyc niftybot-dashboard__badge--{{ kyc_status|clean_class }}">
+                {{ 'KYC'|t }}: {{ kyc_status|replace({'_': ' '})|capitalize }}
+              </span>
+              {% if plan %}
+                <span class="niftybot-dashboard__badge niftybot-dashboard__badge--plan">{{ plan.name }}</span>
+              {% endif %}
+            </div>
+          </div>
         </div>
-        <div class="stat-label">{{ 'Total P&L'|t }}</div>
+
+        <ul class="niftybot-dashboard__profile-list">
+          <li>
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+            <span>{{ user.getEmail() }}</span>
+          </li>
+          {% if phone %}
+            <li>
+              <i class="bi bi-telephone" aria-hidden="true"></i>
+              <span>{{ phone }}</span>
+            </li>
+          {% endif %}
+          {% if city %}
+            <li>
+              <i class="bi bi-geo-alt" aria-hidden="true"></i>
+              <span>{{ city }}</span>
+            </li>
+          {% endif %}
+          <li>
+            <i class="bi bi-calendar3" aria-hidden="true"></i>
+            <span>{{ 'Member since'|t }} {{ user.getCreatedTime()|date('d M Y') }}</span>
+          </li>
+        </ul>
+
+        {% if member_id %}
+          <div class="niftybot-dashboard__copy-row">
+            <label class="form-label small mb-1" for="niftybot-member-id-copy">{{ 'Member ID'|t }}</label>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="niftybot-member-id-copy" value="{{ member_id }}" readonly />
+              <button type="button" class="btn btn-primary" data-copy-target="niftybot-member-id-copy">
+                {{ 'Copy'|t }}
+              </button>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="niftybot-dashboard__profile-links">
+          <a href="{{ path('niftybot_user.profile') }}">{{ 'Edit profile'|t }}</a>
+          <a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'KYC'|t }}</a>
+          <a href="{{ path('niftybot_user.wallet') }}">{{ 'Wallet'|t }}</a>
+        </div>
       </div>
     </div>
 
-    {% if fxc_investment %}
-      <div class="stat-card">
-        <div class="stat-icon">🤖</div>
-        <div class="stat-content">
-          <div class="stat-value pnl-positive">₹{{ fxc_investment.ai_profit_pending|number_format(2) }}</div>
-          <div class="stat-label">{{ 'AI Profit (this week)'|t }}</div>
+    <div class="col-xl-7">
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <div class="niftybot-dashboard__wallet-card">
+            <div class="niftybot-dashboard__wallet-card-icon"><i class="bi bi-piggy-bank" aria-hidden="true"></i></div>
+            <div class="niftybot-dashboard__wallet-card-label">{{ 'Wallet balance'|t }}</div>
+            <div class="niftybot-dashboard__wallet-card-value">₹{{ wallet_balance|number_format(2) }}</div>
+            <div class="niftybot-dashboard__wallet-card-meta">
+              <span>{{ 'Deposited'|t }} ₹{{ wallet_totals.deposits|number_format(0) }}</span>
+              <span>{{ 'Withdrawn'|t }} ₹{{ wallet_totals.withdrawals|number_format(0) }}</span>
+            </div>
+          </div>
         </div>
+        <div class="col-sm-6">
+          <div class="niftybot-dashboard__wallet-card">
+            <div class="niftybot-dashboard__wallet-card-icon"><i class="bi bi-graph-up" aria-hidden="true"></i></div>
+            <div class="niftybot-dashboard__wallet-card-label">{{ 'Trading P&amp;L'|t }}</div>
+            <div class="niftybot-dashboard__wallet-card-value {{ stats.total_pnl >= 0 ? 'is-positive' : 'is-negative' }}">
+              {{ stats.total_pnl >= 0 ? '+' : '' }}₹{{ stats.total_pnl|number_format(2) }}
+            </div>
+            <div class="niftybot-dashboard__wallet-card-meta">
+              <span>{{ 'Open positions'|t }} {{ stats.open_positions }}</span>
+              <span>{{ 'Orders today'|t }} {{ stats.orders_today }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="niftybot-dashboard__wallet-card">
+            <div class="niftybot-dashboard__wallet-card-icon"><i class="bi bi-stars" aria-hidden="true"></i></div>
+            <div class="niftybot-dashboard__wallet-card-label">{{ 'AI profit (week)'|t }}</div>
+            <div class="niftybot-dashboard__wallet-card-value is-positive">₹{{ investment_profit_pending|number_format(2) }}</div>
+            <div class="niftybot-dashboard__wallet-card-meta">
+              <span>{{ 'Total earned'|t }} ₹{{ investment_profit_total|number_format(0) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="niftybot-dashboard__wallet-card">
+            <div class="niftybot-dashboard__wallet-card-icon"><i class="bi bi-safe" aria-hidden="true"></i></div>
+            <div class="niftybot-dashboard__wallet-card-label">{{ 'Invested capital'|t }}</div>
+            <div class="niftybot-dashboard__wallet-card-value">₹{{ investment_principal|number_format(2) }}</div>
+            <div class="niftybot-dashboard__wallet-card-meta">
+              {% if fxc_investment %}
+                <span>{{ fxc_investment.name }}</span>
+              {% else %}
+                <a href="{{ path('niftybot_investment.plans') }}">{{ 'Start investing'|t }}</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="niftybot-dashboard__ticker">
+    <a href="{{ path('niftybot_trading.positions') }}" class="niftybot-dashboard__ticker-item">
+      <span class="niftybot-dashboard__ticker-label">{{ 'Open positions'|t }}</span>
+      <span class="niftybot-dashboard__ticker-value">{{ stats.open_positions }}</span>
+    </a>
+    <a href="{{ path('niftybot_trading.orders') }}" class="niftybot-dashboard__ticker-item">
+      <span class="niftybot-dashboard__ticker-label">{{ 'Total orders'|t }}</span>
+      <span class="niftybot-dashboard__ticker-value">{{ stats.total_orders }}</span>
+    </a>
+    <a href="{{ path('niftybot_investment.dashboard') }}" class="niftybot-dashboard__ticker-item">
+      <span class="niftybot-dashboard__ticker-label">{{ 'AI investment'|t }}</span>
+      <span class="niftybot-dashboard__ticker-value">₹{{ investment_principal|number_format(0) }}</span>
+    </a>
+    {% if subscription and plan %}
+      <div class="niftybot-dashboard__ticker-item niftybot-dashboard__ticker-item--static">
+        <span class="niftybot-dashboard__ticker-label">{{ 'Plan expires'|t }}</span>
+        <span class="niftybot-dashboard__ticker-value">{{ subscription.end_date|date('d M Y') }}</span>
       </div>
     {% endif %}
   </div>
 
-  {# Subscription Info #}
-  {% if subscription and plan %}
-    <div class="dashboard-subscription-bar">
-      <span>{{ 'Plan:'|t }} <strong>{{ plan.name }}</strong></span>
-      <span>{{ 'Expires:'|t }} {{ subscription.end_date|date('d M Y') }}</span>
-      <span>{{ 'Max Orders/Day:'|t }} {{ plan.max_orders_per_day }}</span>
+  <div class="niftybot-dashboard__broker-panel mb-3">
+    <div class="niftybot-dashboard__panel">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <h3 class="niftybot-dashboard__panel-title mb-0">
+          <i class="bi bi-plug me-1" aria-hidden="true"></i>{{ 'Broker connection'|t }}
+        </h3>
+        <a href="{{ path('niftybot_core.user_broker') }}" class="btn btn-sm btn-outline-primary">
+          {% if broker.connected %}{{ 'Manage'|t }}{% else %}{{ 'Connect Groww'|t }}{% endif %}
+        </a>
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-6 col-lg-3">
+          <div class="niftybot-dashboard__broker-stat">
+            <span class="niftybot-dashboard__broker-stat-label">{{ 'Broker'|t }}</span>
+            <strong>Groww</strong>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="niftybot-dashboard__broker-stat">
+            <span class="niftybot-dashboard__broker-stat-label">{{ 'Status'|t }}</span>
+            {% if broker.connected %}
+              <span class="badge bg-success">{{ 'Connected'|t }}</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ 'Not connected'|t }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="niftybot-dashboard__broker-stat">
+            <span class="niftybot-dashboard__broker-stat-label">{{ 'Groww user ID'|t }}</span>
+            <code>{{ broker.broker_user_id ?: '—' }}</code>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="niftybot-dashboard__broker-stat">
+            <span class="niftybot-dashboard__broker-stat-label">{{ 'Groww balance'|t }}</span>
+            <strong>
+              {% if broker.balance is not null %}
+                ₹{{ broker.balance|number_format(2) }}
+              {% else %}
+                —
+              {% endif %}
+            </strong>
+          </div>
+        </div>
+      </div>
+      {% if broker.ucc %}
+        <p class="small text-secondary mb-0 mt-2">{{ 'UCC'|t }}: {{ broker.ucc }}</p>
+      {% endif %}
     </div>
-  {% endif %}
+  </div>
 
-  <div class="dashboard-grid">
-    {# Quick Actions #}
-    <div class="dashboard-card quick-actions">
-      <h3>{{ 'Quick Actions'|t }}</h3>
-      <div class="action-buttons">
-        <a href="{{ path('niftybot_trading.order_form') }}" class="button button--primary">{{ 'Place Order'|t }}</a>
-        <a href="{{ path('niftybot_user.wallet_deposit') }}" class="button">{{ 'Deposit'|t }}</a>
-        <a href="{{ path('niftybot_investment.dashboard') }}" class="button">{{ 'FXC Investment'|t }}</a>
-        <a href="{{ path('niftybot_trading.positions') }}" class="button">{{ 'Positions'|t }}</a>
-        <a href="{{ path('niftybot_trading.history') }}" class="button">{{ 'History'|t }}</a>
-        <a href="{{ path('niftybot_reports.user') }}" class="button">{{ 'Reports'|t }}</a>
+  <div class="row g-3 g-lg-4">
+    <div class="col-md-3 col-6">
+      <div class="niftybot-dashboard__balance-card">
+        <div class="niftybot-dashboard__balance-card-label">{{ 'Available balance'|t }}</div>
+        <div class="niftybot-dashboard__balance-card-value">₹{{ available_balance|number_format(2) }}</div>
+        <p>{{ 'Ready to trade or withdraw'|t }}</p>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="niftybot-dashboard__balance-card">
+        <div class="niftybot-dashboard__balance-card-label">{{ 'Capital deployed'|t }}</div>
+        <div class="niftybot-dashboard__balance-card-value">₹{{ stats.total_investment|number_format(2) }}</div>
+        <p>{{ 'In open positions'|t }}</p>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="niftybot-dashboard__balance-card">
+        <div class="niftybot-dashboard__balance-card-label">{{ 'Open positions'|t }}</div>
+        <div class="niftybot-dashboard__balance-card-value">{{ stats.open_positions }}</div>
+        <p><a href="{{ path('niftybot_trading.positions') }}">{{ 'View all'|t }}</a></p>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="niftybot-dashboard__balance-card">
+        <div class="niftybot-dashboard__balance-card-label">{{ 'Orders today'|t }}</div>
+        <div class="niftybot-dashboard__balance-card-value">{{ stats.orders_today }}</div>
+        <p><a href="{{ path('niftybot_trading.history') }}">{{ 'Trade history'|t }}</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 g-lg-4 mt-1">
+    <div class="col-lg-6">
+      <div class="niftybot-dashboard__panel">
+        <div class="niftybot-dashboard__panel-header">
+          <h3>{{ 'Open positions'|t }}</h3>
+          <a href="{{ path('niftybot_trading.positions') }}">{{ 'View all'|t }}</a>
+        </div>
+        {% if positions|length > 0 %}
+          <div class="table-responsive">
+            <table class="table table-hover table-striped niftybot-table compact mb-0">
+              <thead>
+                <tr>
+                  <th>{{ 'Symbol'|t }}</th>
+                  <th>{{ 'Qty'|t }}</th>
+                  <th>{{ 'Avg'|t }}</th>
+                  <th>{{ 'P&amp;L'|t }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for pos in positions %}
+                  <tr>
+                    <td>{{ pos.symbol }}</td>
+                    <td>{{ pos.quantity }}</td>
+                    <td>₹{{ pos.average_price|number_format(2) }}</td>
+                    <td class="{{ pos.pnl >= 0 ? 'is-positive' : 'is-negative' }}">
+                      {{ pos.pnl >= 0 ? '+' : '' }}₹{{ pos.pnl|number_format(2) }}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="niftybot-dashboard__empty">{{ 'No open positions.'|t }}</p>
+        {% endif %}
       </div>
     </div>
 
-    {# Open Positions #}
-    <div class="dashboard-card positions-card">
-      <h3>{{ 'Open Positions'|t }}</h3>
-      {% if positions|length > 0 %}
-        <table class="niftybot-table compact">
-          <thead>
-            <tr>
-              <th>{{ 'Symbol'|t }}</th>
-              <th>{{ 'Qty'|t }}</th>
-              <th>{{ 'Avg'|t }}</th>
-              <th>{{ 'P&L'|t }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for pos in positions %}
-              <tr>
-                <td>{{ pos.symbol }}</td>
-                <td>{{ pos.quantity }}</td>
-                <td>₹{{ pos.average_price|number_format(2) }}</td>
-                <td class="{{ pos.pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
-                  {{ pos.pnl >= 0 ? '+' : '' }}₹{{ pos.pnl|number_format(2) }}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <a href="{{ path('niftybot_trading.positions') }}" class="view-all">{{ 'View All'|t }} →</a>
-      {% else %}
-        <p class="empty-state-small">{{ 'No open positions.'|t }}</p>
-      {% endif %}
+    <div class="col-lg-6">
+      <div class="niftybot-dashboard__panel">
+        <div class="niftybot-dashboard__panel-header">
+          <h3>{{ 'Recent orders'|t }}</h3>
+          <a href="{{ path('niftybot_trading.orders') }}">{{ 'View all'|t }}</a>
+        </div>
+        {% if recent_orders|length > 0 %}
+          <div class="table-responsive">
+            <table class="table table-hover table-striped niftybot-table compact mb-0">
+              <thead>
+                <tr>
+                  <th>{{ 'Symbol'|t }}</th>
+                  <th>{{ 'Type'|t }}</th>
+                  <th>{{ 'Qty'|t }}</th>
+                  <th>{{ 'Status'|t }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in recent_orders %}
+                  <tr>
+                    <td>{{ order.symbol }}</td>
+                    <td>{{ order.transaction_type }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>{{ order.status|replace({'_': ' '})|capitalize }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="niftybot-dashboard__empty">{{ 'No orders placed yet.'|t }}</p>
+        {% endif %}
+      </div>
     </div>
+  </div>
 
-    {# Recent Orders #}
-    <div class="dashboard-card orders-card">
-      <h3>{{ 'Recent Orders'|t }}</h3>
-      {% if recent_orders|length > 0 %}
-        <table class="niftybot-table compact">
-          <thead>
-            <tr>
-              <th>{{ 'Symbol'|t }}</th>
-              <th>{{ 'Type'|t }}</th>
-              <th>{{ 'Qty'|t }}</th>
-              <th>{{ 'Status'|t }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for order in recent_orders %}
-              <tr>
-                <td>{{ order.symbol }}</td>
-                <td>
-                  <span class="txn-type txn-type--{{ order.transaction_type|lower }}">
-                    {{ order.transaction_type }}
-                  </span>
-                </td>
-                <td>{{ order.quantity }}</td>
-                <td>
-                  <span class="order-status order-status--{{ order.status }}">
-                    {{ order.status|replace({'_': ' '})|capitalize }}
-                  </span>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <a href="{{ path('niftybot_trading.orders') }}" class="view-all">{{ 'View All Orders'|t }} →</a>
-      {% else %}
-        <p class="empty-state-small">{{ 'No orders placed yet.'|t }}</p>
-      {% endif %}
-    </div>
+  <div class="niftybot-dashboard__quick-actions">
+    <a href="{{ path('niftybot_trading.order_form') }}" class="btn btn-primary">{{ 'Place order'|t }}</a>
+    <a href="{{ path('niftybot_core.user_auto_trade') }}" class="btn btn-outline-primary">{{ 'Auto trade'|t }}</a>
+    <a href="{{ path('niftybot_core.user_broker') }}" class="btn btn-outline-primary">{{ 'Broker'|t }}</a>
+    <a href="{{ path('niftybot_investment.dashboard') }}" class="btn btn-outline-primary">{{ 'Investment'|t }}</a>
+    <a href="{{ path('niftybot_reports.user') }}" class="btn btn-outline-primary">{{ 'Reports'|t }}</a>
+    <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-outline-primary">{{ 'Plans'|t }}</a>
   </div>
 </div>

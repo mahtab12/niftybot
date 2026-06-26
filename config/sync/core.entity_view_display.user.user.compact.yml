@@ -1,11 +1,10 @@
-uuid: 828b8291-b4d0-4b96-b019-2aa73b911520
+uuid: 3fd836c4-f5b4-403b-8f1c-c71ea98a4390
 langcode: en
 status: true
 dependencies:
   config:
     - core.entity_view_mode.user.compact
     - field.field.user.user.field_city
-    - field.field.user.user.field_country
     - field.field.user.user.field_full_name
     - field.field.user.user.field_mobile_number
     - field.field.user.user.user_picture
@@ -33,7 +32,6 @@ content:
     region: content
 hidden:
   field_city: true
-  field_country: true
   field_full_name: true
   field_mobile_number: true
   member_for: true

@@ -1,0 +1,590 @@
+/**
+ * NiftyOption landing page styles.
+ */
+
+.layout-landing #loading-wrapper,
+.layout-login #loading-wrapper {
+  display: none !important;
+}
+
+/* Landing — full-page document scroll (not dashboard shell) */
+body.layout-landing {
+  height: auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Dashboard — fixed header, sidebar, footer; scroll only main content */
+body.layout-dashboard {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.layout-dashboard .page-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.layout-dashboard .page-header {
+  flex: 0 0 auto;
+  z-index: 200;
+}
+
+body.layout-dashboard .main-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow: hidden;
+}
+
+body.layout-dashboard .content-wrapper-scroll {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+body.layout-dashboard .main-header,
+body.layout-dashboard .niftyoption-page-header {
+  flex: 0 0 auto;
+}
+
+body.layout-dashboard .content-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1.5rem;
+}
+
+body.layout-dashboard .app-footer {
+  flex: 0 0 auto;
+}
+
+.niftyoption-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.niftyoption-brand-logo__icon {
+  display: block;
+}
+
+.niftyoption-brand-logo__text,
+.page-header .niftyoption-brand-logo__text,
+.landing-header .niftyoption-brand-logo__text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1553a3;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.login-logo.niftyoption-brand-logo .niftyoption-brand-logo__text {
+  font-size: 1.35rem;
+}
+
+.niftyoption-brand-logo__wordmark,
+.niftyoption-brand-logo__full {
+  max-width: 180px;
+  width: auto;
+  height: auto;
+}
+
+.login-logo img {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+}
+
+.landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #eef1f6;
+}
+
+.landing-header {
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.landing-header .landing-brand-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1553a3;
+  letter-spacing: -0.02em;
+}
+
+.landing-header .niftyoption-brand-logo__text {
+  font-size: 1.25rem;
+}
+
+.landing-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fff;
+}
+
+.landing-footer a {
+  color: #707f93;
+  text-decoration: none;
+}
+
+.landing-footer a:hover {
+  color: #1553a3;
+}
+
+/* Hero — reset dashboard negative margins for standalone landing */
+.landing-page .landing-hero__banner {
+  margin: 0;
+  padding: 4.5rem 0 8rem;
+}
+
+.landing-page .landing-hero__cards {
+  margin: -5.5rem auto 0;
+  padding: 0 1.25rem;
+  max-width: 1320px;
+  position: relative;
+  z-index: 2;
+}
+
+.landing-page .landing-hero__cards .card {
+  border: 0;
+  box-shadow: 0 12px 32px rgba(23, 24, 28, 0.08);
+}
+
+.landing-section {
+  padding: 4.5rem 0;
+}
+
+.landing-section--alt {
+  background: #fff;
+}
+
+.landing-section__title {
+  margin-bottom: 0.75rem;
+}
+
+.landing-section__subtitle {
+  color: #707f93;
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+}
+
+.landing-step {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.landing-step__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  background: rgba(21, 83, 163, 0.1);
+  color: #1553a3;
+}
+
+.landing-stat-box {
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  height: 100%;
+}
+
+.landing-stat-box h3 {
+  margin-bottom: 0.25rem;
+  font-size: 1.75rem;
+}
+
+.landing-stat-box p {
+  margin: 0;
+  color: #707f93;
+}
+
+.landing-cta {
+  background: linear-gradient(135deg, #34424e 0%, #1e2a33 100%);
+  border-radius: 1rem;
+  padding: 3.5rem 2rem;
+  text-align: center;
+}
+
+.landing-cta h2 {
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.landing-cta p {
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 560px;
+  margin: 0 auto 1.5rem;
+}
+
+.landing-page .pricing-plan {
+  height: 100%;
+}
+
+.landing-trust-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.landing-trust-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: #707f93;
+}
+
+.landing-trust-list li i {
+  color: #0a9126;
+  font-size: 1.25rem;
+  margin-top: 0.15rem;
+}
+
+.content-wrapper .messages {
+  margin-bottom: 1rem;
+}
+
+/* Form validation — Bootstrap alert styling */
+.niftyoption-form-error {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  padding: 0.65rem 0.85rem;
+}
+
+.niftyoption-form-error__icon {
+  margin-right: 0.5rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.niftyoption-form-error__text {
+  flex: 1 1 auto;
+}
+
+.niftyoption-status-message {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 0.85rem 1rem;
+}
+
+.niftyoption-status-message__icon {
+  margin-right: 0.65rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.niftyoption-status-message__list {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.niftyoption-status-message__list li + li {
+  margin-top: 0.35rem;
+}
+
+.form-item--error .form-control,
+.form-item--error input[type="date"],
+.form-item--error input[type="file"],
+.form-item--error textarea.form-control,
+.form-item--error select.form-control,
+.form-control.is-invalid,
+input.is-invalid[type="date"],
+input.is-invalid[type="file"],
+textarea.is-invalid,
+select.is-invalid {
+  border-color: #e22132 !important;
+}
+
+.form-item--error .form-control:focus,
+.form-item--error input[type="date"]:focus,
+.form-item--error textarea.form-control:focus,
+.form-item--error select.form-control:focus,
+.form-control.is-invalid:focus,
+input.is-invalid[type="date"]:focus,
+textarea.is-invalid:focus,
+select.is-invalid:focus {
+  border-color: #e22132 !important;
+  box-shadow: 0 0 0 3px rgba(233, 52, 67, 0.15);
+}
+
+/* Dashboard breadcrumbs */
+.niftyoption-page-header {
+  flex-direction: column;
+  align-items: stretch;
+  padding-bottom: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.niftyoption-breadcrumb-wrap {
+  padding: 0.35rem 0 0.85rem;
+}
+
+.niftyoption-breadcrumb {
+  margin: 0;
+}
+
+.niftyoption-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.niftyoption-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+
+.niftyoption-breadcrumb__link {
+  color: #707f93;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+  transition: color 0.15s ease;
+}
+
+.niftyoption-breadcrumb__link:hover,
+.niftyoption-breadcrumb__link:focus {
+  color: #1553a3;
+}
+
+.niftyoption-breadcrumb__text {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.niftyoption-breadcrumb__current {
+  color: #17181c;
+  font-weight: 600;
+  padding: 0.15rem 0;
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.niftyoption-breadcrumb__separator {
+  font-size: 0.625rem;
+  color: #c5cad3;
+  margin: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.niftyoption-breadcrumb__link .bi {
+  font-size: 0.875rem;
+  color: #9499a9;
+  flex-shrink: 0;
+}
+
+.niftyoption-breadcrumb__link:hover .bi,
+.niftyoption-breadcrumb__link:focus .bi {
+  color: #1553a3;
+}
+
+.niftyoption-breadcrumb__item.is-active .niftyoption-breadcrumb__current {
+  color: #1553a3;
+}
+
+@media (min-width: 768px) {
+  .niftyoption-breadcrumb__text {
+    max-width: 20rem;
+  }
+
+  .niftyoption-breadcrumb__current {
+    max-width: 28rem;
+  }
+}
+
+/* NiftyBot data tables (dashboard style) */
+table.niftybot-table {
+  width: 100%;
+  color: #17181c;
+  border: 1px solid #d7e0eb;
+  background-color: #fff;
+}
+
+table.niftybot-table:not(.table) {
+  border-collapse: collapse;
+}
+
+table.niftybot-table > thead {
+  box-shadow: 0 7px 7px rgba(189, 201, 214, 0.3);
+}
+
+table.niftybot-table > thead th,
+table.niftybot-table > thead td {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.85rem 1rem;
+  color: #707f93;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid #d7e0eb;
+}
+
+table.niftybot-table > tbody td {
+  padding: 0.85rem 1rem;
+  vertical-align: middle;
+}
+
+table.niftybot-table.table-striped > tbody > tr:nth-of-type(even) > * {
+  background-color: #f3f6fa;
+}
+
+table.niftybot-table.compact > thead th,
+table.niftybot-table.compact > tbody td {
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.niftybot-login-form .form-item {
+  margin-bottom: 1rem;
+}
+
+.niftyoption-login-form label.form-label,
+.niftyoption-login-form .form-item label {
+  font-weight: 500;
+}
+
+.visually-hidden-focusable.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 9999;
+}
+
+.visually-hidden-focusable.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  background: #fff;
+  padding: 0.5rem 1rem;
+}
+
+/* Auth pages — see css/auth-overrides.css (loads after login.min.css on auth routes) */
+
+@media (min-width: 768px) {
+  .niftybot-registration-form .niftyoption-field-pair > .form-item,
+  .niftybot-registration-form .niftyoption-password-pair .form-item {
+    margin-bottom: 0;
+  }
+
+  .niftybot-registration-form .niftyoption-password-pair .form-type-password-confirm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .niftybot-registration-form .niftyoption-password-pair .form-type-password-confirm > .form-item {
+    flex: 1 1 calc(50% - 0.5rem);
+    max-width: calc(50% - 0.5rem);
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .niftybot-registration-form .niftyoption-field-pair > .form-item,
+  .niftybot-registration-form .niftyoption-field-pair > .col-md-6,
+  .niftybot-registration-form .niftyoption-password-pair .col-md-6 {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+}
+
+/* Dashboard sidebar — active menu item background */
+.sidebar-menu ul li.active-page-link > a,
+.sidebar-menu ul li > a.current-page {
+  color: #ffffff !important;
+  background-color: #1865d3 !important;
+  background-image: radial-gradient(
+      92% 85% at 89% 80%,
+      rgba(0, 0, 0, 0.23) 0%,
+      transparent 86.18%
+    ),
+    radial-gradient(
+      60% 85% at 25% 20%,
+      rgba(255, 255, 255, 0.41) 0%,
+      rgba(255, 255, 255, 0) 69.79%,
+      rgba(255, 255, 255, 0) 100%
+    ) !important;
+}
+
+.sidebar-menu ul li.active-page-link > a i,
+.sidebar-menu ul li > a.current-page i {
+  color: #ffffff !important;
+}
+
+.sidebar-menu ul li.active-page-link > a:hover,
+.sidebar-menu ul li > a.current-page:hover {
+  color: #ffffff !important;
+  background-color: #1865d3 !important;
+}
+
+.sidebar-menu .sidebar-submenu ul li.menu-item--active > a,
+.sidebar-menu .sidebar-submenu ul li > a.current-page {
+  color: #ffffff !important;
+  background-color: #1865d3 !important;
+  background-image: radial-gradient(
+      92% 85% at 89% 80%,
+      rgba(0, 0, 0, 0.23) 0%,
+      transparent 86.18%
+    ),
+    radial-gradient(
+      60% 85% at 25% 20%,
+      rgba(255, 255, 255, 0.41) 0%,
+      rgba(255, 255, 255, 0) 69.79%,
+      rgba(255, 255, 255, 0) 100%
+    ) !important;
+}
+
+.sidebar-menu .sidebar-submenu ul li.menu-item--active > a:hover,
+.sidebar-menu .sidebar-submenu ul li > a.current-page:hover {
+  color: #ffffff !important;
+  background-color: #1865d3 !important;
+}
+
+.sidebar-menu .sidebar-dropdown.active .sidebar-submenu {
+  display: block;
+}
+
+.sidebar-menu .sidebar-dropdown.active > a:not(.current-page) {
+  background-color: #0c489c;
+  color: #ffffff;
+}
+
+.sidebar-menu .sidebar-dropdown.active > a:not(.current-page) i {
+  color: #ffffff;
+}

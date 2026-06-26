@@ -12,6 +12,48 @@ niftybot_core.settings:
   parent: niftybot_core.admin
   weight: 10
 
+niftybot_core.broker_status:
+  title: 'Broker Connection'
+  description: 'View broker connection status and Groww user profile.'
+  route_name: niftybot_core.broker_status
+  parent: niftybot_core.admin
+  weight: 5
+
+niftybot_core.portfolio:
+  title: 'Portfolio'
+  description: 'View portfolio holdings and open positions from the trading API.'
+  route_name: niftybot_core.portfolio
+  parent: niftybot_core.admin
+  weight: 6
+
+niftybot_core.market:
+  title: 'Market Watch'
+  description: 'Live Nifty, Sensex, crude oil, and gold prices with option chains.'
+  route_name: niftybot_core.market
+  parent: niftybot_core.admin
+  weight: 7
+
+niftybot_core.auto_trade:
+  title: 'Nifty Auto Trade'
+  description: 'Automated Nifty F&O — buy ATM or sell OTM, 1 lot (65).'
+  route_name: niftybot_core.auto_trade
+  parent: niftybot_core.admin
+  weight: 8
+
+niftybot_core.auto_trade_sensex:
+  title: 'Sensex Auto Trade'
+  description: 'Automated Sensex F&O — buy ATM or sell OTM, 1 lot (20).'
+  route_name: niftybot_core.auto_trade_sensex
+  parent: niftybot_core.admin
+  weight: 9
+
+niftybot_core.smart_orders:
+  title: 'Smart Orders'
+  description: 'View GTT and OCO smart orders from Groww.'
+  route_name: niftybot_core.smart_orders
+  parent: niftybot_core.admin
+  weight: 10
+
 niftybot_user.kyc_admin_menu:
   title: 'KYC Management'
   description: 'Review and manage KYC verifications.'
@@ -60,3 +102,37 @@ niftybot_reports.admin_menu:
   route_name: niftybot_reports.admin
   parent: niftybot_core.admin
   weight: 7
+
+niftybot_core.user_broker_menu:
+  title: 'Broker Connection'
+  route_name: niftybot_core.user_broker
+  menu_name: dashboard-menu
+  weight: 10
+
+niftybot_core.user_auto_trade_menu:
+  title: 'Auto Trade'
+  route_name: niftybot_core.user_auto_trade
+  menu_name: dashboard-menu
+  weight: 3
+
+niftybot_core.user_auto_trade_overview_menu:
+  title: 'Overview'
+  description: 'Learn how auto-trade works and choose an index.'
+  route_name: niftybot_core.user_auto_trade
+  parent: niftybot_core.user_auto_trade_menu
+  menu_name: dashboard-menu
+  weight: -1
+
+niftybot_core.user_auto_trade_nifty_menu:
+  title: 'Nifty'
+  route_name: niftybot_core.user_auto_trade_nifty
+  parent: niftybot_core.user_auto_trade_menu
+  menu_name: dashboard-menu
+  weight: 0
+
+niftybot_core.user_auto_trade_sensex_menu:
+  title: 'Sensex'
+  route_name: niftybot_core.user_auto_trade_sensex
+  parent: niftybot_core.user_auto_trade_menu
+  menu_name: dashboard-menu
+  weight: 1

@@ -1,0 +1,15 @@
+subscription:
+  css:
+    theme:
+      css/subscription.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+    - niftyoption/global
+
+subscribe:
+  css:
+    theme:
+      css/subscribe.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+    - niftybot_user/wallet

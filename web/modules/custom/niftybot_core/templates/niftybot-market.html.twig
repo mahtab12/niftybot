@@ -1,0 +1,111 @@
+<div class="niftybot-market niftybot-market--live">
+  <div class="niftybot-market__toolbar">
+    <h2>{{ 'Market Watch'|t }}</h2>
+    {% if api_configured and dashboard_success %}
+      <div class="niftybot-market__live-meta">
+        <span class="niftybot-live-status niftybot-live-status--reconnecting">{{ 'Connecting…'|t }}</span>
+        <span class="niftybot-live-updated">{{ 'Updated'|t }}: <span class="niftybot-live-updated__time">—</span></span>
+      </div>
+    {% endif %}
+  </div>
+
+  <p class="niftybot-market__intro">
+    {{ 'Live prices for Indian indices and MCX commodities via Groww.'|t }}
+    {{ 'Click Nifty or Sensex to view the option chain.'|t }}
+  </p>
+
+  <p class="niftybot-market__note messages messages--status">
+    {{ 'Global indices (S&P 500, Dow, Nasdaq, etc.) are not available through Groww — only NSE, BSE, and MCX instruments.'|t }}
+  </p>
+
+  {% if not api_configured %}
+    <p class="messages messages--warning">
+      {{ 'Trading Service API Key is not configured.'|t }}
+      <a href="{{ path('niftybot_core.settings') }}">{{ 'Add it in NiftyBot Settings'|t }}</a>
+    </p>
+  {% else %}
+
+    {% if not dashboard_success %}
+      <p class="messages messages--error">{{ dashboard_message|default('Market data could not be loaded.'|t) }}</p>
+    {% endif %}
+
+    <div class="niftybot-market__grid" id="niftybot-market-grid">
+      {% for item in items %}
+        <button
+          type="button"
+          class="niftybot-market-card{% if item.has_option_chain %} niftybot-market-card--clickable{% endif %}"
+          data-niftybot-market-id="{{ item.id }}"
+          data-niftybot-symbol="{{ item.symbol }}"
+          data-niftybot-exchange="{{ item.exchange }}"
+          data-niftybot-option-exchange="{{ item.option_exchange|default(item.exchange) }}"
+          data-niftybot-has-chain="{{ item.has_option_chain ? '1' : '0' }}"
+          {% if not item.has_option_chain %}disabled{% endif %}
+        >
+          <div class="niftybot-market-card__label">{{ item.label }}</div>
+          <div class="niftybot-market-card__exchange">{{ item.exchange }} · {{ item.segment }}</div>
+          <div
+            class="niftybot-market-card__price"
+            data-niftybot-field="price-{{ item.id }}"
+          >
+            {% if item.last_price is not null %}
+              {{ item.last_price|number_format(2) }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+          <div
+            class="niftybot-market-card__change{% if item.day_change > 0 %} niftybot-pnl--positive{% elseif item.day_change < 0 %} niftybot-pnl--negative{% endif %}"
+            data-niftybot-field="change-{{ item.id }}"
+          >
+            {% if item.day_change is not null %}
+              {{ item.day_change|number_format(2) }} ({{ item.day_change_perc|number_format(2) }}%)
+            {% else %}
+              {{ item.message|default('—') }}
+            {% endif %}
+          </div>
+          {% if item.has_option_chain %}
+            <div class="niftybot-market-card__hint">{{ 'View option chain →'|t }}</div>
+          {% endif %}
+        </button>
+      {% else %}
+        <p>{{ 'No market instruments loaded yet.'|t }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="niftybot-option-chain" id="niftybot-option-chain" hidden>
+      <div class="niftybot-option-chain__header">
+        <h3 id="niftybot-option-chain-title">{{ 'Option Chain'|t }}</h3>
+        <button type="button" class="button niftybot-option-chain__close" id="niftybot-option-chain-close">
+          {{ 'Close'|t }}
+        </button>
+      </div>
+      <div class="niftybot-option-chain__controls">
+        <label for="niftybot-option-expiry">{{ 'Expiry'|t }}</label>
+        <select id="niftybot-option-expiry" class="form-select"></select>
+        <span class="niftybot-option-chain__underlying-ltp" id="niftybot-option-underlying-ltp"></span>
+      </div>
+      <p class="niftybot-option-chain__status" id="niftybot-option-chain-status"></p>
+      <div class="niftybot-option-chain__table-wrap">
+        <table class="niftybot-market__table niftybot-option-chain__table" id="niftybot-option-chain-table">
+          <thead>
+            <tr>
+              <th colspan="3" class="niftybot-option-chain__th-ce">{{ 'Call (CE)'|t }}</th>
+              <th rowspan="2" class="niftybot-option-chain__th-strike">{{ 'Strike'|t }}</th>
+              <th colspan="3" class="niftybot-option-chain__th-pe">{{ 'Put (PE)'|t }}</th>
+            </tr>
+            <tr>
+              <th class="niftybot-option-chain__th-ce">{{ 'CE LTP'|t }}</th>
+              <th class="niftybot-option-chain__th-ce">{{ 'CE OI'|t }}</th>
+              <th class="niftybot-option-chain__th-ce">{{ 'CE IV'|t }}</th>
+              <th class="niftybot-option-chain__th-pe">{{ 'PE LTP'|t }}</th>
+              <th class="niftybot-option-chain__th-pe">{{ 'PE OI'|t }}</th>
+              <th class="niftybot-option-chain__th-pe">{{ 'PE IV'|t }}</th>
+            </tr>
+          </thead>
+          <tbody id="niftybot-option-chain-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  {% endif %}
+</div>

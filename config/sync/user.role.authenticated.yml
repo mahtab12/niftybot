@@ -1,4 +1,4 @@
-uuid: 49bf495f-9b14-4982-910f-d39ff7a3379f
+uuid: fe97a08c-4fa8-4580-8950-c7f113266204
 langcode: en
 status: true
 dependencies:
@@ -7,6 +7,7 @@ dependencies:
   module:
     - file
     - filter
+    - niftybot_user
     - system
 _core:
   default_config_hash: wkW7P5A53YhGmsgamrmTbfwpZrqdnPYiJdoAZQtdmJg
@@ -17,4 +18,7 @@ is_admin: false
 permissions:
   - 'access content'
   - 'delete own files'
+  - 'manage wallet'
+  - 'submit kyc'
   - 'use text format basic_html'
+  - 'view own kyc'

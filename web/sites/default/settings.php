@@ -880,3 +880,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true' && file_exists(__DIR__ . '/settings.ddev
 # }
 
 $settings['config_sync_directory'] = '../config/sync';
+// NiftyBot site settings.
+if (file_exists(__DIR__ . "/settings.niftybot.php")) {
+  include __DIR__ . "/settings.niftybot.php";
+}

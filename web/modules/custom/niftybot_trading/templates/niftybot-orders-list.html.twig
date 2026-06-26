@@ -1,67 +1,224 @@
-<div class="niftybot-orders">
-  <div class="orders-header">
-    <a href="{{ path('niftybot_trading.order_form') }}" class="button button--primary">{{ '+ Place New Order'|t }}</a>
+{#
+/**
+ * @file
+ * Orders list — user or admin.
+ */
+#}
+<div class="niftybot-trading-page niftybot-dashboard">
+  <div class="niftybot-trading-page__hero card mb-4">
+    <div class="niftybot-trading-page__hero-bg" aria-hidden="true"></div>
+    <div class="card-body position-relative">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <div class="d-flex align-items-start gap-3">
+            <div class="niftybot-trading-page__hero-icon" aria-hidden="true">
+              <i class="bi bi-list-check"></i>
+            </div>
+            <div>
+              <p class="niftybot-trading-page__hero-label mb-2">
+                {{ is_admin ? 'Platform orders'|t : 'Your orders'|t }}
+              </p>
+              <h2 class="niftybot-trading-page__hero-amount mb-0">
+                {{ summary.total|default(orders|length) }}
+              </h2>
+              <p class="niftybot-trading-page__hero-hint mb-0">
+                {{ is_admin
+                  ? 'All trader orders across the platform'|t
+                  : 'Track pending, executed, and cancelled orders'|t }}
+              </p>
+            </div>
+          </div>
+
+          <div class="niftybot-trading-page__hero-meta">
+            <div class="niftybot-trading-page__hero-stat">
+              <span class="niftybot-trading-page__hero-stat-label">{{ 'Open / pending'|t }}</span>
+              <span class="niftybot-trading-page__hero-stat-value">{{ summary.pending|default(0) }}</span>
+            </div>
+            <div class="niftybot-trading-page__hero-stat">
+              <span class="niftybot-trading-page__hero-stat-label">{{ 'Executed'|t }}</span>
+              <span class="niftybot-trading-page__hero-stat-value">{{ summary.executed|default(0) }}</span>
+            </div>
+            <div class="niftybot-trading-page__hero-stat">
+              <span class="niftybot-trading-page__hero-stat-label">{{ 'Cancelled'|t }}</span>
+              <span class="niftybot-trading-page__hero-stat-value">{{ summary.cancelled|default(0) }}</span>
+            </div>
+          </div>
+        </div>
+
+        {% if not is_admin %}
+          <div class="col-lg-4">
+            <div class="niftybot-trading-page__hero-actions">
+              <a href="{{ path('niftybot_trading.order_form') }}" class="btn btn-light">
+                <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>
+                {{ 'Place order'|t }}
+              </a>
+              <a href="{{ path('niftybot_trading.positions') }}" class="btn btn-outline-light">
+                <i class="bi bi-briefcase me-2" aria-hidden="true"></i>
+                {{ 'Positions'|t }}
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
   </div>
 
-  {% if orders|length > 0 %}
-    <table class="niftybot-table orders-table">
-      <thead>
-        <tr>
-          {% if is_admin %}<th>{{ 'User'|t }}</th>{% endif %}
-          <th>{{ 'Symbol'|t }}</th>
-          <th>{{ 'Exchange'|t }}</th>
-          <th>{{ 'Type'|t }}</th>
-          <th>{{ 'Order'|t }}</th>
-          <th>{{ 'Qty'|t }}</th>
-          <th>{{ 'Price'|t }}</th>
-          <th>{{ 'Status'|t }}</th>
-          <th>{{ 'Broker'|t }}</th>
-          <th>{{ 'Date'|t }}</th>
-          <th>{{ 'Actions'|t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for order in orders %}
-          <tr class="order-row order-status--{{ order.status }}">
-            {% if is_admin %}<td>{{ order.username }}</td>{% endif %}
-            <td class="order-symbol">{{ order.symbol }}</td>
-            <td>{{ order.exchange }}</td>
-            <td>
-              <span class="txn-type txn-type--{{ order.transaction_type|lower }}">
-                {{ order.transaction_type }}
-              </span>
-            </td>
-            <td>{{ order.order_type }}</td>
-            <td>{{ order.quantity }}</td>
-            <td>
-              {% if order.executed_price %}
-                ₹{{ order.executed_price|number_format(2) }}
-              {% elseif order.price %}
-                ₹{{ order.price|number_format(2) }}
-              {% else %}
-                {{ 'Market'|t }}
-              {% endif %}
-            </td>
-            <td>
-              <span class="order-status order-status--{{ order.status }}">
-                {{ order.status|replace({'_': ' '})|capitalize }}
-              </span>
-            </td>
-            <td>{{ order.broker|capitalize }}</td>
-            <td>{{ order.placed_at|date('d M, h:i A') }}</td>
-            <td>
-              <a href="{{ order.detail_url }}">{{ 'View'|t }}</a>
-              {% if order.cancel_url is defined and order.cancel_url %}
-                | <a href="{{ order.cancel_url }}" class="cancel-link">{{ 'Cancel'|t }}</a>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <div class="empty-state">
-      <p>{{ 'No orders yet. Place your first order to get started.'|t }}</p>
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="niftybot-trading-page__stat-card">
+        <div class="niftybot-trading-page__stat-card-top">
+          <div class="niftybot-trading-page__stat-icon niftybot-trading-page__stat-icon--trades" aria-hidden="true">
+            <i class="bi bi-receipt"></i>
+          </div>
+        </div>
+        <div class="niftybot-trading-page__stat-value">{{ summary.total|default(orders|length) }}</div>
+        <div class="niftybot-trading-page__stat-label">{{ 'Total orders'|t }}</div>
+      </div>
     </div>
-  {% endif %}
+    <div class="col-sm-6 col-lg-3">
+      <div class="niftybot-trading-page__stat-card">
+        <div class="niftybot-trading-page__stat-card-top">
+          <div class="niftybot-trading-page__stat-icon niftybot-trading-page__stat-icon--rate" aria-hidden="true">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+        </div>
+        <div class="niftybot-trading-page__stat-value">{{ summary.pending|default(0) }}</div>
+        <div class="niftybot-trading-page__stat-label">{{ 'Pending'|t }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="niftybot-trading-page__stat-card">
+        <div class="niftybot-trading-page__stat-card-top">
+          <div class="niftybot-trading-page__stat-icon niftybot-trading-page__stat-icon--executed" aria-hidden="true">
+            <i class="bi bi-check-circle"></i>
+          </div>
+        </div>
+        <div class="niftybot-trading-page__stat-value">{{ summary.executed|default(0) }}</div>
+        <div class="niftybot-trading-page__stat-label">{{ 'Executed'|t }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="niftybot-trading-page__stat-card">
+        <div class="niftybot-trading-page__stat-card-top">
+          <div class="niftybot-trading-page__stat-icon niftybot-trading-page__stat-icon--cancelled" aria-hidden="true">
+            <i class="bi bi-x-circle"></i>
+          </div>
+        </div>
+        <div class="niftybot-trading-page__stat-value">{{ summary.cancelled|default(0) }}</div>
+        <div class="niftybot-trading-page__stat-label">{{ 'Cancelled'|t }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card niftybot-trading-page__table-card">
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <h3 class="niftybot-trading-page__table-title">
+          <i class="bi bi-table" aria-hidden="true"></i>
+          {{ 'Order book'|t }}
+        </h3>
+        <p class="niftybot-trading-page__table-subtitle mb-0">
+          {{ 'Showing latest @count orders'|t({'@count': orders|length}) }}
+        </p>
+      </div>
+      {% if not is_admin %}
+        <a href="{{ path('niftybot_trading.order_form') }}" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
+          {{ 'New order'|t }}
+        </a>
+      {% endif %}
+    </div>
+
+    {% if orders|length > 0 %}
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover nowrap mb-0 niftybot-table">
+            <thead>
+              <tr>
+                {% if is_admin %}<th scope="col">{{ 'User'|t }}</th>{% endif %}
+                <th scope="col">{{ 'Symbol'|t }}</th>
+                <th scope="col">{{ 'Exchange'|t }}</th>
+                <th scope="col">{{ 'Side'|t }}</th>
+                <th scope="col">{{ 'Order type'|t }}</th>
+                <th scope="col">{{ 'Qty'|t }}</th>
+                <th scope="col">{{ 'Price'|t }}</th>
+                <th scope="col">{{ 'Status'|t }}</th>
+                <th scope="col">{{ 'Broker'|t }}</th>
+                <th scope="col">{{ 'Placed'|t }}</th>
+                <th scope="col">{{ 'Actions'|t }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in orders %}
+                <tr>
+                  {% if is_admin %}
+                    <td data-label="{{ 'User'|t }}" class="niftybot-trading-page__broker">{{ order.username }}</td>
+                  {% endif %}
+                  <td data-label="{{ 'Symbol'|t }}" class="niftybot-trading-page__symbol">{{ order.symbol }}</td>
+                  <td data-label="{{ 'Exchange'|t }}">{{ order.exchange }}</td>
+                  <td data-label="{{ 'Side'|t }}">
+                    <span class="niftybot-trading-page__txn-badge niftybot-trading-page__txn-badge--{{ order.transaction_type|lower }}">
+                      {{ order.transaction_type }}
+                    </span>
+                  </td>
+                  <td data-label="{{ 'Order type'|t }}">{{ order.order_type }}</td>
+                  <td data-label="{{ 'Qty'|t }}">{{ order.quantity }}</td>
+                  <td data-label="{{ 'Price'|t }}">
+                    {% if order.executed_price %}
+                      ₹{{ order.executed_price|number_format(2) }}
+                    {% elseif order.price %}
+                      ₹{{ order.price|number_format(2) }}
+                    {% else %}
+                      {{ 'Market'|t }}
+                    {% endif %}
+                  </td>
+                  <td data-label="{{ 'Status'|t }}">
+                    <span class="niftybot-trading-page__status-badge niftybot-trading-page__status-badge--{{ order.status|clean_class }}">
+                      {{ order.status|replace({'_': ' '})|capitalize }}
+                    </span>
+                  </td>
+                  <td data-label="{{ 'Broker'|t }}" class="niftybot-trading-page__broker">{{ order.broker|capitalize }}</td>
+                  <td data-label="{{ 'Placed'|t }}">{{ order.placed_at|date('d M Y, h:i A') }}</td>
+                  <td data-label="{{ 'Actions'|t }}">
+                    <div class="niftybot-trading-page__row-actions">
+                      <a href="{{ order.detail_url }}" class="btn btn-sm btn-outline-primary">
+                        {{ 'View'|t }}
+                      </a>
+                      {% if order.cancel_url is defined and order.cancel_url %}
+                        <a href="{{ order.cancel_url }}" class="btn btn-sm btn-outline-danger">
+                          {{ 'Cancel'|t }}
+                        </a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="card-body">
+        <div class="niftybot-trading-page__empty">
+          <i class="bi bi-inbox niftybot-trading-page__empty-icon" aria-hidden="true"></i>
+          <h3 class="niftybot-trading-page__empty-title">{{ 'No orders yet'|t }}</h3>
+          <p class="niftybot-trading-page__empty-text">
+            {{ 'Place your first order to start trading on NiftyBot.'|t }}
+          </p>
+          {% if not is_admin %}
+            <div class="niftybot-trading-page__empty-actions">
+              <a href="{{ path('niftybot_trading.order_form') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
+                {{ 'Place order'|t }}
+              </a>
+              <a href="{{ path('niftybot_core.user_broker') }}" class="btn btn-outline-primary">
+                <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
+                {{ 'Connect broker'|t }}
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
 </div>

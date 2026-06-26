@@ -1,77 +1,251 @@
-<div class="niftybot-profile">
-  <div class="profile-header">
-    <h2>{{ 'Welcome, '|t }}{{ user.getAccountName() }}</h2>
+{#
+/**
+ * @file
+ * Trader profile — account overview.
+ */
+#}
+{% set avatar_url = '/themes/custom/niftyoption/assets/images/user7.png' %}
+{% set kyc_label = {
+  'approved': 'Verified'|t,
+  'pending': 'Pending review'|t,
+  'under_review': 'Under review'|t,
+  'rejected': 'Rejected'|t,
+  'not_submitted': 'Not submitted'|t,
+} %}
+
+<div class="niftybot-profile niftybot-dashboard">
+  <div class="niftybot-profile__hero niftybot-dashboard__panel">
+    <div class="niftybot-dashboard__profile-head">
+      <div class="niftybot-dashboard__avatar">
+        <img src="{{ avatar_url }}" alt="" width="64" height="64" />
+      </div>
+      <div class="niftybot-profile__hero-main">
+        <p class="niftybot-profile__eyebrow mb-1">{{ 'My account'|t }}</p>
+        <h2 class="niftybot-profile__title mb-1">{{ display_name }}</h2>
+        {% if member_id %}
+          <div class="niftybot-dashboard__member-id">{{ member_id }}</div>
+        {% endif %}
+        <div class="niftybot-dashboard__badges">
+          <span class="niftybot-dashboard__badge niftybot-dashboard__badge--kyc niftybot-dashboard__badge--kyc--{{ kyc_status|clean_class }}">
+            {{ 'KYC'|t }}: {{ kyc_label[kyc_status]|default(kyc_status|replace({'_': ' '})|capitalize) }}
+          </span>
+          {% if subscription %}
+            <span class="niftybot-dashboard__badge niftybot-dashboard__badge--plan">{{ 'Plan active'|t }}</span>
+          {% else %}
+            <span class="niftybot-dashboard__badge niftybot-dashboard__badge--kyc niftybot-dashboard__badge--kyc--not-submitted">{{ 'No plan'|t }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="niftybot-profile__hero-actions">
+        <a href="{{ path('niftybot_user.wallet_deposit') }}" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>{{ 'Deposit'|t }}
+        </a>
+        <a href="{{ path('niftybot_user.kyc_submit') }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-shield-check me-1" aria-hidden="true"></i>{{ 'KYC'|t }}
+        </a>
+      </div>
+    </div>
   </div>
 
-  <div class="profile-cards">
-    <div class="profile-card">
-      <h3>{{ 'Account Details'|t }}</h3>
-      <table>
-        {% if member_id %}
-        <tr>
-          <td><strong>{{ 'Member ID'|t }}</strong></td>
-          <td><span class="member-id">{{ member_id }}</span></td>
-        </tr>
-        {% endif %}
-        <tr>
-          <td><strong>{{ 'Username'|t }}</strong></td>
-          <td>{{ user.getAccountName() }}</td>
-        </tr>
-        <tr>
-          <td><strong>{{ 'Email'|t }}</strong></td>
-          <td>{{ user.getEmail() }}</td>
-        </tr>
-        <tr>
-          <td><strong>{{ 'Member Since'|t }}</strong></td>
-          <td>{{ user.getCreatedTime()|date('d M Y') }}</td>
-        </tr>
-      </table>
-    </div>
-
-    <div class="profile-card">
-      <h3>{{ 'KYC Status'|t }}</h3>
-      {% if kyc_status == 'approved' %}
-        <span class="status status--success">{{ 'Verified'|t }}</span>
+  {% if kyc_status != 'approved' %}
+    <div class="alert alert-warning niftybot-dashboard__alert mb-3" role="alert">
+      {% if kyc_status == 'not_submitted' %}
+        {{ 'Complete KYC verification to unlock trading.'|t }}
+        <a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'Submit KYC'|t }}</a>
       {% elseif kyc_status == 'pending' or kyc_status == 'under_review' %}
-        <span class="status status--warning">{{ 'Pending Verification'|t }}</span>
+        {{ 'Your KYC documents are being reviewed. We will notify you once approved.'|t }}
       {% elseif kyc_status == 'rejected' %}
-        <span class="status status--error">{{ 'Rejected'|t }}</span>
-        <p><a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'Re-submit KYC'|t }}</a></p>
-      {% else %}
-        <span class="status status--info">{{ 'Not Submitted'|t }}</span>
-        <p><a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'Submit KYC'|t }}</a></p>
+        {{ 'Your KYC was rejected. Please re-submit with correct documents.'|t }}
+        <a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'Re-submit KYC'|t }}</a>
       {% endif %}
     </div>
+  {% endif %}
 
-    <div class="profile-card">
-      <h3>{{ 'Wallet'|t }}</h3>
-      <div class="wallet-balance-display">₹{{ wallet_balance|number_format(2) }}</div>
-      <div class="wallet-actions">
-        <a href="{{ path('niftybot_user.wallet_deposit') }}" class="button">{{ 'Deposit'|t }}</a>
-        <a href="{{ path('niftybot_user.wallet_withdraw') }}" class="button">{{ 'Withdraw'|t }}</a>
+  <div class="niftybot-profile__layout">
+    <div class="niftybot-profile__main">
+      <div class="niftybot-dashboard__panel">
+        <h3 class="niftybot-profile__section-title">
+          <i class="bi bi-person-vcard" aria-hidden="true"></i>
+          {{ 'Account details'|t }}
+        </h3>
+
+        <div class="niftybot-profile__details">
+          {% if full_name %}
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'Full name'|t }}</span>
+              <span class="niftybot-profile__detail-value">{{ full_name }}</span>
+            </div>
+          {% endif %}
+          {% if mobile_number %}
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'Mobile number'|t }}</span>
+              <span class="niftybot-profile__detail-value">{{ mobile_number }}</span>
+            </div>
+          {% endif %}
+          <div class="niftybot-profile__detail">
+            <span class="niftybot-profile__detail-label">{{ 'Email'|t }}</span>
+            <span class="niftybot-profile__detail-value">{{ user.getEmail() }}</span>
+          </div>
+          {% if member_id %}
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'Member ID'|t }}</span>
+              <span class="niftybot-profile__detail-value"><code class="niftybot-profile__code">{{ member_id }}</code></span>
+            </div>
+          {% endif %}
+          <div class="niftybot-profile__detail">
+            <span class="niftybot-profile__detail-label">{{ 'Member since'|t }}</span>
+            <span class="niftybot-profile__detail-value">{{ user.getCreatedTime()|date('d M Y') }}</span>
+          </div>
+        </div>
+
+        {% if member_id %}
+          <div class="niftybot-dashboard__copy-row">
+            <label class="form-label small mb-1" for="niftybot-profile-member-id">{{ 'Copy member ID'|t }}</label>
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" id="niftybot-profile-member-id" value="{{ member_id }}" readonly />
+              <button type="button" class="btn btn-primary" data-copy-target="niftybot-profile-member-id">
+                {{ 'Copy'|t }}
+              </button>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="niftybot-dashboard__panel niftybot-profile__kyc-panel">
+        <h3 class="niftybot-profile__section-title">
+          <i class="bi bi-shield-lock" aria-hidden="true"></i>
+          {{ 'Identity & bank details'|t }}
+        </h3>
+
+        {% if kyc %}
+          <div class="niftybot-profile__details">
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'PAN'|t }}</span>
+              <span class="niftybot-profile__detail-value"><code class="niftybot-profile__code">{{ kyc.pan_number }}</code></span>
+            </div>
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'Aadhaar'|t }}</span>
+              <span class="niftybot-profile__detail-value">{{ aadhaar_display }}</span>
+            </div>
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'Bank name'|t }}</span>
+              <span class="niftybot-profile__detail-value">{{ kyc.bank_name }}</span>
+            </div>
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'Account number'|t }}</span>
+              <span class="niftybot-profile__detail-value"><code class="niftybot-profile__code">{{ bank_account_masked }}</code></span>
+            </div>
+            <div class="niftybot-profile__detail">
+              <span class="niftybot-profile__detail-label">{{ 'IFSC code'|t }}</span>
+              <span class="niftybot-profile__detail-value"><code class="niftybot-profile__code">{{ kyc.bank_ifsc }}</code></span>
+            </div>
+            {% if kyc.date_of_birth %}
+              <div class="niftybot-profile__detail">
+                <span class="niftybot-profile__detail-label">{{ 'Date of birth'|t }}</span>
+                <span class="niftybot-profile__detail-value">{{ kyc.date_of_birth }}</span>
+              </div>
+            {% endif %}
+          </div>
+          <div class="niftybot-profile__kyc-footer">
+            <a href="{{ path('niftybot_user.kyc_status') }}" class="btn btn-sm btn-outline-primary">
+              {{ 'View KYC status'|t }}
+            </a>
+            {% if kyc_status == 'rejected' %}
+              <a href="{{ path('niftybot_user.kyc_submit') }}" class="btn btn-sm btn-primary">
+                {{ 'Update KYC'|t }}
+              </a>
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="niftybot-profile__muted mb-3">
+            {{ 'PAN, Aadhaar, and bank details will appear here after you complete KYC verification.'|t }}
+          </p>
+          <a href="{{ path('niftybot_user.kyc_submit') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-shield-check me-1" aria-hidden="true"></i>{{ 'Submit KYC'|t }}
+          </a>
+        {% endif %}
       </div>
     </div>
 
-    <div class="profile-card">
-      <h3>{{ 'Subscription'|t }}</h3>
-      {% if subscription %}
-        <span class="status status--success">{{ 'Active'|t }}</span>
-        <p>{{ 'Expires:'|t }} {{ subscription.end_date|date('d M Y') }}</p>
-      {% else %}
-        <span class="status status--warning">{{ 'No Active Subscription'|t }}</span>
-        <p><a href="{{ path('niftybot_subscription.plans') }}">{{ 'View Plans'|t }}</a></p>
-      {% endif %}
+    <div class="niftybot-profile__aside">
+      <div class="niftybot-dashboard__wallet-card">
+        <div class="niftybot-dashboard__wallet-card-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></div>
+        <div class="niftybot-dashboard__wallet-card-label">{{ 'Wallet balance'|t }}</div>
+        <div class="niftybot-dashboard__wallet-card-value">₹{{ wallet_balance|number_format(2) }}</div>
+        <div class="niftybot-dashboard__wallet-card-meta mb-3">
+          <span>{{ 'Available for trading & withdrawals'|t }}</span>
+        </div>
+        <div class="niftybot-profile__wallet-actions">
+          <a href="{{ path('niftybot_user.wallet_deposit') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>{{ 'Deposit'|t }}
+          </a>
+          <a href="{{ path('niftybot_user.wallet_withdraw') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>{{ 'Withdraw'|t }}
+          </a>
+          <a href="{{ path('niftybot_user.wallet') }}" class="btn btn-sm btn-link">
+            {{ 'View transactions'|t }}
+          </a>
+        </div>
+      </div>
+
+      <div class="niftybot-dashboard__panel">
+        <h3 class="niftybot-profile__section-title">
+          <i class="bi bi-tags" aria-hidden="true"></i>
+          {{ 'Subscription'|t }}
+        </h3>
+        {% if subscription %}
+          <p class="niftybot-profile__status-text mb-2">
+            <span class="niftybot-profile__status-pill niftybot-profile__status-pill--success">{{ 'Active'|t }}</span>
+          </p>
+          <p class="niftybot-profile__muted mb-3">
+            {{ 'Expires on'|t }} <strong>{{ subscription.end_date|date('d M Y') }}</strong>
+          </p>
+          <a href="{{ path('niftybot_subscription.my_subscription') }}" class="btn btn-sm btn-outline-primary">
+            {{ 'Manage subscription'|t }}
+          </a>
+        {% else %}
+          <p class="niftybot-profile__status-text mb-2">
+            <span class="niftybot-profile__status-pill niftybot-profile__status-pill--warning">{{ 'No active plan'|t }}</span>
+          </p>
+          <p class="niftybot-profile__muted mb-3">{{ 'Subscribe to access premium trading features.'|t }}</p>
+          <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-sm btn-primary">
+            {{ 'View plans'|t }}
+          </a>
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <div class="profile-quick-links">
-    <h3>{{ 'Quick Links'|t }}</h3>
-    <ul>
-      <li><a href="{{ path('niftybot_dashboard.main') }}">{{ 'Dashboard'|t }}</a></li>
-      <li><a href="{{ path('niftybot_user.wallet') }}">{{ 'Wallet & Transactions'|t }}</a></li>
-      <li><a href="{{ path('niftybot_trading.order_form') }}">{{ 'Place Order'|t }}</a></li>
-      <li><a href="{{ path('niftybot_trading.history') }}">{{ 'Trade History'|t }}</a></li>
-      <li><a href="{{ path('niftybot_reports.user') }}">{{ 'Reports'|t }}</a></li>
-    </ul>
+  <div class="niftybot-profile__quick-section">
+    <h3 class="niftybot-profile__section-title mb-3">
+      <i class="bi bi-grid" aria-hidden="true"></i>
+      {{ 'Quick links'|t }}
+    </h3>
+    <div class="niftybot-profile__quick-grid">
+      <a href="{{ path('niftybot_dashboard.main') }}" class="niftybot-profile__quick-card">
+        <i class="bi bi-house" aria-hidden="true"></i>
+        <span>{{ 'Dashboard'|t }}</span>
+      </a>
+      <a href="{{ path('niftybot_user.wallet') }}" class="niftybot-profile__quick-card">
+        <i class="bi bi-wallet2" aria-hidden="true"></i>
+        <span>{{ 'Wallet'|t }}</span>
+      </a>
+      <a href="{{ path('niftybot_user.kyc_submit') }}" class="niftybot-profile__quick-card">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        <span>{{ 'KYC'|t }}</span>
+      </a>
+      <a href="{{ path('niftybot_trading.history') }}" class="niftybot-profile__quick-card">
+        <i class="bi bi-clock-history" aria-hidden="true"></i>
+        <span>{{ 'Trade history'|t }}</span>
+      </a>
+      <a href="{{ path('niftybot_reports.user') }}" class="niftybot-profile__quick-card">
+        <i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i>
+        <span>{{ 'Reports'|t }}</span>
+      </a>
+      <a href="{{ path('niftybot_investment.dashboard') }}" class="niftybot-profile__quick-card">
+        <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+        <span>{{ 'Investment'|t }}</span>
+      </a>
+    </div>
   </div>
 </div>

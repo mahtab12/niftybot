@@ -1,0 +1,46 @@
+global:
+  css:
+    theme:
+      assets/css/bootstrap.min.css: {}
+      assets/fonts/bootstrap/bootstrap-icons.css: {}
+      assets/css/main.min.css: {}
+      css/niftyoption.css: {}
+  js:
+    assets/js/bootstrap.bundle.min.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+dashboard:
+  css:
+    theme:
+      assets/vendor/overlay-scroll/OverlayScrollbars.min.css: {}
+  js:
+    assets/vendor/overlay-scroll/jquery.overlayScrollbars.min.js: {}
+    js/theme.js: {}
+  dependencies:
+    - niftyoption/global
+    - core/jquery
+    - core/drupal
+    - core/once
+
+auth:
+  css:
+    theme:
+      assets/css/bootstrap.min.css: {}
+      assets/fonts/bootstrap/bootstrap-icons.css: {}
+      assets/css/login.min.css: {}
+      css/auth-overrides.css: {}
+  js:
+    assets/js/bootstrap.bundle.min.js: {}
+  dependencies:
+    - core/drupal
+
+login:
+  dependencies:
+    - niftyoption/auth
+
+landing:
+  dependencies:
+    - niftyoption/global

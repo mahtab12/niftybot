@@ -180,25 +180,26 @@ function niftybot_subscription_schema() {
 }
 
 /**
- * Implements hook_install().
+ * Default subscription plan definitions.
  */
-function niftybot_subscription_install() {
+function niftybot_subscription_default_plans(): array {
   $now = \Drupal::time()->getRequestTime();
-  $database = \Drupal::database();
 
-  $plans = [
-    [
+  return [
+    'starter' => [
       'name' => 'Starter',
       'machine_name' => 'starter',
-      'description' => 'Perfect for beginners. Access basic trading features.',
-      'price' => 499.00,
+      'description' => 'Essential auto-trade access for getting started with index options.',
+      'price' => 4999.00,
       'duration_days' => 30,
       'max_orders_per_day' => 5,
-      'max_capital' => 50000.00,
+      'max_capital' => 250000.00,
       'features' => json_encode([
-        'Basic order placement',
-        'Portfolio tracking',
-        'Daily trade reports',
+        'Nifty & Sensex auto-trade',
+        'Up to 5 auto-trades per day',
+        'Live signal dashboard',
+        'OCO stop-loss & target on Groww',
+        'Portfolio & order history',
         'Email support',
       ]),
       'brokers_allowed' => 'groww',
@@ -207,57 +208,111 @@ function niftybot_subscription_install() {
       'created' => $now,
       'updated' => $now,
     ],
-    [
+    'pro' => [
       'name' => 'Pro',
       'machine_name' => 'pro',
-      'description' => 'For active traders. Unlock advanced features and higher limits.',
-      'price' => 1499.00,
+      'description' => 'For active traders who need higher daily auto-trade capacity.',
+      'price' => 8999.00,
       'duration_days' => 30,
-      'max_orders_per_day' => 25,
-      'max_capital' => 500000.00,
+      'max_orders_per_day' => 10,
+      'max_capital' => 1000000.00,
       'features' => json_encode([
-        'Advanced order types',
-        'Real-time portfolio tracking',
-        'Strategy signals',
-        'Detailed analytics & reports',
-        'Priority support',
-        'Multiple broker support',
+        'Everything in Starter',
+        'Up to 10 auto-trades per day',
+        'Custom trade quantity per index',
+        'Advanced trade reports',
+        'Priority email support',
       ]),
-      'brokers_allowed' => 'groww,zerodha,angel',
+      'brokers_allowed' => 'groww',
       'status' => 1,
       'weight' => 1,
       'created' => $now,
       'updated' => $now,
     ],
-    [
+    'elite' => [
       'name' => 'Elite',
       'machine_name' => 'elite',
-      'description' => 'For serious traders. Unlimited access with premium features.',
-      'price' => 3999.00,
+      'description' => 'Maximum daily auto-trade capacity for serious index options traders.',
+      'price' => 14999.00,
       'duration_days' => 30,
-      'max_orders_per_day' => 100,
+      'max_orders_per_day' => 25,
       'max_capital' => 5000000.00,
       'features' => json_encode([
-        'Unlimited order types',
-        'Auto-trading strategies',
-        'Risk management tools',
-        'Advanced analytics',
-        'API access',
-        'All brokers supported',
-        'Dedicated account manager',
-        '24/7 premium support',
+        'Everything in Pro',
+        'Up to 25 auto-trades per day',
+        'Highest capital limits',
+        'Dedicated priority support',
+        'Early access to new strategies',
       ]),
-      'brokers_allowed' => 'groww,zerodha,angel,upstox,fyers',
+      'brokers_allowed' => 'groww',
       'status' => 1,
       'weight' => 2,
       'created' => $now,
       'updated' => $now,
     ],
   ];
+}
 
-  foreach ($plans as $plan) {
+/**
+ * Implements hook_install().
+ */
+function niftybot_subscription_install() {
+  $database = \Drupal::database();
+
+  foreach (niftybot_subscription_default_plans() as $plan) {
     $database->insert('niftybot_subscription_plans')
       ->fields($plan)
       ->execute();
   }
+}
+
+/**
+ * Update subscription plan pricing and daily trade limits.
+ */
+function niftybot_subscription_update_9001() {
+  $database = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+
+  foreach (niftybot_subscription_default_plans() as $machine_name => $plan) {
+    unset($plan['machine_name'], $plan['created']);
+    $plan['updated'] = $now;
+
+    $exists = $database->select('niftybot_subscription_plans', 'sp')
+      ->fields('sp', ['plan_id'])
+      ->condition('machine_name', $machine_name)
+      ->execute()
+      ->fetchField();
+
+    if ($exists) {
+      $database->update('niftybot_subscription_plans')
+        ->fields($plan)
+        ->condition('machine_name', $machine_name)
+        ->execute();
+    }
+    else {
+      $plan['machine_name'] = $machine_name;
+      $plan['created'] = $now;
+      $database->insert('niftybot_subscription_plans')
+        ->fields($plan)
+        ->execute();
+    }
+  }
+}
+
+/**
+ * Starter plan: 5 auto-trades per day.
+ */
+function niftybot_subscription_update_9002() {
+  $database = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+  $starter = niftybot_subscription_default_plans()['starter'];
+
+  $database->update('niftybot_subscription_plans')
+    ->fields([
+      'max_orders_per_day' => 5,
+      'features' => $starter['features'],
+      'updated' => $now,
+    ])
+    ->condition('machine_name', 'starter')
+    ->execute();
 }

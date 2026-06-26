@@ -13,6 +13,7 @@ function niftybot_trading_theme($existing, $type, $theme, $path) {
     'niftybot_orders_list' => [
       'variables' => [
         'orders' => [],
+        'summary' => [],
         'is_admin' => FALSE,
       ],
       'template' => 'niftybot-orders-list',
@@ -28,6 +29,7 @@ function niftybot_trading_theme($existing, $type, $theme, $path) {
         'positions' => [],
         'total_pnl' => 0,
         'total_investment' => 0,
+        'position_count' => 0,
       ],
       'template' => 'niftybot-positions-list',
     ],

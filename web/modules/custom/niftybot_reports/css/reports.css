@@ -1,0 +1,425 @@
+/**
+ * NiftyBot trading reports — trader overview & P&L.
+ */
+
+.niftybot-reports {
+  --reports-primary: #1553a3;
+  --reports-primary-dark: #0f3d7a;
+  --reports-text: #17181c;
+  --reports-muted: #707f93;
+  --reports-border: #d7e0eb;
+  --reports-surface: #ffffff;
+  --reports-surface-muted: #f8fafc;
+  --reports-success: #119a2c;
+  --reports-danger: #e93443;
+  width: 100%;
+  color: var(--reports-text);
+}
+
+/* Hero — P&L summary */
+.niftybot-reports__hero {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(21, 83, 163, 0.18);
+  background: linear-gradient(135deg, #0f3d7a 0%, #1553a3 45%, #276dd9 100%);
+  color: #fff;
+}
+
+.niftybot-reports__hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.16) 0%, transparent 40%),
+    radial-gradient(circle at 8% 92%, rgba(255, 255, 255, 0.08) 0%, transparent 36%);
+  pointer-events: none;
+}
+
+.niftybot-reports__hero .card-body {
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.niftybot-reports__hero-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.niftybot-reports__hero-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.niftybot-reports__hero-amount {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.niftybot-reports__hero-amount--positive {
+  color: #b8f5c8;
+}
+
+.niftybot-reports__hero-amount--negative {
+  color: #ffc9cf;
+}
+
+.niftybot-reports__hero-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.niftybot-reports__hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.niftybot-reports__hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.niftybot-reports__hero-stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.niftybot-reports__hero-stat-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.niftybot-reports__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.niftybot-reports__hero-actions .btn-light {
+  color: var(--reports-primary-dark);
+  font-weight: 600;
+}
+
+.niftybot-reports__hero-actions .btn-outline-light:hover {
+  color: var(--reports-primary-dark);
+}
+
+/* KPI stat cards */
+.niftybot-reports__stat-card {
+  background: var(--reports-surface);
+  border: 1px solid var(--reports-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.15rem;
+  height: 100%;
+  box-shadow: 0 6px 18px rgba(23, 24, 28, 0.05);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.niftybot-reports__stat-card:hover {
+  border-color: #c5d9f5;
+  box-shadow: 0 10px 24px rgba(21, 83, 163, 0.1);
+}
+
+.niftybot-reports__stat-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.niftybot-reports__stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.niftybot-reports__stat-icon--orders {
+  background: #eaf2ff;
+  color: var(--reports-primary);
+}
+
+.niftybot-reports__stat-icon--executed {
+  background: #e8f8ec;
+  color: var(--reports-success);
+}
+
+.niftybot-reports__stat-icon--cancelled {
+  background: #fff0f2;
+  color: var(--reports-danger);
+}
+
+.niftybot-reports__stat-icon--rate {
+  background: #fff8e6;
+  color: #c98a00;
+}
+
+.niftybot-reports__stat-icon--investment {
+  background: #eef0ff;
+  color: #4f46e5;
+}
+
+.niftybot-reports__stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--reports-text);
+}
+
+.niftybot-reports__stat-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--reports-muted);
+}
+
+/* Section panels */
+.niftybot-reports__section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--reports-text);
+}
+
+.niftybot-reports__section-title .bi {
+  color: var(--reports-primary);
+  font-size: 1.1rem;
+}
+
+.niftybot-reports__section-subtitle {
+  margin: 0 0 1.15rem;
+  font-size: 0.875rem;
+  color: var(--reports-muted);
+}
+
+/* Report link cards */
+.niftybot-reports__links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.niftybot-reports__link-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--reports-border);
+  border-radius: 10px;
+  background: var(--reports-surface-muted);
+  text-decoration: none;
+  color: var(--reports-text);
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.niftybot-reports__link-card:hover,
+.niftybot-reports__link-card:focus {
+  border-color: #c5d9f5;
+  background: #f3f8ff;
+  box-shadow: 0 6px 16px rgba(21, 83, 163, 0.08);
+  color: var(--reports-text);
+}
+
+.niftybot-reports__link-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--reports-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: var(--reports-primary);
+  flex-shrink: 0;
+}
+
+.niftybot-reports__link-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.niftybot-reports__link-card-title {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--reports-text);
+}
+
+.niftybot-reports__link-card-desc {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--reports-muted);
+  margin-top: 0.1rem;
+}
+
+.niftybot-reports__link-card-arrow {
+  color: #c5cad3;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.niftybot-reports__link-card:hover .niftybot-reports__link-card-arrow,
+.niftybot-reports__link-card:focus .niftybot-reports__link-card-arrow {
+  color: var(--reports-primary);
+  transform: translateX(2px);
+}
+
+/* Export buttons */
+.niftybot-reports__exports {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.niftybot-reports__export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: flex-start;
+  padding: 0.7rem 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.niftybot-reports__export-btn .bi {
+  font-size: 1.1rem;
+}
+
+/* Empty state */
+.niftybot-reports__empty {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed var(--reports-border);
+  border-radius: 12px;
+  background: var(--reports-surface-muted);
+}
+
+.niftybot-reports__empty-icon {
+  font-size: 2.5rem;
+  color: #c5cad3;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.niftybot-reports__empty-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.niftybot-reports__empty-text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--reports-muted);
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* P&L report page */
+.niftybot-reports-pnl__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.niftybot-reports-pnl__summary-item {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--reports-border);
+  background: var(--reports-surface-muted);
+}
+
+.niftybot-reports-pnl__summary-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--reports-muted);
+  margin-bottom: 0.25rem;
+}
+
+.niftybot-reports-pnl__summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.niftybot-reports-pnl__summary-value--positive {
+  color: var(--reports-success);
+}
+
+.niftybot-reports-pnl__summary-value--negative {
+  color: var(--reports-danger);
+}
+
+.niftybot-reports-pnl__back {
+  margin-bottom: 1rem;
+}
+
+.niftybot-reports-pnl__back a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--reports-primary);
+  text-decoration: none;
+}
+
+.niftybot-reports-pnl__back a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 991.98px) {
+  .niftybot-reports__hero-actions {
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .niftybot-reports__hero .card-body {
+    padding: 1.35rem 1.25rem;
+  }
+
+  .niftybot-reports__stat-value {
+    font-size: 1.3rem;
+  }
+}

@@ -1,56 +1,166 @@
-<div class="niftybot-positions">
-  <div class="positions-summary">
-    <div class="summary-card">
-      <span class="summary-label">{{ 'Total Investment'|t }}</span>
-      <span class="summary-value">₹{{ total_investment|number_format(2) }}</span>
-    </div>
-    <div class="summary-card">
-      <span class="summary-label">{{ 'Total P&L'|t }}</span>
-      <span class="summary-value {{ total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
-        {{ total_pnl >= 0 ? '+' : '' }}₹{{ total_pnl|number_format(2) }}
-      </span>
+{#
+/**
+ * @file
+ * Open positions list.
+ */
+#}
+<div class="niftybot-trading-page niftybot-dashboard">
+  <div class="niftybot-trading-page__hero card mb-4">
+    <div class="niftybot-trading-page__hero-bg" aria-hidden="true"></div>
+    <div class="card-body position-relative">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <div class="d-flex align-items-start gap-3">
+            <div class="niftybot-trading-page__hero-icon" aria-hidden="true">
+              <i class="bi bi-briefcase"></i>
+            </div>
+            <div>
+              <p class="niftybot-trading-page__hero-label mb-2">{{ 'Unrealized P&L'|t }}</p>
+              <h2 class="niftybot-trading-page__hero-amount mb-0 {{ total_pnl >= 0 ? 'niftybot-trading-page__hero-amount--positive' : 'niftybot-trading-page__hero-amount--negative' }}">
+                {{ total_pnl >= 0 ? '+' : '' }}₹{{ total_pnl|number_format(2) }}
+              </h2>
+              <p class="niftybot-trading-page__hero-hint mb-0">
+                {{ 'Mark-to-market on your open positions'|t }}
+              </p>
+            </div>
+          </div>
+
+          <div class="niftybot-trading-page__hero-meta">
+            <div class="niftybot-trading-page__hero-stat">
+              <span class="niftybot-trading-page__hero-stat-label">{{ 'Open positions'|t }}</span>
+              <span class="niftybot-trading-page__hero-stat-value">{{ position_count }}</span>
+            </div>
+            <div class="niftybot-trading-page__hero-stat">
+              <span class="niftybot-trading-page__hero-stat-label">{{ 'Total investment'|t }}</span>
+              <span class="niftybot-trading-page__hero-stat-value">₹{{ total_investment|number_format(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="niftybot-trading-page__hero-actions">
+            <a href="{{ path('niftybot_trading.order_form') }}" class="btn btn-light">
+              <i class="bi bi-plus-circle me-2" aria-hidden="true"></i>
+              {{ 'Place order'|t }}
+            </a>
+            <a href="{{ path('niftybot_trading.history') }}" class="btn btn-outline-light">
+              <i class="bi bi-clock-history me-2" aria-hidden="true"></i>
+              {{ 'Trade history'|t }}
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  {% if positions|length > 0 %}
-    <table class="niftybot-table positions-table">
-      <thead>
-        <tr>
-          <th>{{ 'Symbol'|t }}</th>
-          <th>{{ 'Exchange'|t }}</th>
-          <th>{{ 'Type'|t }}</th>
-          <th>{{ 'Qty'|t }}</th>
-          <th>{{ 'Avg Price'|t }}</th>
-          <th>{{ 'Current'|t }}</th>
-          <th>{{ 'P&L'|t }}</th>
-          <th>{{ 'P&L %'|t }}</th>
-          <th>{{ 'Broker'|t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for pos in positions %}
-          <tr>
-            <td class="position-symbol">{{ pos.symbol }}</td>
-            <td>{{ pos.exchange }}</td>
-            <td>{{ pos.product_type }}</td>
-            <td>{{ pos.quantity }}</td>
-            <td>₹{{ pos.average_price|number_format(2) }}</td>
-            <td>₹{{ pos.current_price ? pos.current_price|number_format(2) : '--' }}</td>
-            <td class="{{ pos.pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
-              {{ pos.pnl >= 0 ? '+' : '' }}₹{{ pos.pnl|number_format(2) }}
-            </td>
-            <td class="{{ pos.pnl_percentage >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
-              {{ pos.pnl_percentage >= 0 ? '+' : '' }}{{ pos.pnl_percentage|number_format(2) }}%
-            </td>
-            <td>{{ pos.broker|capitalize }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <div class="empty-state">
-      <p>{{ 'No open positions. Place a trade to see your positions here.'|t }}</p>
-      <a href="{{ path('niftybot_trading.order_form') }}" class="button button--primary">{{ 'Place Order'|t }}</a>
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-4">
+      <div class="niftybot-trading-page__stat-card">
+        <div class="niftybot-trading-page__stat-card-top">
+          <div class="niftybot-trading-page__stat-icon niftybot-trading-page__stat-icon--positions" aria-hidden="true">
+            <i class="bi bi-layers"></i>
+          </div>
+        </div>
+        <div class="niftybot-trading-page__stat-value">{{ position_count }}</div>
+        <div class="niftybot-trading-page__stat-label">{{ 'Open positions'|t }}</div>
+      </div>
     </div>
-  {% endif %}
+    <div class="col-sm-6 col-lg-4">
+      <div class="niftybot-trading-page__stat-card">
+        <div class="niftybot-trading-page__stat-card-top">
+          <div class="niftybot-trading-page__stat-icon niftybot-trading-page__stat-icon--investment" aria-hidden="true">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+        </div>
+        <div class="niftybot-trading-page__stat-value">₹{{ total_investment|number_format(0) }}</div>
+        <div class="niftybot-trading-page__stat-label">{{ 'Capital deployed'|t }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="niftybot-trading-page__stat-card">
+        <div class="niftybot-trading-page__stat-card-top">
+          <div class="niftybot-trading-page__stat-icon niftybot-trading-page__stat-icon--trades" aria-hidden="true">
+            <i class="bi bi-graph-up-arrow"></i>
+          </div>
+        </div>
+        <div class="niftybot-trading-page__stat-value {{ total_pnl >= 0 ? 'niftybot-trading-page__pnl--positive' : 'niftybot-trading-page__pnl--negative' }}">
+          {{ total_pnl >= 0 ? '+' : '' }}₹{{ total_pnl|number_format(0) }}
+        </div>
+        <div class="niftybot-trading-page__stat-label">{{ 'Total P&L'|t }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card niftybot-trading-page__table-card">
+    <div class="card-header">
+      <h3 class="niftybot-trading-page__table-title">
+        <i class="bi bi-table" aria-hidden="true"></i>
+        {{ 'Position book'|t }}
+      </h3>
+      <p class="niftybot-trading-page__table-subtitle">
+        {{ 'Live holdings synced from your broker'|t }}
+      </p>
+    </div>
+
+    {% if positions|length > 0 %}
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover nowrap mb-0 niftybot-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'Symbol'|t }}</th>
+                <th scope="col">{{ 'Exchange'|t }}</th>
+                <th scope="col">{{ 'Type'|t }}</th>
+                <th scope="col">{{ 'Qty'|t }}</th>
+                <th scope="col">{{ 'Avg price'|t }}</th>
+                <th scope="col">{{ 'Current'|t }}</th>
+                <th scope="col">{{ 'P&L'|t }}</th>
+                <th scope="col">{{ 'P&L %'|t }}</th>
+                <th scope="col">{{ 'Broker'|t }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pos in positions %}
+                <tr>
+                  <td data-label="{{ 'Symbol'|t }}" class="niftybot-trading-page__symbol">{{ pos.symbol }}</td>
+                  <td data-label="{{ 'Exchange'|t }}">{{ pos.exchange }}</td>
+                  <td data-label="{{ 'Type'|t }}">{{ pos.product_type }}</td>
+                  <td data-label="{{ 'Qty'|t }}">{{ pos.quantity }}</td>
+                  <td data-label="{{ 'Avg price'|t }}">₹{{ pos.average_price|number_format(2) }}</td>
+                  <td data-label="{{ 'Current'|t }}">₹{{ pos.current_price ? pos.current_price|number_format(2) : '—' }}</td>
+                  <td data-label="{{ 'P&L'|t }}" class="{{ pos.pnl >= 0 ? 'niftybot-trading-page__pnl--positive' : 'niftybot-trading-page__pnl--negative' }}">
+                    {{ pos.pnl >= 0 ? '+' : '' }}₹{{ pos.pnl|number_format(2) }}
+                  </td>
+                  <td data-label="{{ 'P&L %'|t }}" class="{{ pos.pnl_percentage >= 0 ? 'niftybot-trading-page__pnl--positive' : 'niftybot-trading-page__pnl--negative' }}">
+                    {{ pos.pnl_percentage >= 0 ? '+' : '' }}{{ pos.pnl_percentage|number_format(2) }}%
+                  </td>
+                  <td data-label="{{ 'Broker'|t }}" class="niftybot-trading-page__broker">{{ pos.broker|capitalize }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="card-body">
+        <div class="niftybot-trading-page__empty">
+          <i class="bi bi-briefcase niftybot-trading-page__empty-icon" aria-hidden="true"></i>
+          <h3 class="niftybot-trading-page__empty-title">{{ 'No open positions'|t }}</h3>
+          <p class="niftybot-trading-page__empty-text">
+            {{ 'Place a trade or connect your broker to see live holdings here.'|t }}
+          </p>
+          <div class="niftybot-trading-page__empty-actions">
+            <a href="{{ path('niftybot_trading.order_form') }}" class="btn btn-primary">
+              <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
+              {{ 'Place order'|t }}
+            </a>
+            <a href="{{ path('niftybot_core.user_broker') }}" class="btn btn-outline-primary">
+              <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
+              {{ 'Connect broker'|t }}
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
 </div>

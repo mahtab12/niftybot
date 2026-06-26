@@ -1,0 +1,31 @@
+{#
+/**
+ * @file
+ * Professional breadcrumb trail for dashboard pages.
+ */
+#}
+{% if breadcrumb %}
+  <nav class="niftyoption-breadcrumb" aria-label="{{ 'Breadcrumb'|t }}">
+    <ol class="niftyoption-breadcrumb__list">
+      {% for item in breadcrumb %}
+        <li class="niftyoption-breadcrumb__item{% if loop.last %} is-active{% endif %}">
+          {% if not loop.last and item.url %}
+            <a href="{{ item.url }}" class="niftyoption-breadcrumb__link">
+              {% if loop.first %}
+                <i class="bi bi-house-door" aria-hidden="true"></i>
+                <span class="niftyoption-breadcrumb__text">{{ item.text }}</span>
+              {% else %}
+                <span class="niftyoption-breadcrumb__text">{{ item.text }}</span>
+              {% endif %}
+            </a>
+          {% else %}
+            <span class="niftyoption-breadcrumb__current" aria-current="page">{{ item.text }}</span>
+          {% endif %}
+          {% if not loop.last %}
+            <i class="bi bi-chevron-right niftyoption-breadcrumb__separator" aria-hidden="true"></i>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  </nav>
+{% endif %}

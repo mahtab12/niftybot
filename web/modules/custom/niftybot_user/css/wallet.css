@@ -1,24 +1,156 @@
 .wallet-payment-panel {
   margin: 1.5rem 0;
-  padding: 1.25rem;
-  border: 1px solid #d8dee4;
-  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #d7e0eb;
+  border-radius: 10px;
   background: #f8fafc;
 }
 
+/* Wallet deposit / withdraw forms */
+.niftybot-wallet-form-card {
+  border: 0;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+}
+
+.niftybot-wallet-form-card .card-header {
+  padding: 1.25rem 1.5rem 0.75rem;
+  border-bottom: 0;
+}
+
+.niftybot-wallet-form-card .card-body {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.niftybot-wallet-form__balance-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eaf2ff 0%, #f3f8ff 100%);
+  border: 1px solid #c5d9f5;
+}
+
+.niftybot-wallet-form__balance-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #707f93;
+  width: 100%;
+}
+
+@media (min-width: 576px) {
+  .niftybot-wallet-form__balance-label {
+    width: auto;
+    margin-right: auto;
+  }
+}
+
+.niftybot-wallet-form__balance-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1553a3;
+  line-height: 1.2;
+}
+
+.niftybot-wallet-form__balance-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.8125rem;
+  color: #707f93;
+  width: 100%;
+}
+
+@media (min-width: 576px) {
+  .niftybot-wallet-form__balance-meta {
+    width: auto;
+    text-align: right;
+  }
+}
+
+.niftybot-wallet-form label,
+.niftybot-wallet-form .form-item label {
+  font-weight: 500;
+  color: #17181c;
+  margin-bottom: 0.35rem;
+}
+
+.niftybot-wallet-form .form-item .description {
+  font-size: 0.8125rem;
+  color: #707f93;
+  margin-top: 0.35rem;
+}
+
+.niftybot-wallet-form .form-radios,
+.niftybot-wallet-form__radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.niftybot-wallet-form .form-type-radio {
+  flex: 1 1 12rem;
+  margin: 0 !important;
+}
+
+.niftybot-wallet-form .form-type-radio label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid #d7e0eb;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.niftybot-wallet-form .form-type-radio label:hover {
+  border-color: #1553a3;
+  background: #f8fbff;
+}
+
+.niftybot-wallet-form .form-type-radio input:checked + label {
+  border-color: #1553a3;
+  box-shadow: 0 0 0 3px rgba(21, 83, 163, 0.12);
+  background: #f3f8ff;
+}
+
+.niftybot-wallet-form .form-type-radio:has(input:checked) label {
+  border-color: #1553a3;
+  box-shadow: 0 0 0 3px rgba(21, 83, 163, 0.12);
+  background: #f3f8ff;
+}
+
+.niftybot-wallet-form .form-type-radio input {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.niftybot-wallet-form .form-actions {
+  margin-top: 1.25rem;
+  padding-top: 0.5rem;
+}
+
+.niftybot-wallet-form__submit {
+  min-width: 12rem;
+}
+
+.niftybot-wallet-form__info {
+  font-size: 0.9rem;
+  border-radius: 8px;
+}
+
 .wallet-payment-help {
-  margin-top: 1rem;
-  color: #475569;
-}
-
-.wallet-balance-meta {
-  margin: 0.75rem 0 1rem;
-  color: #475569;
-  font-size: 0.95rem;
-}
-
-.wallet-balance-meta p {
-  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #707f93;
+  margin: 0 0 1rem;
 }
 
 .upi-payment-demo {
@@ -26,6 +158,340 @@
   gap: 1.5rem;
   grid-template-columns: minmax(180px, 220px) 1fr;
   align-items: center;
+}
+
+.upi-payment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upi-payment-details__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.upi-payment-details__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #707f93;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.upi-payment-details__value {
+  font-size: 1.5rem;
+  color: #1553a3;
+}
+
+.upi-payment-details__upi {
+  font-size: 1.125rem;
+  color: #0f766e;
+  word-break: break-all;
+}
+
+.neft-bank-details {
+  margin-bottom: 0.5rem;
+}
+
+.neft-bank-details h4 {
+  margin-top: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #17181c;
+}
+
+.neft-bank-details table {
+  margin-bottom: 1rem;
+}
+
+.neft-bank-details table td {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Wallet overview — balance hero */
+.niftybot-wallet__hero,
+.wallet-balance-card {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(21, 83, 163, 0.18);
+  background: linear-gradient(135deg, #0f3d7a 0%, #1553a3 45%, #276dd9 100%);
+  color: #fff;
+}
+
+.niftybot-wallet__hero .card-body,
+.wallet-balance-card {
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.niftybot-wallet__hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.14) 0%, transparent 42%),
+    radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.08) 0%, transparent 35%);
+  pointer-events: none;
+}
+
+.niftybot-wallet__label,
+.wallet-balance-card > h3 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.niftybot-wallet__amount,
+.wallet-amount {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.niftybot-wallet__hint {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.niftybot-wallet__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.65rem;
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
+}
+
+.niftybot-wallet__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.niftybot-wallet__stat {
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  min-width: 10rem;
+}
+
+.niftybot-wallet__stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.15rem;
+}
+
+.niftybot-wallet__stat strong {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.wallet-balance-meta {
+  margin: 0.75rem 0 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.wallet-balance-meta p {
+  margin: 0.25rem 0;
+}
+
+.niftybot-wallet__actions,
+.wallet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.niftybot-wallet__actions .btn,
+.wallet-actions .button,
+.wallet-actions a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 9.5rem;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.niftybot-wallet__btn-deposit,
+.wallet-actions .button--primary {
+  color: #1553a3 !important;
+  background: #fff !important;
+  border: 1px solid #fff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.niftybot-wallet__btn-deposit:hover,
+.niftybot-wallet__btn-deposit:focus,
+.wallet-actions .button--primary:hover,
+.wallet-actions .button--primary:focus {
+  color: #0f3d7a !important;
+  background: #f3f8ff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+
+.niftybot-wallet__btn-withdraw,
+.wallet-actions .button:not(.button--primary) {
+  color: #fff !important;
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+}
+
+.niftybot-wallet__btn-withdraw:hover,
+.niftybot-wallet__btn-withdraw:focus,
+.wallet-actions .button:not(.button--primary):hover,
+.wallet-actions .button:not(.button--primary):focus {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: #fff !important;
+  transform: translateY(-1px);
+}
+
+.niftybot-wallet__history-card .card-header {
+  padding-bottom: 0.75rem;
+}
+
+.niftybot-wallet__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+  border-bottom: 1px solid #e8edf4;
+}
+
+.niftybot-wallet__filter {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid #d7e0eb;
+  background: #fff;
+  color: #4b5563;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.niftybot-wallet__filter:hover,
+.niftybot-wallet__filter:focus {
+  color: #1553a3;
+  border-color: #9ec5fe;
+  background: #f3f8ff;
+}
+
+.niftybot-wallet__filter.is-active {
+  color: #fff;
+  background: #1553a3;
+  border-color: #1553a3;
+}
+
+.niftybot-wallet__empty-icon {
+  font-size: 2.5rem;
+  color: #9499a9;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-wallet .wallet-transactions td,
+.niftybot-wallet .wallet-transactions th {
+  vertical-align: middle;
+  padding: 0.85rem 1rem;
+}
+
+.niftybot-wallet .txn-amount {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.niftybot-wallet .txn-amount--deposit {
+  color: #0a9126;
+}
+
+.niftybot-wallet .txn-amount--withdrawal,
+.niftybot-wallet .txn-amount--investment,
+.niftybot-wallet .txn-amount--algo_trade {
+  color: #e22132;
+}
+
+.niftybot-wallet .badge {
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+  white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+  .niftybot-wallet__actions,
+  .wallet-actions {
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .niftybot-wallet__hero .card-body,
+  .wallet-balance-card {
+    padding: 1.35rem 1.25rem 1.25rem;
+  }
+
+  .niftybot-wallet__actions .btn,
+  .wallet-actions .button,
+  .wallet-actions a.button {
+    flex: 1 1 calc(50% - 0.375rem);
+    min-width: 0;
+  }
+
+  .niftybot-wallet .wallet-transactions thead {
+    display: none;
+  }
+
+  .niftybot-wallet .wallet-transactions tbody tr {
+    display: block;
+    border-bottom: 1px solid #d7e0eb;
+    padding: 0.75rem 1rem;
+  }
+
+  .niftybot-wallet .wallet-transactions tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .niftybot-wallet .wallet-transactions tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.35rem 0;
+    border: 0;
+  }
+
+  .niftybot-wallet .wallet-transactions tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #707f93;
+    font-size: 0.8125rem;
+  }
 }
 
 .upi-qr-scanner__frame {
@@ -86,32 +552,6 @@
   text-align: center;
   font-size: 0.875rem;
   color: #64748b;
-}
-
-.upi-payment-details p {
-  margin: 0 0 0.75rem;
-}
-
-.upi-payment-details span {
-  display: block;
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-.upi-payment-details strong {
-  font-size: 1.125rem;
-}
-
-#wallet-upi-id {
-  color: #0f766e;
-}
-
-.neft-bank-details h4 {
-  margin-top: 0;
-}
-
-.neft-bank-details table {
-  margin-bottom: 1rem;
 }
 
 @media (max-width: 640px) {

@@ -8,3 +8,19 @@ wallet:
   dependencies:
     - core/drupal
     - core/once
+
+profile:
+  version: 1.x
+  css:
+    theme:
+      css/profile.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+
+kyc:
+  version: 1.x
+  css:
+    theme:
+      css/kyc.css: {}
+  dependencies:
+    - core/drupal

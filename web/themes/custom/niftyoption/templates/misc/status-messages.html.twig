@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * Status messages as Bootstrap alerts.
+ */
+#}
+<div data-drupal-messages>
+{% for type, messages in message_list %}
+  {%
+    set alert_type = type == 'error' ? 'danger' : (type == 'status' ? 'success' : type)
+  %}
+  {%
+    set icon_class = alert_type == 'danger' ? 'bi-exclamation-triangle-fill' : (alert_type == 'warning' ? 'bi-exclamation-circle-fill' : (alert_type == 'success' ? 'bi-check-circle-fill' : 'bi-info-circle-fill'))
+  %}
+  <div role="{{ type == 'error' ? 'alert' : 'status' }}" aria-label="{{ status_headings[type] }}" class="alert alert-{{ alert_type }} niftyoption-status-message d-flex align-items-start mb-3">
+    <i class="bi {{ icon_class }} niftyoption-status-message__icon" aria-hidden="true"></i>
+    <div class="niftyoption-status-message__body flex-grow-1">
+      {% if status_headings[type] %}
+        <h2 class="visually-hidden">{{ status_headings[type] }}</h2>
+      {% endif %}
+      {% if messages|length > 1 %}
+        <ul class="niftyoption-status-message__list mb-0">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {{ messages|first }}
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+</div>

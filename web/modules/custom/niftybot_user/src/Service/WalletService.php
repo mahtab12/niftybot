@@ -22,6 +22,17 @@ class WalletService {
   public const DEPOSITS_LIST_CACHE_TAG = 'niftybot_wallet_deposits';
 
   /**
+   * Supported wallet transaction history filters.
+   */
+  public const TRANSACTION_FILTERS = [
+    'all',
+    'deposit',
+    'withdrawal',
+    'investment',
+    'algo_trade',
+  ];
+
+  /**
    * Cache tag for the admin withdrawal verification list.
    */
   public const WITHDRAWALS_LIST_CACHE_TAG = 'niftybot_wallet_withdrawals';
@@ -177,10 +188,24 @@ class WalletService {
         ->execute();
     }
 
+    return $this->markDepositCompleted($transaction_id, TRUE);
+  }
+
+  /**
+   * Marks a pending deposit as completed without crediting the wallet.
+   */
+  public function markDepositCompleted(int $transaction_id, bool $balance_applied = FALSE): bool {
+    $transaction = $this->loadTransaction($transaction_id);
+    if (!$transaction || $transaction->type !== 'deposit' || $transaction->status !== 'pending') {
+      return FALSE;
+    }
+
+    $now = $this->time->getRequestTime();
+
     $this->database->update('niftybot_wallet_transactions')
       ->fields([
         'status' => 'completed',
-        'balance_applied' => 1,
+        'balance_applied' => $balance_applied ? 1 : 0,
         'updated' => $now,
       ])
       ->condition('transaction_id', $transaction_id)
@@ -361,14 +386,163 @@ class WalletService {
   /**
    * Returns recent transactions for a user.
    */
-  public function getUserTransactions(int $uid, int $limit = 50): array {
-    return $this->database->select('niftybot_wallet_transactions', 'wt')
+  public function getUserTransactions(int $uid, int $limit = 50, string $filter = 'all'): array {
+    if (!in_array($filter, self::TRANSACTION_FILTERS, TRUE)) {
+      $filter = 'all';
+    }
+
+    $query = $this->database->select('niftybot_wallet_transactions', 'wt')
       ->fields('wt')
-      ->condition('uid', $uid)
+      ->condition('uid', $uid);
+
+    $this->applyTransactionFilter($query, $filter);
+
+    return $query
       ->orderBy('created', 'DESC')
       ->range(0, $limit)
       ->execute()
       ->fetchAll();
+  }
+
+  /**
+   * Filter options for the wallet transaction history UI.
+   *
+   * @return array<int, array{id: string, label: \Drupal\Core\StringTranslation\TranslatableMarkup}>
+   */
+  public function getTransactionFilterOptions(): array {
+    return [
+      ['id' => 'all', 'label' => t('All')],
+      ['id' => 'deposit', 'label' => t('Deposits')],
+      ['id' => 'withdrawal', 'label' => t('Withdrawals')],
+      ['id' => 'investment', 'label' => t('Investments')],
+      ['id' => 'algo_trade', 'label' => t('Algo trade fees')],
+    ];
+  }
+
+  /**
+   * Applies a transaction category filter to a wallet query.
+   */
+  protected function applyTransactionFilter($query, string $filter): void {
+    switch ($filter) {
+      case 'deposit':
+        $query->condition('type', 'deposit');
+        break;
+
+      case 'algo_trade':
+        $query->condition('payment_method', 'algo_trade');
+        break;
+
+      case 'investment':
+        $query->condition('type', 'withdrawal');
+        $or = $query->orConditionGroup()
+          ->condition('payment_method', ['fxc_investment', 'subscription'], 'IN')
+          ->condition('notes', '%StrikeFlow Investment%', 'LIKE')
+          ->condition('notes', '%FXC Global investment%', 'LIKE');
+        $subscription_wallet = $query->andConditionGroup()
+          ->condition('payment_method', 'wallet')
+          ->condition('notes', 'Subscription:%', 'LIKE');
+        $or->condition($subscription_wallet);
+        $query->condition($or);
+        break;
+
+      case 'withdrawal':
+        $query->condition('type', 'withdrawal');
+        $query->condition('payment_method', ['fxc_investment', 'subscription', 'algo_trade'], 'NOT IN');
+        $query->condition('notes', '%StrikeFlow Investment%', 'NOT LIKE');
+        $query->condition('notes', '%FXC Global investment%', 'NOT LIKE');
+        $subscription_wallet = $query->andConditionGroup()
+          ->condition('payment_method', 'wallet')
+          ->condition('notes', 'Subscription:%', 'LIKE');
+        $query->condition($subscription_wallet, NULL, 'NOT');
+        break;
+    }
+  }
+
+  /**
+   * Whether a withdrawal row is an algo trade platform fee.
+   */
+  public function isAlgoTradeFeeTransaction(object $transaction): bool {
+    return ($transaction->type ?? '') === 'withdrawal'
+      && ($transaction->payment_method ?? '') === 'algo_trade';
+  }
+
+  /**
+   * Whether a withdrawal row is an in-platform investment (not a bank payout).
+   */
+  public function isInvestmentTransaction(object $transaction): bool {
+    if (($transaction->type ?? '') !== 'withdrawal') {
+      return FALSE;
+    }
+
+    $method = (string) ($transaction->payment_method ?? '');
+    if (in_array($method, ['fxc_investment', 'subscription'], TRUE)) {
+      return TRUE;
+    }
+
+    $notes = (string) ($transaction->notes ?? '');
+    if ($method === 'wallet' && str_starts_with($notes, 'Subscription:')) {
+      return TRUE;
+    }
+
+    return str_contains($notes, 'StrikeFlow Investment')
+      || str_contains($notes, 'FXC Global investment');
+  }
+
+  /**
+   * User-facing labels for wallet transaction history rows.
+   *
+   * @return array{type: string, type_label: \Drupal\Core\StringTranslation\TranslatableMarkup, method_label: \Drupal\Core\StringTranslation\TranslatableMarkup, badge_class: string}
+   */
+  public function getTransactionDisplayLabels(object $transaction): array {
+    if (($transaction->type ?? '') === 'deposit') {
+      return [
+        'type' => 'deposit',
+        'type_label' => t('Deposit'),
+        'method_label' => $this->formatPaymentMethodLabel($transaction->payment_method ?? ''),
+        'badge_class' => 'shade-light-green green',
+      ];
+    }
+
+    if ($this->isInvestmentTransaction($transaction)) {
+      return [
+        'type' => 'investment',
+        'type_label' => t('Investment'),
+        'method_label' => t('Investment'),
+        'badge_class' => 'shade-light-purple purple',
+      ];
+    }
+
+    if ($this->isAlgoTradeFeeTransaction($transaction)) {
+      return [
+        'type' => 'algo_trade',
+        'type_label' => t('Algo trade fee'),
+        'method_label' => t('Auto trade'),
+        'badge_class' => 'shade-light-orange orange',
+      ];
+    }
+
+    return [
+      'type' => 'withdrawal',
+      'type_label' => t('Withdrawal'),
+      'method_label' => $this->formatPaymentMethodLabel($transaction->payment_method ?? ''),
+      'badge_class' => 'shade-light-blue blue',
+    ];
+  }
+
+  /**
+   * Formats stored payment method codes for display.
+   */
+  protected function formatPaymentMethodLabel(string $payment_method): string {
+    return match ($payment_method) {
+      'upi' => (string) t('UPI'),
+      'bank_transfer' => (string) t('Bank transfer'),
+      'card' => (string) t('Card'),
+      'wallet' => (string) t('Wallet'),
+      'algo_trade' => (string) t('Algo trade fee'),
+      'subscription' => (string) t('Subscription'),
+      'fxc_investment' => (string) t('Investment'),
+      default => ucwords(str_replace('_', ' ', $payment_method)),
+    };
   }
 
 }

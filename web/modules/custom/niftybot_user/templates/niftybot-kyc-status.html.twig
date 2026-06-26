@@ -1,51 +1,63 @@
-<div class="niftybot-kyc-status">
-  <h2>{{ 'KYC Verification Status'|t }}</h2>
+<div class="niftybot-kyc-status-page">
+  <div class="card niftybot-kyc-status-card">
+    <div class="card-header">
+      <h3 class="card-title mb-1">{{ 'KYC Verification Status'|t }}</h3>
+      <p class="card-subtitle mb-0">{{ 'Track your identity verification progress'|t }}</p>
+    </div>
+    <div class="card-body">
+      {% if kyc %}
+        <div class="niftybot-kyc-status-badge kyc-status--{{ kyc.status }}">
+          {{ status_label }}
+        </div>
 
-  {% if kyc %}
-    <div class="kyc-status-card">
-      <div class="kyc-status-badge kyc-status--{{ kyc.status }}">
-        {{ status_label }}
-      </div>
+        <div class="table-responsive">
+          <table class="table table-borderless niftybot-kyc-details-table mb-0">
+            <tbody>
+              <tr>
+                <td>{{ 'Name'|t }}</td>
+                <td>{{ kyc.full_name }}</td>
+              </tr>
+              <tr>
+                <td>{{ 'PAN'|t }}</td>
+                <td>{{ kyc.pan_number }}</td>
+              </tr>
+              <tr>
+                <td>{{ 'Submitted On'|t }}</td>
+                <td>{{ kyc.created|date('d M Y, h:i A') }}</td>
+              </tr>
+              {% if kyc.updated > kyc.created %}
+                <tr>
+                  <td>{{ 'Last Updated'|t }}</td>
+                  <td>{{ kyc.updated|date('d M Y, h:i A') }}</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
 
-      <table class="kyc-details">
-        <tr>
-          <td><strong>{{ 'Name'|t }}</strong></td>
-          <td>{{ kyc.full_name }}</td>
-        </tr>
-        <tr>
-          <td><strong>{{ 'PAN'|t }}</strong></td>
-          <td>{{ kyc.pan_number }}</td>
-        </tr>
-        <tr>
-          <td><strong>{{ 'Submitted On'|t }}</strong></td>
-          <td>{{ kyc.created|date('d M Y, h:i A') }}</td>
-        </tr>
-        {% if kyc.updated > kyc.created %}
-        <tr>
-          <td><strong>{{ 'Last Updated'|t }}</strong></td>
-          <td>{{ kyc.updated|date('d M Y, h:i A') }}</td>
-        </tr>
+        {% if kyc.status == 'pending' or kyc.status == 'under_review' %}
+          <div class="alert alert-info mt-4 mb-0">
+            {{ 'Your documents are being reviewed. We will notify you once verification is complete.'|t }}
+          </div>
         {% endif %}
-      </table>
 
-      {% if kyc.status == 'rejected' %}
-        <div class="kyc-rejection">
-          <h4>{{ 'Reason for Rejection'|t }}</h4>
-          <p>{{ kyc.rejection_reason }}</p>
-          <a href="{{ path('niftybot_user.kyc_submit') }}" class="button button--primary">{{ 'Re-submit KYC'|t }}</a>
-        </div>
-      {% endif %}
+        {% if kyc.status == 'rejected' %}
+          <div class="alert alert-warning mt-4 mb-0">
+            <h4 class="h6 fw-semibold">{{ 'Reason for Rejection'|t }}</h4>
+            <p class="mb-3">{{ kyc.rejection_reason }}</p>
+            <a href="{{ path('niftybot_user.kyc_submit') }}" class="btn btn-primary">{{ 'Re-submit KYC'|t }}</a>
+          </div>
+        {% endif %}
 
-      {% if kyc.status == 'approved' %}
-        <div class="kyc-approved-message">
-          <p>{{ 'Your identity has been verified. You can now trade on the platform.'|t }}</p>
-        </div>
+        {% if kyc.status == 'approved' %}
+          <div class="alert alert-success mt-4 mb-0">
+            {{ 'Your identity has been verified. You can now trade on the platform.'|t }}
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="text-secondary mb-4">{{ 'You have not submitted KYC verification yet. KYC is required before you can start trading.'|t }}</p>
+        <a href="{{ path('niftybot_user.kyc_submit') }}" class="btn btn-primary btn-lg">{{ 'Submit KYC Now'|t }}</a>
       {% endif %}
     </div>
-  {% else %}
-    <div class="kyc-not-submitted">
-      <p>{{ 'You have not submitted KYC verification yet. KYC is required before you can start trading.'|t }}</p>
-      <a href="{{ path('niftybot_user.kyc_submit') }}" class="button button--primary">{{ 'Submit KYC Now'|t }}</a>
-    </div>
-  {% endif %}
+  </div>
 </div>

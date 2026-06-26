@@ -1,60 +1,96 @@
-<div class="niftybot-pnl-report">
-  <h2>{{ 'Profit & Loss Report'|t }}</h2>
+{#
+/**
+ * @file
+ * Profit & loss report.
+ */
+#}
+<div class="niftybot-reports niftybot-reports-pnl niftybot-dashboard">
+  <div class="niftybot-reports-pnl__back">
+    <a href="{{ path('niftybot_reports.user') }}">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i>
+      {{ 'Back to reports'|t }}
+    </a>
+  </div>
 
-  <div class="pnl-summary">
-    <div class="stat-card large">
-      <div class="stat-value {{ total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
+  <div class="niftybot-dashboard__panel mb-4">
+    <h2 class="niftybot-reports__section-title mb-1">
+      <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+      {{ 'Profit & loss report'|t }}
+    </h2>
+    <p class="niftybot-reports__section-subtitle mb-0">
+      {{ 'Daily session breakdown from executed orders'|t }}
+    </p>
+  </div>
+
+  <div class="niftybot-reports-pnl__summary">
+    <div class="niftybot-reports-pnl__summary-item">
+      <span class="niftybot-reports-pnl__summary-label">{{ 'Total P&L'|t }}</span>
+      <span class="niftybot-reports-pnl__summary-value {{ total_pnl >= 0 ? 'niftybot-reports-pnl__summary-value--positive' : 'niftybot-reports-pnl__summary-value--negative' }}">
         {{ total_pnl >= 0 ? '+' : '' }}₹{{ total_pnl|number_format(2) }}
-      </div>
-      <div class="stat-label">{{ 'Total P&L'|t }}</div>
+      </span>
     </div>
-    <div class="stat-card">
-      <div class="stat-value pnl-positive">{{ winning_trades }}</div>
-      <div class="stat-label">{{ 'Winning Days'|t }}</div>
+    <div class="niftybot-reports-pnl__summary-item">
+      <span class="niftybot-reports-pnl__summary-label">{{ 'Winning days'|t }}</span>
+      <span class="niftybot-reports-pnl__summary-value niftybot-reports-pnl__summary-value--positive">{{ winning_trades }}</span>
     </div>
-    <div class="stat-card">
-      <div class="stat-value pnl-negative">{{ losing_trades }}</div>
-      <div class="stat-label">{{ 'Losing Days'|t }}</div>
+    <div class="niftybot-reports-pnl__summary-item">
+      <span class="niftybot-reports-pnl__summary-label">{{ 'Losing days'|t }}</span>
+      <span class="niftybot-reports-pnl__summary-value niftybot-reports-pnl__summary-value--negative">{{ losing_trades }}</span>
     </div>
     {% if (winning_trades + losing_trades) > 0 %}
-    <div class="stat-card">
-      <div class="stat-value">{{ ((winning_trades / (winning_trades + losing_trades)) * 100)|number_format(1) }}%</div>
-      <div class="stat-label">{{ 'Win Rate'|t }}</div>
-    </div>
+      <div class="niftybot-reports-pnl__summary-item">
+        <span class="niftybot-reports-pnl__summary-label">{{ 'Win rate'|t }}</span>
+        <span class="niftybot-reports-pnl__summary-value">
+          {{ ((winning_trades / (winning_trades + losing_trades)) * 100)|number_format(1) }}%
+        </span>
+      </div>
     {% endif %}
   </div>
 
-  {% if daily_pnl|length > 0 %}
-    <h3>{{ 'Daily Breakdown'|t }}</h3>
-    <table class="niftybot-table pnl-table">
-      <thead>
-        <tr>
-          <th>{{ 'Date'|t }}</th>
-          <th>{{ 'Trades'|t }}</th>
-          <th>{{ 'Buy Value'|t }}</th>
-          <th>{{ 'Sell Value'|t }}</th>
-          <th>{{ 'P&L'|t }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for day in daily_pnl %}
-          <tr>
-            <td>{{ day.date }}</td>
-            <td>{{ day.trades }}</td>
-            <td>₹{{ day.buy|number_format(2) }}</td>
-            <td>₹{{ day.sell|number_format(2) }}</td>
-            <td class="{{ day.pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
-              {{ day.pnl >= 0 ? '+' : '' }}₹{{ day.pnl|number_format(2) }}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p class="empty-state">{{ 'No trading data available for P&L report.'|t }}</p>
-  {% endif %}
+  <div class="card niftybot-reports__history-card border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom">
+      <h3 class="card-title mb-0">{{ 'Daily breakdown'|t }}</h3>
+    </div>
 
-  <div class="report-actions">
-    <a href="{{ path('niftybot_reports.user') }}" class="button">{{ 'Back to Reports'|t }}</a>
+    {% if daily_pnl|length > 0 %}
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover nowrap mb-0 niftybot-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'Date'|t }}</th>
+                <th scope="col">{{ 'Trades'|t }}</th>
+                <th scope="col">{{ 'Buy value'|t }}</th>
+                <th scope="col">{{ 'Sell value'|t }}</th>
+                <th scope="col">{{ 'P&L'|t }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for day in daily_pnl %}
+                <tr>
+                  <td data-label="{{ 'Date'|t }}">{{ day.date }}</td>
+                  <td data-label="{{ 'Trades'|t }}">{{ day.trades }}</td>
+                  <td data-label="{{ 'Buy value'|t }}">₹{{ day.buy|number_format(2) }}</td>
+                  <td data-label="{{ 'Sell value'|t }}">₹{{ day.sell|number_format(2) }}</td>
+                  <td data-label="{{ 'P&L'|t }}" class="{{ day.pnl >= 0 ? 'text-success' : 'text-danger' }} fw-semibold">
+                    {{ day.pnl >= 0 ? '+' : '' }}₹{{ day.pnl|number_format(2) }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="card-body">
+        <div class="niftybot-reports__empty py-4">
+          <i class="bi bi-inbox niftybot-reports__empty-icon" aria-hidden="true"></i>
+          <h3 class="niftybot-reports__empty-title">{{ 'No trading data yet'|t }}</h3>
+          <p class="niftybot-reports__empty-text">
+            {{ 'Executed orders will appear here once you start trading.'|t }}
+          </p>
+        </div>
+      </div>
+    {% endif %}
   </div>
 </div>

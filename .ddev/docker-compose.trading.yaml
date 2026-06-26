@@ -7,12 +7,9 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+    env_file:
+      - ../trading_service/.env
     environment:
-      - API_KEY=${TRADING_API_KEY:-niftybot-dev-key}
-      - GROWW_API_KEY=${GROWW_API_KEY:-}
-      - GROWW_API_SECRET=${GROWW_API_SECRET:-}
-      - GROWW_TOTP_SECRET=${GROWW_TOTP_SECRET:-}
-      - GROWW_AUTH_METHOD=${GROWW_AUTH_METHOD:-api_key}
       - DB_HOST=db
       - DB_PORT=3306
       - DB_USER=db

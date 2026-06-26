@@ -7,7 +7,21 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import health, margin, market, orders, positions, smart_orders, user
+from app.routers import (
+    auto_trade,
+    auto_trade_stream,
+    broker_credentials,
+    health,
+    margin,
+    market,
+    market_stream,
+    orders,
+    portfolio_stream,
+    positions,
+    smart_orders,
+    user,
+    user_auto_trade,
+)
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -36,12 +50,18 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(broker_credentials.router)
 app.include_router(orders.router)
 app.include_router(positions.router)
 app.include_router(user.router)
 app.include_router(market.router)
+app.include_router(auto_trade.router)
 app.include_router(smart_orders.router)
 app.include_router(margin.router)
+app.include_router(auto_trade_stream.router)
+app.include_router(market_stream.router)
+app.include_router(portfolio_stream.router)
+app.include_router(user_auto_trade.router)
 
 
 @app.on_event("startup")

@@ -3,6 +3,7 @@
 namespace Drupal\niftybot_user\Form;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -32,16 +33,23 @@ class WalletDepositReviewForm extends FormBase {
   protected WalletService $walletService;
 
   /**
+   * The module handler.
+   */
+  protected ModuleHandlerInterface $moduleHandler;
+
+  /**
    * Constructs the form.
    */
   public function __construct(
     Connection $database,
     AccountProxyInterface $current_user,
     WalletService $wallet_service,
+    ModuleHandlerInterface $module_handler,
   ) {
     $this->database = $database;
     $this->currentUser = $current_user;
     $this->walletService = $wallet_service;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -51,7 +59,8 @@ class WalletDepositReviewForm extends FormBase {
     return new static(
       $container->get('database'),
       $container->get('current_user'),
-      $container->get('niftybot_user.wallet_service')
+      $container->get('niftybot_user.wallet_service'),
+      $container->get('module_handler')
     );
   }
 
@@ -76,6 +85,11 @@ class WalletDepositReviewForm extends FormBase {
       ? $this->t('UPI')
       : $this->t('NEFT / RTGS');
 
+    $purpose_label = $this->t('Wallet deposit');
+    if (!empty($transaction->notes) && preg_match('/^subscription:\d+$/', (string) $transaction->notes)) {
+      $purpose_label = $this->t('Subscription payment');
+    }
+
     $user = User::load($transaction->uid);
     $form_state->set('transaction_id', (int) $transaction_id);
 
@@ -89,6 +103,7 @@ class WalletDepositReviewForm extends FormBase {
       '#type' => 'table',
       '#rows' => [
         [$this->t('Transaction ID'), $transaction->transaction_id],
+        [$this->t('Purpose'), $purpose_label],
         [$this->t('User'), $user ? $user->getAccountName() : $this->t('Unknown')],
         [$this->t('Email'), $user ? $user->getEmail() : $this->t('Unknown')],
         [$this->t('Payment Method'), $method_label],
@@ -163,7 +178,12 @@ class WalletDepositReviewForm extends FormBase {
     $action = $form_state->getValue('action');
 
     if ($action === 'approve') {
-      if ($this->walletService->completeDeposit($transaction_id)) {
+      $transaction = $this->walletService->loadTransaction($transaction_id);
+      $handled = array_filter($this->moduleHandler->invokeAll('niftybot_wallet_deposit_approve', [$transaction]));
+      if ($handled) {
+        $this->messenger()->addStatus($this->t('Deposit verified.'));
+      }
+      elseif ($this->walletService->completeDeposit($transaction_id)) {
         $this->messenger()->addStatus($this->t('Deposit verified and wallet credited.'));
       }
       else {
@@ -172,6 +192,8 @@ class WalletDepositReviewForm extends FormBase {
     }
     else {
       $notes = trim((string) $form_state->getValue('notes'));
+      $transaction = $this->walletService->loadTransaction($transaction_id);
+      $this->moduleHandler->invokeAll('niftybot_wallet_deposit_reject', [$transaction, $notes]);
       if ($this->walletService->rejectDeposit($transaction_id, $notes)) {
         $this->messenger()->addStatus($this->t('Deposit request rejected.'));
       }

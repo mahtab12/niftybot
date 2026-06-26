@@ -10,18 +10,17 @@ module:
   ckeditor5: 0
   config: 0
   contextual: 0
-  country: 0
   datetime: 0
   dblog: 0
   dynamic_page_cache: 0
   editor: 0
-  email_registration: 0
   field: 0
   field_ui: 0
   file: 0
   filter: 0
   help: 0
   image: 0
+  inline_form_errors: 0
   layout_builder: 0
   layout_discovery: 0
   link: 0
@@ -31,6 +30,7 @@ module:
   navigation: 0
   niftybot_core: 0
   niftybot_dashboard: 0
+  niftybot_investment: 0
   niftybot_reports: 0
   niftybot_subscription: 0
   niftybot_trading: 0
@@ -45,14 +45,11 @@ module:
   text: 0
   update: 0
   user: 0
-  user_dashboard: 0
   views_ui: 0
   views: 10
   standard: 1000
 theme:
   olivero: 0
   claro: 0
-  radix: 0
-  stable9: 0
-  bootstrap5: 0
+  niftyoption: 0
 profile: standard

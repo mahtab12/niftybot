@@ -8,18 +8,21 @@
       </div>
       <div class="upi-qr-scanner__scan-line"></div>
     </div>
-    <p class="upi-qr-scanner__label">{{ 'Demo UPI Scanner'|t }}</p>
+    <p class="upi-qr-scanner__label">{{ 'Scan to pay via UPI'|t }}</p>
   </div>
 
   <div class="upi-payment-details">
-    <p class="upi-payment-amount">
-      <span>{{ 'Amount'|t }}</span>
-      <strong class="wallet-upi-amount-display">{% if amount %}₹{{ amount|number_format(2) }}{% else %}—{% endif %}</strong>
-    </p>
-    <p class="upi-payment-id">
-      <span>{{ 'UPI ID'|t }}</span>
-      <strong id="wallet-upi-id">{{ upi_id }}</strong>
-    </p>
-    <button type="button" class="button wallet-upi-copy" data-upi-id="{{ upi_id }}">{{ 'Copy UPI ID'|t }}</button>
+    <div class="upi-payment-details__row">
+      <span class="upi-payment-details__label">{{ 'Amount'|t }}</span>
+      <strong class="wallet-upi-amount-display upi-payment-details__value">{% if amount %}₹{{ amount|number_format(2) }}{% else %}—{% endif %}</strong>
+    </div>
+    <div class="upi-payment-details__row">
+      <span class="upi-payment-details__label">{{ 'UPI ID'|t }}</span>
+      <strong id="wallet-upi-id" class="upi-payment-details__upi">{{ upi_id }}</strong>
+    </div>
+    <button type="button" class="btn btn-outline-primary btn-sm wallet-upi-copy" data-upi-id="{{ upi_id }}">
+      <i class="bi bi-clipboard me-1" aria-hidden="true"></i>
+      {{ 'Copy UPI ID'|t }}
+    </button>
   </div>
 </div>

@@ -1,0 +1,86 @@
+<div class="niftybot-broker-status">
+  <h2>{{ 'Broker Connection'|t }}</h2>
+
+  <div class="niftybot-stats-grid">
+    <div class="niftybot-stat-card">
+      <div class="stat-label">{{ 'Broker'|t }}</div>
+      <div class="stat-value">{{ broker|upper }}</div>
+    </div>
+
+    <div class="niftybot-stat-card">
+      <div class="stat-label">{{ 'Connection Status'|t }}</div>
+      <div class="stat-value">
+        {% if connected %}
+          <span class="niftybot-status niftybot-status--connected">{{ 'Connected'|t }}</span>
+        {% else %}
+          <span class="niftybot-status niftybot-status--disconnected">{{ 'Not connected'|t }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="niftybot-stat-card">
+      <div class="stat-label">{{ 'Trading API'|t }}</div>
+      <div class="stat-value">
+        {% if api_configured %}
+          <span class="niftybot-status niftybot-status--connected">{{ 'Configured'|t }}</span>
+        {% else %}
+          <span class="niftybot-status niftybot-status--disconnected">{{ 'Not configured'|t }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <p class="niftybot-broker-status__message">{{ status_message }}</p>
+  <p class="niftybot-broker-status__url">
+    <strong>{{ 'Trading API URL:'|t }}</strong> <code>{{ base_url }}</code>
+  </p>
+
+  {% if not api_configured %}
+    <p>
+      <a href="{{ path('niftybot_core.settings') }}">{{ 'Configure Trading Service API Key'|t }}</a>
+    </p>
+  {% endif %}
+
+  <h3>{{ 'Groww User Profile'|t }}</h3>
+
+  {% if profile.success %}
+    <table class="niftybot-broker-status__table">
+      <tbody>
+        <tr>
+          <th>{{ 'User ID (vendor_user_id)'|t }}</th>
+          <td><code>{{ profile.vendor_user_id|default('-') }}</code></td>
+        </tr>
+        <tr>
+          <th>{{ 'UCC'|t }}</th>
+          <td>{{ profile.ucc|default('-') }}</td>
+        </tr>
+        <tr>
+          <th>{{ 'NSE Enabled'|t }}</th>
+          <td>{{ profile.nse_enabled ? 'Yes'|t : 'No'|t }}</td>
+        </tr>
+        <tr>
+          <th>{{ 'BSE Enabled'|t }}</th>
+          <td>{{ profile.bse_enabled ? 'Yes'|t : 'No'|t }}</td>
+        </tr>
+        <tr>
+          <th>{{ 'DDPI Enabled'|t }}</th>
+          <td>{{ profile.ddpi_enabled ? 'Yes'|t : 'No'|t }}</td>
+        </tr>
+        <tr>
+          <th>{{ 'Active Segments'|t }}</th>
+          <td>
+            {% if profile.active_segments is not empty %}
+              {{ profile.active_segments|join(', ') }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  {% else %}
+    <p class="messages messages--warning">
+      {{ profile.message|default('User profile could not be loaded. Check the Trading Service API Key and broker credentials in trading_service/.env.'|t) }}
+    </p>
+  {% endif %}
+</div>

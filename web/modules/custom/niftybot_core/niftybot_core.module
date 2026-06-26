@@ -5,6 +5,7 @@
  * Primary module hooks for NiftyBot Core module.
  */
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
@@ -31,5 +32,131 @@ function niftybot_core_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'niftybot-admin-overview',
     ],
+    'niftybot_broker_status' => [
+      'variables' => [
+        'broker' => 'groww',
+        'connected' => FALSE,
+        'status_message' => '',
+        'api_configured' => FALSE,
+        'base_url' => '',
+        'profile' => [],
+      ],
+      'template' => 'niftybot-broker-status',
+    ],
+    'niftybot_portfolio' => [
+      'variables' => [
+        'broker' => 'groww',
+        'api_configured' => FALSE,
+        'summary' => [],
+        'summary_success' => FALSE,
+        'summary_message' => '',
+        'holdings' => [],
+        'positions' => [],
+        'api_response' => [],
+      ],
+      'template' => 'niftybot-portfolio',
+    ],
+    'niftybot_market' => [
+      'variables' => [
+        'broker' => 'groww',
+        'api_configured' => FALSE,
+        'items' => [],
+        'dashboard_success' => FALSE,
+        'dashboard_message' => '',
+      ],
+      'template' => 'niftybot-market',
+    ],
+    'niftybot_auto_trade' => [
+      'variables' => [
+        'instrument' => 'nifty',
+        'page_title' => 'Nifty Auto Trade',
+        'index_label' => 'Nifty 50 LTP',
+        'intro' => '',
+        'api_configured' => FALSE,
+        'status' => [],
+        'status_success' => FALSE,
+        'is_user' => FALSE,
+        'broker_connected' => FALSE,
+        'broker_summary' => [],
+      ],
+      'template' => 'niftybot-auto-trade',
+    ],
+    'niftybot_auto_trade_overview' => [
+      'variables' => [],
+      'template' => 'niftybot-auto-trade-overview',
+    ],
+    'niftybot_auto_trade_user' => [
+      'variables' => [
+        'instrument' => 'nifty',
+        'page_title' => 'Nifty Auto Trade',
+        'index_label' => 'Nifty 50 LTP',
+        'intro' => '',
+        'lot_size' => 65,
+        'lot_step' => 65,
+        'trade_quantity' => 65,
+        'auto_trade_access' => [],
+        'auto_trade_fee_history' => [],
+        'auto_trade_fee_summary' => [
+          'total_fees' => 0,
+          'trade_count' => 0,
+          'month_fees' => 0,
+          'month_count' => 0,
+        ],
+        'api_configured' => FALSE,
+        'status' => [],
+        'status_success' => FALSE,
+        'broker_connected' => FALSE,
+        'broker_summary' => [],
+        'is_user' => FALSE,
+        'user_trade_history' => [],
+      ],
+      'template' => 'niftybot-auto-trade-user',
+    ],
+    'niftybot_smart_orders' => [
+      'variables' => [
+        'api_configured' => FALSE,
+        'oco_orders' => [],
+        'gtt_orders' => [],
+        'message' => '',
+      ],
+      'template' => 'niftybot-smart-orders',
+    ],
+    'niftybot_support' => [
+      'variables' => [
+        'site_name' => '',
+        'support_email' => '',
+        'quick_links' => [],
+      ],
+      'template' => 'niftybot-support',
+    ],
+    'niftybot_faq' => [
+      'variables' => [
+        'faq_sections' => [],
+      ],
+      'template' => 'niftybot-faq',
+    ],
   ];
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for login redirect to dashboard.
+ */
+function niftybot_core_form_user_login_form_alter(array &$form, FormStateInterface $form_state): void {
+  $form['#submit'][] = 'niftybot_core_user_login_dashboard_redirect';
+}
+
+/**
+ * Redirects users to the trading dashboard after successful login.
+ */
+function niftybot_core_user_login_dashboard_redirect(array &$form, FormStateInterface $form_state): void {
+  if ($form_state->getErrors()) {
+    return;
+  }
+
+  $destination = \Drupal::request()->query->get('destination');
+  if (is_string($destination) && $destination !== '' && $destination !== '/user/login') {
+    return;
+  }
+
+  $form_state->setRedirect('niftybot_dashboard.main');
 }

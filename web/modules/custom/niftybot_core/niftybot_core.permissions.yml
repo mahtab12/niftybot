@@ -23,3 +23,11 @@ manage niftybot subscriptions:
   title: 'Manage Subscriptions'
   description: 'Allow administrators to manage subscription plans.'
   restrict access: true
+
+access niftybot auto trade:
+  title: 'Access Auto Trade'
+  description: 'Allow users to view and control auto-trade strategies.'
+
+manage niftybot broker:
+  title: 'Manage Broker Connection'
+  description: 'Allow users to connect and manage broker API credentials.'

@@ -49,10 +49,12 @@ class UserProfileController extends ControllerBase {
     $user = $this->entityTypeManager()->getStorage('user')->load($uid);
 
     $kyc = $this->database->select('niftybot_kyc', 'k')
-      ->fields('k', ['status'])
+      ->fields('k')
       ->condition('uid', $uid)
       ->execute()
-      ->fetchField();
+      ->fetchObject();
+
+    $kyc_status = $kyc ? $kyc->status : 'not_submitted';
 
     $wallet_balance = $this->database->select('niftybot_wallet', 'w')
       ->fields('w', ['balance'])
@@ -69,8 +71,24 @@ class UserProfileController extends ControllerBase {
 
     return [
       '#theme' => 'niftybot_user_profile',
+      '#attached' => [
+        'library' => [
+          'niftybot_user/profile',
+        ],
+      ],
       '#user' => $user,
-      '#kyc_status' => $kyc ?: 'not_submitted',
+      '#display_name' => niftybot_user_display_name($user),
+      '#full_name' => niftybot_user_profile_field_value($user, 'field_full_name')
+        ?: ($kyc ? trim((string) $kyc->full_name) : ''),
+      '#mobile_number' => niftybot_user_profile_field_value($user, 'field_mobile_number'),
+      '#kyc' => $kyc ?: NULL,
+      '#kyc_status' => $kyc_status,
+      '#bank_account_masked' => $kyc
+        ? niftybot_user_mask_bank_account((string) $kyc->bank_account_number)
+        : '',
+      '#aadhaar_display' => $kyc
+        ? niftybot_user_format_aadhaar_display((string) $kyc->aadhaar_last4)
+        : '',
       '#wallet_balance' => (float) ($wallet_balance ?? 0),
       '#subscription' => $subscription,
       '#member_id' => $this->memberIdService->getMemberId($uid),

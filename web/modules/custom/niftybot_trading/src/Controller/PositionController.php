@@ -57,6 +57,10 @@ class PositionController extends ControllerBase {
       '#positions' => $positions,
       '#total_pnl' => $total_pnl,
       '#total_investment' => $total_investment,
+      '#position_count' => count($positions),
+      '#attached' => [
+        'library' => ['niftybot_trading/positions'],
+      ],
     ];
   }
 

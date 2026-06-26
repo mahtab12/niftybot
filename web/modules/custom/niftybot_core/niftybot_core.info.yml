@@ -8,3 +8,4 @@ dependencies:
   - drupal:system
   - drupal:node
   - drupal:views
+  - niftybot_user:niftybot_user

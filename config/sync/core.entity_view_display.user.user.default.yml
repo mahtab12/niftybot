@@ -1,16 +1,14 @@
-uuid: e698a90a-7de4-417e-915d-be38dd9b1c1b
+uuid: c64722c9-ec42-4c02-a24a-59b16eb0de2b
 langcode: en
 status: true
 dependencies:
   config:
     - field.field.user.user.field_city
-    - field.field.user.user.field_country
     - field.field.user.user.field_full_name
     - field.field.user.user.field_mobile_number
     - field.field.user.user.user_picture
     - image.style.thumbnail
   module:
-    - country
     - image
     - user
 _core:
@@ -20,22 +18,6 @@ targetEntityType: user
 bundle: user
 mode: default
 content:
-  field_city:
-    type: string
-    label: above
-    settings:
-      link_to_entity: false
-      link_rel: canonical
-    third_party_settings: {  }
-    weight: 9
-    region: content
-  field_country:
-    type: country_default
-    label: above
-    settings: {  }
-    third_party_settings: {  }
-    weight: 8
-    region: content
   field_full_name:
     type: string
     label: above
@@ -52,7 +34,7 @@ content:
       link_to_entity: false
       link_rel: canonical
     third_party_settings: {  }
-    weight: 10
+    weight: 7
     region: content
   member_for:
     weight: 5
@@ -68,4 +50,5 @@ content:
     third_party_settings: {  }
     weight: 0
     region: content
-hidden: {  }
+hidden:
+  field_city: true

@@ -1,0 +1,243 @@
+/**
+ * NiftyBot subscription pages — compact plans grid.
+ */
+
+.niftybot-plans-page {
+  width: 100%;
+  --plans-primary: #1553a3;
+  --plans-text: #17181c;
+  --plans-muted: #707f93;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0.25rem 0 1.5rem;
+}
+
+.niftybot-plans-page__header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.niftybot-plans-page__title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--plans-text);
+  margin: 0 0 0.35rem;
+}
+
+.niftybot-plans-page__subtitle {
+  color: var(--plans-muted);
+  margin: 0 auto;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  max-width: 32rem;
+}
+
+.niftybot-plans-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  .niftybot-plans-page__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+}
+
+/* Compact pricing cards — override theme .pricing-plan defaults */
+.niftybot-plans-page .niftybot-plans-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  padding: 1.1rem 1.15rem 1rem;
+  border-radius: 12px;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(23, 24, 28, 0.12);
+}
+
+.niftybot-plans-page .niftybot-plans-card--featured {
+  box-shadow: 0 12px 28px rgba(23, 24, 28, 0.18);
+}
+
+@media (min-width: 992px) {
+  .niftybot-plans-page .niftybot-plans-card--featured {
+    transform: translateY(-4px);
+  }
+}
+
+.niftybot-plans-card__badge {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 2;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.niftybot-plans-card__header {
+  padding: 0 0 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.niftybot-plans-card__name {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.niftybot-plans-card__price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem 0.4rem;
+}
+
+.niftybot-plans-card__price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.niftybot-plans-card__period {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.niftybot-plans-card__body {
+  flex: 1;
+  text-align: left;
+  padding: 0;
+}
+
+.niftybot-plans-card__desc {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  opacity: 0.9;
+  margin: 0 0 0.65rem;
+}
+
+.niftybot-plans-card__features {
+  margin: 0;
+  padding: 0;
+}
+
+.niftybot-plans-card__features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.35rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.niftybot-plans-card__features li:last-child {
+  border-bottom: 0;
+}
+
+.niftybot-plans-card__features li i {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  opacity: 0.95;
+}
+
+.niftybot-plans-card__highlight {
+  font-weight: 600;
+}
+
+.niftybot-plans-card__footer {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.niftybot-plans-card__footer .btn {
+  font-weight: 600;
+  padding: 0.45rem 0.75rem;
+}
+
+.niftybot-plans-card__current {
+  cursor: default;
+  color: var(--plans-primary) !important;
+  font-weight: 600;
+}
+
+.niftybot-plans-empty {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+  max-width: 22rem;
+  margin: 0 auto;
+}
+
+.niftybot-plans-empty .card-body {
+  padding: 2rem 1.25rem;
+}
+
+.niftybot-plans-empty__icon {
+  font-size: 2rem;
+  color: #9499a9;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* My subscription page */
+.niftybot-my-subscription .subscription-card {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+  background: #fff;
+  padding: 1.5rem;
+}
+
+.niftybot-my-subscription .subscription-details {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+}
+
+.niftybot-my-subscription .subscription-details td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.niftybot-my-subscription .no-subscription {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+}
+
+.niftybot-my-subscription .no-subscription .btn {
+  margin-top: 1rem;
+}
+
+.pnl-positive {
+  color: #059669;
+}
+
+.pnl-negative {
+  color: #dc2626;
+}

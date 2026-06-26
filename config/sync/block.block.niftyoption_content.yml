@@ -1,0 +1,22 @@
+uuid: 79fc22f3-7bde-4956-a5cb-132cd05de108
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - niftyoption
+_core:
+  default_config_hash: erQSEZF2XUjNmgTl0uNRBzmg18ZGXwUcw2FhApoeuHk
+id: niftyoption_content
+theme: niftyoption
+region: content
+weight: 0
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  label_display: '0'
+  provider: system
+visibility: {  }

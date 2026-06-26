@@ -1,0 +1,20 @@
+uuid: 36086eba-7534-44c1-921f-6882ae43ff62
+langcode: en
+status: true
+dependencies:
+  theme:
+    - niftyoption
+_core:
+  default_config_hash: Q9_2whdOj1YIomfvsIfopROW4FT_X5pY0DjdOiOaQ5U
+id: niftyoption_primary_admin_actions
+theme: niftyoption
+region: highlighted
+weight: -5
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  label_display: '0'
+  provider: core
+visibility: {  }

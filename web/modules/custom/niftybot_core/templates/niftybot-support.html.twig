@@ -1,0 +1,83 @@
+<div class="niftybot-support-page">
+  <div class="card niftybot-support-hero mb-4">
+    <div class="card-body">
+      <div class="d-flex align-items-start gap-3">
+        <div class="niftybot-support-hero__icon" aria-hidden="true">
+          <i class="bi bi-headset"></i>
+        </div>
+        <div>
+          <h2 class="niftybot-support-hero__title">{{ 'Support Centre'|t }}</h2>
+          <p class="niftybot-support-hero__text mb-0">
+            {{ 'Need help with your account, wallet, or trading? Browse the topics below or reach out to our team.'|t }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 g-lg-4 mb-4">
+    <div class="col-md-6">
+      <div class="card niftybot-support-card h-100">
+        <div class="card-body">
+          <h3 class="niftybot-support-card__title">
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+            {{ 'Email support'|t }}
+          </h3>
+          <p class="niftybot-support-card__text">
+            {{ 'Send us a message and we will respond as soon as possible.'|t }}
+          </p>
+          <a href="mailto:{{ support_email }}" class="niftybot-support-card__link">{{ support_email }}</a>
+          <p class="niftybot-support-card__meta mb-0">
+            {{ 'Typical response time: 1 business day'|t }}
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card niftybot-support-card h-100">
+        <div class="card-body">
+          <h3 class="niftybot-support-card__title">
+            <i class="bi bi-clock" aria-hidden="true"></i>
+            {{ 'Support hours'|t }}
+          </h3>
+          <ul class="niftybot-support-hours mb-0">
+            <li><strong>{{ 'Monday – Friday'|t }}</strong> {{ '9:00 AM – 6:00 PM IST'|t }}</li>
+            <li><strong>{{ 'Saturday'|t }}</strong> {{ '10:00 AM – 2:00 PM IST'|t }}</li>
+            <li><strong>{{ 'Sunday & holidays'|t }}</strong> {{ 'Closed — email only'|t }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card niftybot-support-card mb-4">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <h3 class="niftybot-support-card__title mb-0">{{ 'Frequently asked questions'|t }}</h3>
+        <a href="{{ path('niftybot_core.faq') }}" class="btn btn-primary btn-sm">
+          {{ 'View all FAQ'|t }}
+        </a>
+      </div>
+      <p class="niftybot-support-card__text mb-0">
+        {{ 'Find quick answers about KYC, wallet deposits, trading, subscriptions, and AI investment.'|t }}
+      </p>
+    </div>
+  </div>
+
+  <h3 class="niftybot-support-section-title">{{ 'Quick links'|t }}</h3>
+  <div class="row g-3">
+    {% for link in quick_links %}
+      <div class="col-md-6 col-lg-3">
+        <a href="{{ path(link.route) }}" class="card niftybot-support-quick-link h-100 text-decoration-none">
+          <div class="card-body">
+            <div class="niftybot-support-quick-link__icon" aria-hidden="true">
+              <i class="bi {{ link.icon }}"></i>
+            </div>
+            <h4 class="niftybot-support-quick-link__title">{{ link.title }}</h4>
+            <p class="niftybot-support-quick-link__text mb-0">{{ link.description }}</p>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>

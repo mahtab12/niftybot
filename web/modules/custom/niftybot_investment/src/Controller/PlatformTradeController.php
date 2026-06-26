@@ -36,11 +36,29 @@ class PlatformTradeController extends ControllerBase {
    * User-facing daily Nifty trades with P&L.
    */
   public function userView() {
+    $grouped_trades = $this->investmentService->getPlatformTradesGrouped();
+    $daily_summary = $this->investmentService->getDailyPnlSummary();
+
+    $summary = [
+      'total_trades' => 0,
+      'total_pnl' => 0.0,
+      'trading_days' => count($daily_summary),
+      'winning_days' => 0,
+    ];
+    foreach ($daily_summary as $day) {
+      $summary['total_trades'] += $day['count'];
+      $summary['total_pnl'] += $day['pnl'];
+      if ($day['pnl'] > 0) {
+        $summary['winning_days']++;
+      }
+    }
+
     return [
       '#theme' => 'niftybot_platform_trades',
-      '#grouped_trades' => $this->investmentService->getPlatformTradesGrouped(),
-      '#daily_summary' => $this->investmentService->getDailyPnlSummary(),
-      '#attached' => ['library' => ['niftybot_investment/investment']],
+      '#grouped_trades' => $grouped_trades,
+      '#daily_summary' => $daily_summary,
+      '#summary' => $summary,
+      '#attached' => ['library' => ['niftybot_investment/platform_trades']],
     ];
   }
 

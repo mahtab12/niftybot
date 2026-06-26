@@ -1,0 +1,22 @@
+uuid: 7c6b3c01-5f75-4fed-8128-00a6315c03f0
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - niftyoption
+_core:
+  default_config_hash: eYL19CLDyinGTWYQfBD1DswWzglEotE_kHnHx3AxTXM
+id: niftyoption_powered
+theme: niftyoption
+region: header
+weight: 0
+provider: null
+plugin: system_powered_by_block
+settings:
+  id: system_powered_by_block
+  label: 'Powered by Drupal'
+  label_display: '0'
+  provider: system
+visibility: {  }

@@ -71,29 +71,57 @@ class NiftybotSettingsForm extends ConfigFormBase {
 
     $form['platform']['require_subscription'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Require Active Subscription for Trading'),
+      '#title' => $this->t('Require Active Subscription for Manual Trading'),
+      '#description' => $this->t('Auto-trade can still be used with pay-per-trade wallet balance when this is enabled.'),
       '#default_value' => $config->get('require_subscription') ?? TRUE,
     ];
+
+    $form['platform']['auto_trade_per_trade_fee'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Auto-trade fee per executed algo trade (₹)'),
+      '#default_value' => $config->get('auto_trade_per_trade_fee') ?? 100,
+      '#min' => 1,
+      '#step' => 1,
+    ];
+
+    $form['platform']['auto_trade_min_wallet_balance'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum wallet balance for pay-per-trade auto-trade (₹)'),
+      '#default_value' => $config->get('auto_trade_min_wallet_balance') ?? 100,
+      '#min' => 1,
+      '#step' => 1,
+    ];
+
+    $form['trading_api'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Trading Service API'),
+      '#description' => $this->t('Credentials for Drupal to call the Python FastAPI trading service. Must match <code>API_KEY</code> in <code>trading_service/.env</code>. Groww broker credentials stay in that file.'),
+      '#open' => TRUE,
+    ];
+
+    $form['trading_api']['trading_api_base_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Trading API Base URL'),
+      '#description' => $this->t('Use <code>http://trading:8000</code> when running via DDEV, or <code>http://localhost:8000</code> from your host machine.'),
+      '#default_value' => $config->get('trading_api_base_url') ?? 'http://trading:8000',
+      '#required' => TRUE,
+    ];
+
+    $form['trading_api']['trading_api_key'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Trading Service API Key'),
+      '#description' => $this->t('Sent as the <code>X-API-Key</code> header on every request to the trading service. Copy the <code>API_KEY</code> value from <code>trading_service/.env</code>.'),
+      '#size' => 60,
+    ];
+
+    if ($config->get('trading_api_key')) {
+      $form['trading_api']['trading_api_key']['#description'] .= ' ' . $this->t('An API key is currently saved. Leave blank to keep the existing value.');
+    }
 
     $form['trading'] = [
       '#type' => 'details',
       '#title' => $this->t('Trading Settings'),
       '#open' => TRUE,
-    ];
-
-    $form['trading']['trading_api_base_url'] = [
-      '#type' => 'url',
-      '#title' => $this->t('Trading API Base URL'),
-      '#description' => $this->t('Base URL of the Python trading API service.'),
-      '#default_value' => $config->get('trading_api_base_url') ?? 'http://localhost:8000',
-      '#required' => TRUE,
-    ];
-
-    $form['trading']['trading_api_key'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Trading API Key'),
-      '#description' => $this->t('API key for authenticating with the trading service.'),
-      '#default_value' => $config->get('trading_api_key') ?? '',
     ];
 
     $form['trading']['max_orders_per_day'] = [
@@ -168,14 +196,22 @@ class NiftybotSettingsForm extends ConfigFormBase {
       ->set('enable_registration', $form_state->getValue('enable_registration'))
       ->set('require_kyc', $form_state->getValue('require_kyc'))
       ->set('require_subscription', $form_state->getValue('require_subscription'))
+      ->set('auto_trade_per_trade_fee', $form_state->getValue('auto_trade_per_trade_fee'))
+      ->set('auto_trade_min_wallet_balance', $form_state->getValue('auto_trade_min_wallet_balance'))
       ->set('trading_api_base_url', $form_state->getValue('trading_api_base_url'))
-      ->set('trading_api_key', $form_state->getValue('trading_api_key'))
       ->set('max_orders_per_day', $form_state->getValue('max_orders_per_day'))
       ->set('supported_exchanges', array_filter($form_state->getValue('supported_exchanges')))
       ->set('email_notifications', $form_state->getValue('email_notifications'))
       ->set('notify_on_order_execution', $form_state->getValue('notify_on_order_execution'))
       ->set('notify_on_kyc_status', $form_state->getValue('notify_on_kyc_status'))
       ->save();
+
+    $api_key = trim((string) $form_state->getValue('trading_api_key'));
+    if ($api_key !== '') {
+      $this->config('niftybot_core.settings')
+        ->set('trading_api_key', $api_key)
+        ->save();
+    }
 
     parent::submitForm($form, $form_state);
   }

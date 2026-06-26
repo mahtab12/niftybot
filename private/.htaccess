@@ -1,0 +1,2 @@
+# Deny web access to private files if this directory is ever exposed.
+Deny from all

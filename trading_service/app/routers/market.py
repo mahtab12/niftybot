@@ -8,8 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.middleware.auth import verify_api_key
 from app.models.schemas import (
     BrokerType,
+    ExpiriesResponse,
     GreeksResponse,
     LTPResponse,
+    MarketDashboardResponse,
     OHLCResponse,
     OptionChainResponse,
     QuoteResponse,
@@ -41,6 +43,33 @@ def _get_broker(broker: BrokerType):
         raise HTTPException(
             status_code=503, detail=f"Broker not available: {e}",
         )
+
+
+@router.get("/dashboard", response_model=MarketDashboardResponse)
+async def get_market_dashboard(broker: BrokerType = BrokerType.GROWW):
+    """Live quotes for Nifty, Sensex, Crude Oil, and Gold."""
+    return broker_service.get_market_dashboard(broker)
+
+
+@router.get("/expiries", response_model=ExpiriesResponse)
+async def get_expiries(
+    underlying: str,
+    exchange: str = "NSE",
+    expiry_type: str = Query(
+        "weekly",
+        description="weekly = next Tuesday/Thursday expiries; calendar = broker calendar list",
+    ),
+    broker: BrokerType = BrokerType.GROWW,
+):
+    """List option expiry dates for an index (weekly by default)."""
+    clean_underlying = _validate_symbol(underlying)
+    clean_exchange = exchange.strip().upper()
+    clean_type = expiry_type.strip().lower()
+    if clean_type not in ("weekly", "calendar"):
+        raise HTTPException(status_code=400, detail="expiry_type must be weekly or calendar")
+    return broker_service.get_expiries(
+        clean_exchange, clean_underlying, broker, clean_type,
+    )
 
 
 @router.get("/quote", response_model=QuoteResponse)
@@ -142,6 +171,9 @@ async def get_option_chain(
         ..., description="Expiry date in YYYY-MM-DD format, e.g. '2025-11-28'",
     ),
     exchange: str = "NSE",
+    strike_window: int = Query(
+        20, ge=5, le=50, description="Number of strikes centered on ATM",
+    ),
     broker: BrokerType = BrokerType.GROWW,
 ):
     """
@@ -160,7 +192,12 @@ async def get_option_chain(
 
     try:
         broker_inst = _get_broker(broker)
-        return broker_inst.get_option_chain(clean_exchange, clean_underlying, expiry_date)
+        return broker_inst.get_option_chain(
+            clean_exchange,
+            clean_underlying,
+            expiry_date,
+            strike_window=strike_window,
+        )
     except HTTPException:
         raise
     except Exception as e:

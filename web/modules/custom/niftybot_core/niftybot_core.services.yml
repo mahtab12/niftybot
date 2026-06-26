@@ -3,6 +3,33 @@ services:
     class: Drupal\niftybot_core\Service\BrokerManager
     arguments: ['@config.factory', '@logger.factory', '@http_client']
 
+  niftybot_core.credential_vault:
+    class: Drupal\niftybot_core\Service\CredentialVault
+
+  niftybot_core.broker_connection:
+    class: Drupal\niftybot_core\Service\BrokerConnectionService
+    arguments: ['@database', '@niftybot_core.credential_vault', '@niftybot_core.broker_manager', '@logger.factory']
+
+  niftybot_core.in_app_notifications:
+    class: Drupal\niftybot_core\Service\InAppNotificationService
+    arguments: ['@database', '@current_user']
+
   niftybot_core.notification_service:
     class: Drupal\niftybot_core\Service\NotificationService
     arguments: ['@plugin.manager.mail', '@config.factory', '@current_user', '@logger.factory']
+
+  niftybot_core.authenticated_user_redirect:
+    class: Drupal\niftybot_core\EventSubscriber\AuthenticatedUserRedirectSubscriber
+    arguments: ['@current_user', '@current_route_match']
+    tags:
+      - { name: event_subscriber }
+
+  niftybot_core.auto_trade_user:
+    class: Drupal\niftybot_core\Service\AutoTradeUserService
+    arguments:
+      - '@database'
+      - '@config.factory'
+      - '@niftybot_user.wallet_service'
+      - '@niftybot_core.broker_manager'
+      - '@niftybot_core.broker_connection'
+      - '@datetime.time'

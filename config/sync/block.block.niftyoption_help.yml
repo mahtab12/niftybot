@@ -1,0 +1,22 @@
+uuid: 1e0214da-3a0f-4e5c-9358-3bd104edfcc2
+langcode: en
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - niftyoption
+_core:
+  default_config_hash: VfPFqqxfkomud5CO8DUijw85QIl9GIxh_nIxLOYESxg
+id: niftyoption_help
+theme: niftyoption
+region: header
+weight: 0
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  label_display: '0'
+  provider: help
+visibility: {  }

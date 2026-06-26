@@ -81,7 +81,7 @@ class InvestmentService {
    */
   public function createInvestment(int $uid, int $plan_id): int {
     if ($this->getActiveInvestment($uid)) {
-      throw new \InvalidArgumentException('You already have an active FXC investment.');
+      throw new \InvalidArgumentException('You already have an active StrikeFlow investment.');
     }
 
     $plan = $this->getPlan($plan_id);
@@ -106,7 +106,7 @@ class InvestmentService {
         'amount' => $amount,
         'status' => 'completed',
         'payment_method' => 'fxc_investment',
-        'notes' => 'FXC Global investment — ' . $plan->name,
+        'notes' => 'StrikeFlow Investment — ' . $plan->name,
         'balance_applied' => 1,
         'created' => $now,
         'updated' => $now,
@@ -218,7 +218,7 @@ class InvestmentService {
         (int) $investment->uid,
         $profit,
         'investment_profit',
-        'FXC weekly AI profit payout',
+        'StrikeFlow weekly AI profit payout',
       );
 
       $this->database->insert('niftybot_investment_profits')
@@ -296,15 +296,14 @@ class InvestmentService {
    * @return array<string, array{pnl: float, count: int}>
    */
   public function getDailyPnlSummary(): array {
-    $rows = $this->database->select('niftybot_platform_trades', 't')
-      ->fields('t', ['trade_date'])
-      ->addExpression('SUM(pnl)', 'daily_pnl')
-      ->addExpression('COUNT(*)', 'trade_count')
-      ->groupBy('trade_date')
-      ->orderBy('trade_date', 'DESC')
-      ->range(0, 30)
-      ->execute()
-      ->fetchAll();
+    $query = $this->database->select('niftybot_platform_trades', 't');
+    $query->addField('t', 'trade_date');
+    $query->addExpression('SUM(t.pnl)', 'daily_pnl');
+    $query->addExpression('COUNT(*)', 'trade_count');
+    $query->groupBy('trade_date');
+    $query->orderBy('trade_date', 'DESC');
+    $query->range(0, 30);
+    $rows = $query->execute()->fetchAll();
 
     $summary = [];
     foreach ($rows as $row) {

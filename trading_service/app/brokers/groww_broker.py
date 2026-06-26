@@ -1,12 +1,15 @@
 """Groww broker adapter using the official growwapi Python SDK."""
 
 import logging
+from datetime import date
 from typing import Optional
 
 import pyotp
 from growwapi import GrowwAPI
 
 from app.config import settings
+from app.market_watchlist import WATCHLIST
+from app.option_expiries import weekly_expiries
 from app.brokers.base import BaseBroker
 from app.models.schemas import (
     AvailableMarginResponse,
@@ -24,6 +27,9 @@ from app.models.schemas import (
     HoldingItem,
     HoldingsResponse,
     LTPResponse,
+    MarketDashboardResponse,
+    MarketWatchItem,
+    ExpiriesResponse,
     MarketDepth,
     ModifyOrderRequest,
     ModifyOrderResponse,
@@ -42,6 +48,8 @@ from app.models.schemas import (
     PlaceOrderResponse,
     PositionItem,
     PositionsResponse,
+    PortfolioFinancialSummary,
+    PortfolioSummaryResponse,
     ProductType,
     QuoteResponse,
     Segment,
@@ -64,6 +72,7 @@ EXCHANGE_MAP = {
     Exchange.NSE: "NSE",
     Exchange.BSE: "BSE",
     Exchange.NFO: "NSE",
+    Exchange.BFO: "BSE",
     Exchange.MCX: "MCX",
 }
 
@@ -71,6 +80,7 @@ SEGMENT_MAP = {
     Exchange.NSE: "CASH",
     Exchange.BSE: "CASH",
     Exchange.NFO: "FNO",
+    Exchange.BFO: "FNO",
     Exchange.MCX: "COMMODITY",
 }
 
@@ -103,6 +113,15 @@ SEGMENT_DIRECT_MAP = {
     Segment.CASH: "CASH",
     Segment.FNO: "FNO",
 }
+
+
+def _as_float(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 class GrowwBroker(BaseBroker):
@@ -145,6 +164,43 @@ class GrowwBroker(BaseBroker):
             api_key=settings.groww_api_key,
             totp=totp,
         )
+
+    @classmethod
+    def verify_credentials(cls, api_key: str, api_secret: str) -> tuple[UserProfileResponse, AvailableMarginResponse]:
+        """Connect with supplied credentials and fetch profile + margin."""
+        broker = cls()
+        try:
+            access_token = GrowwAPI.get_access_token(
+                api_key=api_key,
+                secret=api_secret,
+            )
+            broker._client = GrowwAPI(access_token)
+            broker._connected = True
+            profile = broker.get_user_profile()
+            margin = broker.get_available_margin()
+            return profile, margin
+        except Exception as exc:
+            logger.exception("Groww credential verification failed")
+            return (
+                UserProfileResponse(success=False, message=str(exc)),
+                AvailableMarginResponse(success=False, message=str(exc)),
+            )
+
+    @classmethod
+    def get_order_book_for_credentials(cls, api_key: str, api_secret: str) -> list[dict]:
+        """Return today's order book for the given API credentials."""
+        broker = cls()
+        try:
+            access_token = GrowwAPI.get_access_token(
+                api_key=api_key,
+                secret=api_secret,
+            )
+            broker._client = GrowwAPI(access_token)
+            broker._connected = True
+            return broker.get_order_book()
+        except Exception:
+            logger.exception("Failed to load order book for user credentials")
+            return []
 
     def is_connected(self) -> bool:
         return self._connected and self._client is not None
@@ -332,30 +388,36 @@ class GrowwBroker(BaseBroker):
         self._ensure_connected()
 
         try:
-            raw_positions = self._client.get_positions()
+            raw = self._client.get_positions_for_user(timeout=10)
+            raw_positions = raw.get("positions", []) if isinstance(raw, dict) else []
             positions = []
 
-            if isinstance(raw_positions, list):
-                for pos in raw_positions:
-                    qty = int(pos.get("quantity", 0) or 0)
-                    if qty == 0:
-                        continue
+            for pos in raw_positions:
+                if not isinstance(pos, dict):
+                    continue
 
-                    avg_price = float(pos.get("averagePrice", 0) or 0)
-                    current_price = float(pos.get("lastTradedPrice", 0) or 0)
-                    pnl = (current_price - avg_price) * qty
-                    pnl_pct = ((current_price - avg_price) / avg_price * 100) if avg_price > 0 else 0
+                qty = int(pos.get("quantity", 0) or 0)
+                if qty == 0:
+                    continue
 
-                    positions.append(PositionItem(
-                        symbol=pos.get("tradingSymbol", ""),
-                        exchange=pos.get("exchange", "NSE"),
-                        quantity=qty,
-                        average_price=avg_price,
-                        current_price=current_price,
-                        pnl=round(pnl, 2),
-                        pnl_percentage=round(pnl_pct, 2),
-                        product_type=pos.get("product", "CNC"),
-                    ))
+                net_price = float(pos.get("net_price", 0) or 0)
+                realised_pnl = float(pos.get("realised_pnl", 0) or 0)
+                pnl_pct = (
+                    (realised_pnl / (abs(qty) * net_price) * 100)
+                    if net_price > 0 and qty != 0
+                    else 0
+                )
+
+                positions.append(PositionItem(
+                    symbol=pos.get("trading_symbol", ""),
+                    exchange=pos.get("exchange", "NSE"),
+                    quantity=qty,
+                    average_price=net_price,
+                    pnl=round(realised_pnl, 2),
+                    pnl_percentage=round(pnl_pct, 2),
+                    product_type=pos.get("product", "CNC"),
+                    segment=pos.get("segment"),
+                ))
 
             return PositionsResponse(
                 success=True,
@@ -376,27 +438,32 @@ class GrowwBroker(BaseBroker):
         self._ensure_connected()
 
         try:
-            raw_holdings = self._client.get_holdings()
+            raw = self._client.get_holdings_for_user(timeout=10)
+            raw_holdings = raw.get("holdings", []) if isinstance(raw, dict) else []
             holdings = []
 
-            if isinstance(raw_holdings, list):
-                for holding in raw_holdings:
-                    qty = int(holding.get("quantity", 0) or 0)
-                    if qty == 0:
-                        continue
+            for holding in raw_holdings:
+                if not isinstance(holding, dict):
+                    continue
 
-                    avg_price = float(holding.get("averagePrice", 0) or 0)
-                    current_price = float(holding.get("lastTradedPrice", 0) or 0)
-                    pnl = (current_price - avg_price) * qty
+                qty = int(float(holding.get("quantity", 0) or 0))
+                if qty == 0:
+                    continue
 
-                    holdings.append(HoldingItem(
-                        symbol=holding.get("tradingSymbol", ""),
-                        exchange=holding.get("exchange", "NSE"),
-                        quantity=qty,
-                        average_price=avg_price,
-                        current_price=current_price,
-                        pnl=round(pnl, 2),
-                    ))
+                symbol = holding.get("trading_symbol") or holding.get("isin") or ""
+                if not symbol:
+                    continue
+
+                exchanges = holding.get("tradable_exchanges") or []
+                exchange = exchanges[0] if exchanges else "NSE"
+
+                holdings.append(HoldingItem(
+                    symbol=symbol,
+                    exchange=exchange,
+                    quantity=qty,
+                    average_price=float(holding.get("average_price", 0) or 0),
+                    isin=holding.get("isin"),
+                ))
 
             return HoldingsResponse(
                 success=True,
@@ -410,6 +477,315 @@ class GrowwBroker(BaseBroker):
                 success=False,
                 holdings=[],
                 message=f"Failed to fetch holdings: {e}",
+            )
+
+    def _segment_constant(self, segment: str) -> str:
+        """Map API segment name to Groww SDK segment constant name."""
+        mapping = {
+            "CASH": "SEGMENT_CASH",
+            "FNO": "SEGMENT_FNO",
+            "COMMODITY": "SEGMENT_COMMODITY",
+        }
+        return mapping.get(segment.upper(), "SEGMENT_CASH")
+
+    def _fetch_market_data_batch(
+        self, segment: str, exchange_symbols: list[str]
+    ) -> tuple[dict[str, float], dict[str, dict]]:
+        """Fetch LTP and OHLC for up to 50 symbols in one segment."""
+        ltp_map: dict[str, float] = {}
+        ohlc_map: dict[str, dict] = {}
+
+        if not exchange_symbols:
+            return ltp_map, ohlc_map
+
+        groww = self._client
+        segment_const = getattr(groww, self._segment_constant(segment))
+
+        for i in range(0, len(exchange_symbols), 50):
+            batch = tuple(exchange_symbols[i : i + 50])
+            symbols_arg = batch if len(batch) > 1 else batch[0]
+
+            try:
+                ltp_data = groww.get_ltp(
+                    segment=segment_const,
+                    exchange_trading_symbols=symbols_arg,
+                )
+                if isinstance(ltp_data, dict):
+                    for key, value in ltp_data.items():
+                        if value is not None:
+                            ltp_map[key] = float(value)
+            except Exception:
+                logger.warning("LTP batch fetch failed for segment %s", segment)
+
+            try:
+                ohlc_data = groww.get_ohlc(
+                    segment=segment_const,
+                    exchange_trading_symbols=symbols_arg,
+                )
+                if isinstance(ohlc_data, dict):
+                    ohlc_map.update(
+                        {k: v for k, v in ohlc_data.items() if isinstance(v, dict)}
+                    )
+            except Exception:
+                logger.warning("OHLC batch fetch failed for segment %s", segment)
+
+        return ltp_map, ohlc_map
+
+    def get_portfolio_summary(self) -> PortfolioSummaryResponse:
+        """Build portfolio summary with P&L, day return, and margin balances."""
+        self._ensure_connected()
+
+        try:
+            margin_data = self._client.get_available_margin_details()
+            holdings_raw = self._client.get_holdings_for_user(timeout=10)
+            positions_raw = self._client.get_positions_for_user(timeout=10)
+
+            raw_holdings = (
+                holdings_raw.get("holdings", [])
+                if isinstance(holdings_raw, dict)
+                else []
+            )
+            raw_positions = (
+                positions_raw.get("positions", [])
+                if isinstance(positions_raw, dict)
+                else []
+            )
+
+            cash_symbols: list[str] = []
+            for holding in raw_holdings:
+                if not isinstance(holding, dict):
+                    continue
+                symbol = holding.get("trading_symbol") or holding.get("isin")
+                if not symbol:
+                    continue
+                exchanges = holding.get("tradable_exchanges") or []
+                exchange = exchanges[0] if exchanges else "NSE"
+                cash_symbols.append(f"{exchange}_{symbol}")
+
+            position_symbols_by_segment: dict[str, list[str]] = {}
+            for pos in raw_positions:
+                if not isinstance(pos, dict) or int(pos.get("quantity", 0) or 0) == 0:
+                    continue
+                segment = (pos.get("segment") or "FNO").upper()
+                key = f"{pos.get('exchange', 'NSE')}_{pos.get('trading_symbol', '')}"
+                position_symbols_by_segment.setdefault(segment, []).append(key)
+
+            cash_ltp, cash_ohlc = self._fetch_market_data_batch("CASH", cash_symbols)
+            segment_market: dict[str, tuple[dict[str, float], dict[str, dict]]] = {
+                "CASH": (cash_ltp, cash_ohlc),
+            }
+            for segment, symbols in position_symbols_by_segment.items():
+                if segment != "CASH":
+                    segment_market[segment] = self._fetch_market_data_batch(segment, symbols)
+
+            holdings: list[HoldingItem] = []
+            holdings_invested = 0.0
+            holdings_current = 0.0
+            holdings_pnl = 0.0
+            holdings_day_return = 0.0
+            holdings_prev_value = 0.0
+
+            for holding in raw_holdings:
+                if not isinstance(holding, dict):
+                    continue
+
+                qty = int(float(holding.get("quantity", 0) or 0))
+                if qty == 0:
+                    continue
+
+                symbol = holding.get("trading_symbol") or holding.get("isin") or ""
+                if not symbol:
+                    continue
+
+                exchanges = holding.get("tradable_exchanges") or []
+                exchange = exchanges[0] if exchanges else "NSE"
+                avg_price = float(holding.get("average_price", 0) or 0)
+                market_key = f"{exchange}_{symbol}"
+                ltp = cash_ltp.get(market_key)
+                prev_close = float((cash_ohlc.get(market_key) or {}).get("close", 0) or 0)
+
+                invested = qty * avg_price
+                current = qty * ltp if ltp is not None else invested
+                pnl = current - invested
+                pnl_pct = (pnl / invested * 100) if invested > 0 else 0.0
+                day_ret = qty * (ltp - prev_close) if ltp is not None and prev_close > 0 else 0.0
+                day_ret_pct = ((ltp - prev_close) / prev_close * 100) if ltp and prev_close > 0 else 0.0
+
+                holdings_invested += invested
+                holdings_current += current
+                holdings_pnl += pnl
+                holdings_day_return += day_ret
+                if prev_close > 0:
+                    holdings_prev_value += qty * prev_close
+
+                holdings.append(HoldingItem(
+                    symbol=symbol,
+                    exchange=exchange,
+                    quantity=qty,
+                    average_price=round(avg_price, 2),
+                    current_price=round(ltp, 2) if ltp is not None else None,
+                    pnl=round(pnl, 2),
+                    pnl_percentage=round(pnl_pct, 2),
+                    day_return=round(day_ret, 2),
+                    day_return_percentage=round(day_ret_pct, 2),
+                    invested_value=round(invested, 2),
+                    current_value=round(current, 2),
+                    isin=holding.get("isin"),
+                ))
+
+            positions: list[PositionItem] = []
+            positions_realised = 0.0
+            positions_unrealised = 0.0
+            positions_day_return = 0.0
+            positions_prev_value = 0.0
+            fno_realised = 0.0
+            fno_unrealised = 0.0
+            fno_day_return = 0.0
+            fno_prev_value = 0.0
+
+            for pos in raw_positions:
+                if not isinstance(pos, dict):
+                    continue
+
+                qty = int(pos.get("quantity", 0) or 0)
+                if qty == 0:
+                    continue
+
+                segment = (pos.get("segment") or "FNO").upper()
+                exchange = pos.get("exchange", "NSE")
+                symbol = pos.get("trading_symbol", "")
+                market_key = f"{exchange}_{symbol}"
+                ltp_map, ohlc_map = segment_market.get(
+                    segment, segment_market.get("FNO", ({}, {}))
+                )
+                ltp = ltp_map.get(market_key)
+                prev_close = float((ohlc_map.get(market_key) or {}).get("close", 0) or 0)
+                net_price = float(pos.get("net_price", 0) or 0)
+                realised_pnl = float(pos.get("realised_pnl", 0) or 0)
+                unrealised = (ltp - net_price) * qty if ltp is not None else 0.0
+                day_ret = qty * (ltp - prev_close) if ltp is not None and prev_close > 0 else 0.0
+                day_ret_pct = ((ltp - prev_close) / prev_close * 100) if ltp and prev_close > 0 else 0.0
+                pnl_pct = (
+                    (realised_pnl / (abs(qty) * net_price) * 100)
+                    if net_price > 0 and qty != 0
+                    else 0.0
+                )
+
+                positions_realised += realised_pnl
+                positions_unrealised += unrealised
+                positions_day_return += day_ret
+                if prev_close > 0:
+                    positions_prev_value += abs(qty) * prev_close
+
+                if segment == "FNO":
+                    fno_realised += realised_pnl
+                    fno_unrealised += unrealised
+                    fno_day_return += day_ret
+                    if prev_close > 0:
+                        fno_prev_value += abs(qty) * prev_close
+
+                positions.append(PositionItem(
+                    symbol=symbol,
+                    exchange=exchange,
+                    quantity=qty,
+                    average_price=round(net_price, 2),
+                    current_price=round(ltp, 2) if ltp is not None else None,
+                    pnl=round(realised_pnl, 2),
+                    pnl_percentage=round(pnl_pct, 2),
+                    product_type=pos.get("product", "CNC"),
+                    segment=segment,
+                    unrealised_pnl=round(unrealised, 2),
+                    day_return=round(day_ret, 2),
+                    day_return_percentage=round(day_ret_pct, 2),
+                ))
+
+            margin = margin_data if isinstance(margin_data, dict) else {}
+            fno = margin.get("fno_margin_details") or {}
+            equity = margin.get("equity_margin_details") or {}
+            commodity = margin.get("commodity_margin_details") or {}
+
+            clear_cash = float(margin.get("clear_cash", 0) or 0)
+            holdings_pnl_pct = (
+                (holdings_pnl / holdings_invested * 100) if holdings_invested > 0 else 0.0
+            )
+            holdings_day_pct = (
+                (holdings_day_return / holdings_prev_value * 100)
+                if holdings_prev_value > 0
+                else 0.0
+            )
+            positions_day_pct = (
+                (positions_day_return / positions_prev_value * 100)
+                if positions_prev_value > 0
+                else 0.0
+            )
+
+            overall_pnl = holdings_pnl + positions_unrealised + positions_realised
+            overall_base = holdings_invested + positions_prev_value
+            overall_pnl_pct = (overall_pnl / overall_base * 100) if overall_base > 0 else 0.0
+
+            day_return = holdings_day_return + positions_day_return
+            day_base = holdings_prev_value + positions_prev_value
+            day_return_pct = (day_return / day_base * 100) if day_base > 0 else 0.0
+
+            fno_total_pnl = fno_realised + fno_unrealised
+            fno_total_pnl_pct = (
+                (fno_total_pnl / fno_prev_value * 100) if fno_prev_value > 0 else 0.0
+            )
+            fno_day_pct = (
+                (fno_day_return / fno_prev_value * 100) if fno_prev_value > 0 else 0.0
+            )
+
+            summary = PortfolioFinancialSummary(
+                clear_cash=round(clear_cash, 2),
+                collateral_available=round(float(margin.get("collateral_available", 0) or 0), 2),
+                collateral_used=round(float(margin.get("collateral_used", 0) or 0), 2),
+                net_margin_used=round(float(margin.get("net_margin_used", 0) or 0), 2),
+                brokerage_and_charges=round(float(margin.get("brokerage_and_charges", 0) or 0), 2),
+                adhoc_margin=round(float(margin.get("adhoc_margin", 0) or 0), 2),
+                total_balance_available=round(clear_cash, 2),
+                equity_cnc_available=round(float(equity.get("cnc_balance_available", 0) or 0), 2),
+                equity_mis_available=round(float(equity.get("mis_balance_available", 0) or 0), 2),
+                fno_future_available=round(float(fno.get("future_balance_available", 0) or 0), 2),
+                fno_option_buy_available=round(float(fno.get("option_buy_balance_available", 0) or 0), 2),
+                fno_option_sell_available=round(float(fno.get("option_sell_balance_available", 0) or 0), 2),
+                commodity_unrealised_m2m=round(float(commodity.get("commodity_unrealised_m2m", 0) or 0), 2),
+                commodity_realised_m2m=round(float(commodity.get("commodity_realised_m2m", 0) or 0), 2),
+                holdings_invested=round(holdings_invested, 2),
+                holdings_current_value=round(holdings_current, 2),
+                holdings_pnl=round(holdings_pnl, 2),
+                holdings_pnl_percentage=round(holdings_pnl_pct, 2),
+                holdings_day_return=round(holdings_day_return, 2),
+                holdings_day_return_percentage=round(holdings_day_pct, 2),
+                positions_realised_pnl=round(positions_realised, 2),
+                positions_unrealised_pnl=round(positions_unrealised, 2),
+                positions_day_return=round(positions_day_return, 2),
+                positions_day_return_percentage=round(positions_day_pct, 2),
+                fno_realised_pnl=round(fno_realised, 2),
+                fno_unrealised_pnl=round(fno_unrealised, 2),
+                fno_total_pnl=round(fno_total_pnl, 2),
+                fno_total_pnl_percentage=round(fno_total_pnl_pct, 2),
+                fno_day_return=round(fno_day_return, 2),
+                fno_day_return_percentage=round(fno_day_pct, 2),
+                overall_pnl=round(overall_pnl, 2),
+                overall_pnl_percentage=round(overall_pnl_pct, 2),
+                day_return=round(day_return, 2),
+                day_return_percentage=round(day_return_pct, 2),
+                total_portfolio_value=round(clear_cash + holdings_current, 2),
+            )
+
+            return PortfolioSummaryResponse(
+                success=True,
+                summary=summary,
+                holdings=holdings,
+                positions=positions,
+                message="Portfolio summary fetched successfully",
+            )
+
+        except Exception as e:
+            logger.exception("Failed to build portfolio summary")
+            return PortfolioSummaryResponse(
+                success=False,
+                message=f"Portfolio summary failed: {e}",
             )
 
     def get_order_book(self) -> list[dict]:
@@ -481,8 +857,8 @@ class GrowwBroker(BaseBroker):
                 last_trade_quantity=data.get("last_trade_quantity"),
                 last_trade_time=data.get("last_trade_time"),
                 open_interest=data.get("open_interest"),
-                oi_day_change=data.get("oi_day_change"),
-                oi_day_change_percentage=data.get("oi_day_change_percentage"),
+                oi_day_change=_as_float(data.get("oi_day_change")),
+                oi_day_change_percentage=_as_float(data.get("oi_day_change_percentage")),
                 week_52_high=data.get("week_52_high"),
                 week_52_low=data.get("week_52_low"),
                 market_cap=data.get("market_cap"),
@@ -559,9 +935,14 @@ class GrowwBroker(BaseBroker):
             return OHLCResponse(success=False, message=f"OHLC failed: {e}")
 
     def get_option_chain(
-        self, exchange: str, underlying: str, expiry_date: str
+        self,
+        exchange: str,
+        underlying: str,
+        expiry_date: str,
+        strike_window: int | None = None,
+        enrich_oi_change: bool = True,
     ) -> OptionChainResponse:
-        """Fetch full option chain with Greeks for an underlying + expiry."""
+        """Fetch option chain with optional ATM window and OI change % enrichment."""
         self._ensure_connected()
 
         try:
@@ -575,6 +956,7 @@ class GrowwBroker(BaseBroker):
             if not isinstance(data, dict):
                 return OptionChainResponse(
                     success=False, underlying=underlying,
+                    expiry_date=expiry_date,
                     message="Unexpected response",
                 )
 
@@ -615,10 +997,19 @@ class GrowwBroker(BaseBroker):
 
                 strikes[strike_price] = StrikeData(CE=ce, PE=pe)
 
+            underlying_ltp = data.get("underlying_ltp")
+            if strike_window and strikes:
+                strikes = self._select_strikes_near_atm(
+                    strikes, underlying_ltp, strike_window,
+                )
+            if enrich_oi_change and strikes:
+                self._enrich_oi_change_percent(strikes, exchange)
+
             return OptionChainResponse(
                 success=True,
                 underlying=underlying,
-                underlying_ltp=data.get("underlying_ltp"),
+                expiry_date=expiry_date,
+                underlying_ltp=underlying_ltp,
                 strikes=strikes,
                 message=f"Option chain with {len(strikes)} strikes",
             )
@@ -627,7 +1018,216 @@ class GrowwBroker(BaseBroker):
             logger.exception("Failed to get option chain for %s", underlying)
             return OptionChainResponse(
                 success=False, underlying=underlying,
+                expiry_date=expiry_date,
                 message=f"Option chain failed: {e}",
+            )
+
+    @staticmethod
+    def _select_strikes_near_atm(
+        strikes: dict[str, StrikeData],
+        underlying_ltp: float | None,
+        count: int,
+    ) -> dict[str, StrikeData]:
+        """Keep `count` strikes centered on the nearest strike to underlying LTP."""
+        keys = sorted(strikes.keys(), key=lambda k: float(k))
+        if len(keys) <= count:
+            return strikes
+
+        if underlying_ltp is None:
+            start = max(0, (len(keys) - count) // 2)
+            selected = keys[start:start + count]
+            return {k: strikes[k] for k in selected}
+
+        atm_index = 0
+        min_diff = float("inf")
+        for index, key in enumerate(keys):
+            diff = abs(float(key) - float(underlying_ltp))
+            if diff < min_diff:
+                min_diff = diff
+                atm_index = index
+
+        below = (count - 1) // 2
+        start = atm_index - below
+        end = start + count
+        if start < 0:
+            start = 0
+            end = count
+        if end > len(keys):
+            end = len(keys)
+            start = max(0, end - count)
+
+        return {k: strikes[k] for k in keys[start:end]}
+
+    def _enrich_oi_change_percent(
+        self, strikes: dict[str, StrikeData], exchange: str,
+    ) -> None:
+        """Fetch OI day-change % from quotes for each contract in the chain."""
+        for strike_data in strikes.values():
+            for opt in (strike_data.CE, strike_data.PE):
+                if opt is None or not opt.trading_symbol:
+                    continue
+                try:
+                    quote = self.get_quote(opt.trading_symbol, exchange, "FNO")
+                    if quote.success:
+                        opt.oi_change_percentage = quote.oi_day_change_percentage
+                except Exception:
+                    logger.debug(
+                        "OI change lookup failed for %s", opt.trading_symbol,
+                    )
+
+    def _future_expiries(self, exchange: str, underlying: str) -> list[str]:
+        """Return calendar expiry dates on or after today (includes weeklies)."""
+        groww = self._client
+        year = date.today().year
+        data = groww.get_expiries(
+            exchange=getattr(groww, f"EXCHANGE_{exchange}"),
+            underlying_symbol=underlying,
+            year=year,
+            timeout=10,
+        )
+        expiries = data.get("expiries", []) if isinstance(data, dict) else []
+        today = date.today().isoformat()
+        future = [e for e in expiries if e >= today]
+        return future or expiries
+
+    def get_expiries(
+        self,
+        exchange: str,
+        underlying: str,
+        expiry_type: str = "weekly",
+    ) -> ExpiriesResponse:
+        """List option expiry dates (weekly by default for index options)."""
+        self._ensure_connected()
+
+        try:
+            if expiry_type == "weekly":
+                expiries = weekly_expiries(exchange, 12)
+                label = "weekly"
+            else:
+                expiries = self._future_expiries(exchange, underlying)
+                label = "calendar"
+
+            nearest = expiries[0] if expiries else None
+            return ExpiriesResponse(
+                success=True,
+                underlying=underlying,
+                exchange=exchange,
+                expiry_type=label,
+                expiries=expiries,
+                nearest_expiry=nearest,
+                message=f"Found {len(expiries)} {label} expiries",
+            )
+        except Exception as e:
+            logger.exception("Failed to get expiries for %s", underlying)
+            return ExpiriesResponse(
+                success=False,
+                underlying=underlying,
+                exchange=exchange,
+                expiry_type=expiry_type,
+                message=f"Expiries failed: {e}",
+            )
+
+    def _mcx_future_quote(self, underlying: str) -> MarketWatchItem:
+        """Best-effort quote for nearest MCX futures contract."""
+        groww = self._client
+        item = MarketWatchItem(
+            id=underlying.lower(),
+            label=underlying,
+            symbol=underlying,
+            exchange="MCX",
+            segment="COMMODITY",
+        )
+
+        try:
+            for expiry in self._future_expiries("MCX", underlying)[:3]:
+                contracts = groww.get_contracts(
+                    exchange=groww.EXCHANGE_MCX,
+                    underlying_symbol=underlying,
+                    expiry_date=expiry,
+                    timeout=10,
+                )
+                futs = [
+                    c for c in contracts.get("contracts", [])
+                    if isinstance(c, str) and c.endswith("-FUT")
+                ]
+                for fut_gs in futs[:1]:
+                    parts = fut_gs.split("-")
+                    if len(parts) < 4:
+                        continue
+                    und, exp = parts[1], parts[2]
+                    mon = exp[2:5].upper()
+                    candidates = [
+                        f"{und}{exp[:2]}{mon}{exp[5:]}FUT",
+                        f"{und}{exp[5:]}{mon}{exp[:2]}FUT",
+                    ]
+                    for ts in candidates:
+                        try:
+                            ltp_data = groww.get_ltp(
+                                segment=groww.SEGMENT_COMMODITY,
+                                exchange_trading_symbols=f"MCX_{ts}",
+                            )
+                            price = next(iter(ltp_data.values()), None) if ltp_data else None
+                            if price is not None:
+                                item.last_price = float(price)
+                                item.message = f"Nearest future ({expiry})"
+                                return item
+                        except Exception:
+                            continue
+        except Exception as e:
+            logger.warning("MCX quote failed for %s: %s", underlying, e)
+
+        item.message = "Price unavailable (MCX market hours or symbol)"
+        return item
+
+    def get_market_dashboard(self) -> MarketDashboardResponse:
+        """Fetch live quotes for the configured market watchlist."""
+        self._ensure_connected()
+
+        items: list[MarketWatchItem] = []
+
+        try:
+            for entry in WATCHLIST:
+                if entry.get("commodity_underlying"):
+                    mcx_item = self._mcx_future_quote(entry["commodity_underlying"])
+                    mcx_item.id = entry["id"]
+                    mcx_item.label = entry["label"]
+                    mcx_item.has_option_chain = entry.get("has_option_chain", False)
+                    items.append(mcx_item)
+                    continue
+
+                quote = self.get_quote(
+                    entry["symbol"],
+                    entry["exchange"],
+                    entry.get("segment", "CASH"),
+                )
+                items.append(MarketWatchItem(
+                    id=entry["id"],
+                    label=entry["label"],
+                    symbol=entry["symbol"],
+                    exchange=entry["exchange"],
+                    segment=entry.get("segment", "CASH"),
+                    has_option_chain=entry.get("has_option_chain", False),
+                    option_exchange=entry.get("option_exchange"),
+                    last_price=quote.last_price,
+                    day_change=quote.day_change,
+                    day_change_perc=quote.day_change_perc,
+                    open=quote.ohlc.open if quote.ohlc else None,
+                    high=quote.ohlc.high if quote.ohlc else None,
+                    low=quote.ohlc.low if quote.ohlc else None,
+                    close=quote.ohlc.close if quote.ohlc else None,
+                    message=quote.message if quote.success else "Quote unavailable",
+                ))
+
+            return MarketDashboardResponse(
+                success=True,
+                items=items,
+                message=f"Loaded {len(items)} instruments",
+            )
+        except Exception as e:
+            logger.exception("Market dashboard failed")
+            return MarketDashboardResponse(
+                success=False,
+                message=f"Dashboard failed: {e}",
             )
 
     def get_greeks(
@@ -839,6 +1439,8 @@ class GrowwBroker(BaseBroker):
                 smart_order_type=getattr(groww, f"SMART_ORDER_TYPE_{smart_order_type}"),
                 smart_order_id=smart_order_id,
             )
+            if isinstance(response, dict) and isinstance(response.get("payload"), dict):
+                response = response["payload"]
             return self._parse_smart_order_response(response, "Smart order fetched")
 
         except Exception as e:
@@ -882,6 +1484,22 @@ class GrowwBroker(BaseBroker):
             orders = []
             for item in response.get("orders", []):
                 if isinstance(item, dict):
+                    target = None
+                    if isinstance(item.get("target"), dict):
+                        raw = item["target"]
+                        target = SmartOrderOCOLegResponse(
+                            trigger_price=raw.get("trigger_price"),
+                            order_type=raw.get("order_type"),
+                            price=raw.get("price"),
+                        )
+                    stop_loss = None
+                    if isinstance(item.get("stop_loss"), dict):
+                        raw = item["stop_loss"]
+                        stop_loss = SmartOrderOCOLegResponse(
+                            trigger_price=raw.get("trigger_price"),
+                            order_type=raw.get("order_type"),
+                            price=raw.get("price"),
+                        )
                     orders.append(SmartOrderSummary(
                         smart_order_id=item.get("smart_order_id", ""),
                         smart_order_type=item.get("smart_order_type", ""),
@@ -889,6 +1507,11 @@ class GrowwBroker(BaseBroker):
                         trading_symbol=item.get("trading_symbol", ""),
                         exchange=item.get("exchange", ""),
                         quantity=int(item.get("quantity", 0) or 0),
+                        trigger_price=item.get("trigger_price"),
+                        trigger_direction=item.get("trigger_direction"),
+                        target=target,
+                        stop_loss=stop_loss,
+                        ltp=item.get("ltp"),
                     ))
 
             return SmartOrderListResponse(

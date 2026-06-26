@@ -1,0 +1,14 @@
+{#
+/**
+ * @file
+ * Dashboard sidebar — renders the Dashboard Menu from Drupal.
+ */
+#}
+<nav class="sidebar-wrapper" aria-label="{{ 'Main navigation'|t }}">
+  <div class="sidebar-menu">
+    <div class="sidebarMenuScroll">
+      {{ niftyoption_dashboard_menu }}
+    </div>
+  </div>
+  {{ page.sidebar }}
+</nav>

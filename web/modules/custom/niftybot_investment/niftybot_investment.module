@@ -53,6 +53,7 @@ function niftybot_investment_theme(array $existing, string $type, string $theme,
         'grouped_trades' => [],
         'daily_summary' => [],
         'day_meta' => [],
+        'summary' => [],
       ],
       'template' => 'niftybot-platform-trades',
     ],
@@ -86,6 +87,8 @@ function template_preprocess_niftybot_investment_plans(array &$variables): void 
       number_format((float) $plan->weekly_return_min, 1),
       number_format((float) $plan->weekly_return_max, 1),
     );
+    $plan->weekly_profit_min = (float) $plan->amount * (float) $plan->weekly_return_min / 100;
+    $plan->weekly_profit_max = (float) $plan->amount * (float) $plan->weekly_return_max / 100;
   }
 }
 
@@ -121,7 +124,7 @@ function template_preprocess_niftybot_platform_trades(array &$variables): void {
  */
 function niftybot_investment_help(string $route_name, RouteMatchInterface $route_match): ?string {
   if ($route_name === 'help.page.niftybot_investment') {
-    return '<p>' . t('FXC Global investment plans with weekly AI profit and platform trade transparency.') . '</p>';
+    return '<p>' . t('StrikeFlow Investment plans with weekly AI algo profit and platform trade transparency.') . '</p>';
   }
   return NULL;
 }

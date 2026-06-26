@@ -1,0 +1,545 @@
+<?php
+
+/**
+ * @file
+ * Install and schema for NiftyBot Core.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function niftybot_core_schema() {
+  $schema = [];
+
+  $schema['niftybot_auto_trades'] = [
+    'description' => 'Auto-trade positions and outcomes for ML/analytics.',
+    'fields' => [
+      'record_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'trade_id' => [
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'description' => 'Internal auto-trade identifier.',
+      ],
+      'instrument' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'description' => 'nifty or sensex.',
+      ],
+      'trade_mode' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+        'default' => 'buy',
+        'description' => 'buy or sell.',
+      ],
+      'position_side' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+        'default' => 'long',
+        'description' => 'long or short.',
+      ],
+      'option_type' => [
+        'type' => 'varchar',
+        'length' => 4,
+        'not null' => TRUE,
+        'description' => 'CE or PE.',
+      ],
+      'symbol' => [
+        'type' => 'varchar',
+        'length' => 80,
+        'not null' => TRUE,
+      ],
+      'exchange' => [
+        'type' => 'varchar',
+        'length' => 10,
+        'not null' => TRUE,
+      ],
+      'strike' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'expiry_date' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => FALSE,
+      ],
+      'quantity' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'entry_price' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 4,
+        'not null' => FALSE,
+      ],
+      'exit_price' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 4,
+        'not null' => FALSE,
+      ],
+      'current_price' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 4,
+        'not null' => FALSE,
+      ],
+      'stop_loss' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 4,
+        'not null' => FALSE,
+      ],
+      'target' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 4,
+        'not null' => FALSE,
+      ],
+      'sl_points' => [
+        'type' => 'numeric',
+        'precision' => 8,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'target_points' => [
+        'type' => 'numeric',
+        'precision' => 8,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'pnl' => [
+        'type' => 'numeric',
+        'precision' => 15,
+        'scale' => 2,
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'pnl_percentage' => [
+        'type' => 'numeric',
+        'precision' => 8,
+        'scale' => 2,
+        'not null' => FALSE,
+        'default' => 0,
+      ],
+      'underlying_ltp_at_entry' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'broker_order_id' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+      ],
+      'exit_broker_order_id' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+      ],
+      'smart_order_id' => [
+        'type' => 'varchar',
+        'length' => 100,
+        'not null' => FALSE,
+      ],
+      'smart_order_status' => [
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => FALSE,
+      ],
+      'signal_action' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => FALSE,
+      ],
+      'signal_confidence' => [
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 4,
+        'not null' => FALSE,
+      ],
+      'signal_reasons' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+        'description' => 'JSON array of signal reasons.',
+      ],
+      'signal_indicators' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+        'description' => 'JSON object of indicator values at entry.',
+      ],
+      'status' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'open',
+        'description' => 'open, closed.',
+      ],
+      'exit_reason' => [
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => FALSE,
+      ],
+      'recovered_from_broker' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'opened_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'closed_at' => [
+        'type' => 'int',
+        'not null' => FALSE,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['record_id'],
+    'unique keys' => [
+      'trade_id' => ['trade_id'],
+    ],
+    'indexes' => [
+      'instrument' => ['instrument'],
+      'status' => ['status'],
+      'symbol' => ['symbol'],
+      'instrument_status' => ['instrument', 'status'],
+      'opened_at' => ['opened_at'],
+    ],
+  ];
+
+  $schema['niftybot_broker_connections'] = [
+    'description' => 'Per-user broker API credentials and connection status.',
+    'fields' => [
+      'connection_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'broker' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => 'groww',
+      ],
+      'api_key_enc' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ],
+      'api_secret_enc' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ],
+      'status' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => 'disconnected',
+        'description' => 'connected, disconnected, or error.',
+      ],
+      'status_message' => [
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => FALSE,
+      ],
+      'broker_user_id' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => FALSE,
+      ],
+      'ucc' => [
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
+      ],
+      'balance' => [
+        'type' => 'numeric',
+        'precision' => 14,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'profile_data' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+        'description' => 'Serialized JSON profile snapshot.',
+      ],
+      'last_verified' => [
+        'type' => 'int',
+        'not null' => FALSE,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['connection_id'],
+    'unique keys' => [
+      'uid_broker' => ['uid', 'broker'],
+    ],
+    'indexes' => [
+      'uid' => ['uid'],
+      'status' => ['status'],
+    ],
+  ];
+
+  $schema['niftybot_trade_alerts'] = [
+    'description' => 'Platform trade-setup alerts broadcast to all traders.',
+    'fields' => [
+      'alert_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'instrument' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+      ],
+      'signal_action' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+      ],
+      'confidence' => [
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 4,
+        'not null' => FALSE,
+      ],
+      'title' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ],
+      'message' => [
+        'type' => 'text',
+        'not null' => TRUE,
+      ],
+      'underlying_ltp' => [
+        'type' => 'numeric',
+        'precision' => 12,
+        'scale' => 2,
+        'not null' => FALSE,
+      ],
+      'payload' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['alert_id'],
+    'indexes' => [
+      'instrument_created' => ['instrument', 'created'],
+      'signal_action' => ['signal_action'],
+    ],
+  ];
+
+  $schema['niftybot_user_notification_reads'] = [
+    'description' => 'Per-user read state for platform trade alerts.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'alert_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'read_at' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'uid_alert' => ['uid', 'alert_id'],
+    ],
+    'indexes' => [
+      'uid' => ['uid'],
+    ],
+  ];
+
+  $schema['niftybot_user_auto_trade_settings'] = niftybot_core_user_auto_trade_settings_schema();
+  $schema['niftybot_user_auto_trade_fees'] = niftybot_core_user_auto_trade_fees_schema();
+
+  return $schema;
+}
+
+/**
+ * User auto-trade quantity preferences (per instrument).
+ */
+function niftybot_core_user_auto_trade_settings_schema(): array {
+  return [
+    'description' => 'Per-user auto-trade quantity and billing preferences.',
+    'fields' => [
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'nifty_quantity' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 65,
+      ],
+      'sensex_quantity' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 20,
+      ],
+      'updated' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['uid'],
+  ];
+}
+
+/**
+ * Log of per-trade algo fees charged from wallet.
+ */
+function niftybot_core_user_auto_trade_fees_schema(): array {
+  return [
+    'description' => 'Pay-per-trade algo fees debited from user wallets.',
+    'fields' => [
+      'fee_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'instrument' => [
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+      ],
+      'trade_id' => [
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+      ],
+      'amount' => [
+        'type' => 'numeric',
+        'precision' => 10,
+        'scale' => 2,
+        'not null' => TRUE,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['fee_id'],
+    'indexes' => [
+      'uid' => ['uid'],
+      'trade_id' => ['trade_id'],
+    ],
+  ];
+}
+
+/**
+ * Create auto-trades table for existing sites.
+ */
+function niftybot_core_update_9001() {
+  $schema = niftybot_core_schema();
+  if (!\Drupal::database()->schema()->tableExists('niftybot_auto_trades')) {
+    \Drupal::database()->schema()->createTable(
+      'niftybot_auto_trades',
+      $schema['niftybot_auto_trades'],
+    );
+  }
+}
+
+/**
+ * Create per-user broker connections table.
+ */
+function niftybot_core_update_9002() {
+  $schema = niftybot_core_schema();
+  if (!\Drupal::database()->schema()->tableExists('niftybot_broker_connections')) {
+    \Drupal::database()->schema()->createTable(
+      'niftybot_broker_connections',
+      $schema['niftybot_broker_connections'],
+    );
+  }
+}
+
+/**
+ * Create trade alert and in-app notification read tables.
+ */
+function niftybot_core_update_9003() {
+  $schema = niftybot_core_schema();
+  $db_schema = \Drupal::database()->schema();
+  foreach (['niftybot_trade_alerts', 'niftybot_user_notification_reads'] as $table) {
+    if (!$db_schema->tableExists($table)) {
+      $db_schema->createTable($table, $schema[$table]);
+    }
+  }
+}
+
+/**
+ * Create user auto-trade settings and fee log tables.
+ */
+function niftybot_core_update_9004() {
+  $schema = niftybot_core_schema();
+  $db_schema = \Drupal::database()->schema();
+  foreach (['niftybot_user_auto_trade_settings', 'niftybot_user_auto_trade_fees'] as $table) {
+    if (!$db_schema->tableExists($table)) {
+      $db_schema->createTable($table, $schema[$table]);
+    }
+  }
+}

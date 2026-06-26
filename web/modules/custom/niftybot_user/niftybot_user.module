@@ -5,7 +5,50 @@
  * Primary module hooks for NiftyBot User module.
  */
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user login.
+ */
+function niftybot_user_form_user_login_form_alter(array &$form, FormStateInterface $form_state): void {
+  array_unshift($form['#validate'], 'niftybot_user_login_form_email_validate');
+  if (isset($form['name'])) {
+    $form['name']['#attributes']['inputmode'] = 'email';
+    $form['name']['#attributes']['autocomplete'] = 'email';
+  }
+}
+
+/**
+ * Maps an email address to the Drupal username before core authentication.
+ */
+function niftybot_user_login_form_email_validate(array &$form, FormStateInterface $form_state): void {
+  $identifier = trim((string) $form_state->getValue('name'));
+  if ($identifier === '') {
+    return;
+  }
+
+  if (str_contains($identifier, '@')) {
+    $account = user_load_by_mail($identifier);
+    if ($account) {
+      $form_state->setValue('name', $account->getAccountName());
+    }
+    return;
+  }
+
+  $member_uid = \Drupal::database()->select('niftybot_user_member_ids', 'm')
+    ->fields('m', ['uid'])
+    ->condition('member_id', strtoupper($identifier))
+    ->execute()
+    ->fetchField();
+
+  if ($member_uid) {
+    $account = \Drupal\user\Entity\User::load((int) $member_uid);
+    if ($account) {
+      $form_state->setValue('name', $account->getAccountName());
+    }
+  }
+}
 
 /**
  * Implements hook_help().
@@ -24,7 +67,13 @@ function niftybot_user_theme($existing, $type, $theme, $path) {
     'niftybot_user_profile' => [
       'variables' => [
         'user' => NULL,
+        'display_name' => '',
+        'full_name' => '',
+        'mobile_number' => '',
+        'kyc' => NULL,
         'kyc_status' => NULL,
+        'aadhaar_display' => '',
+        'bank_account_masked' => '',
         'wallet_balance' => 0,
         'subscription' => NULL,
         'member_id' => NULL,
@@ -44,6 +93,8 @@ function niftybot_user_theme($existing, $type, $theme, $path) {
         'available_balance' => 0,
         'pending_withdrawals' => 0,
         'transactions' => [],
+        'active_filter' => 'all',
+        'filter_options' => [],
       ],
       'template' => 'niftybot-wallet-overview',
     ],
@@ -89,7 +140,7 @@ function niftybot_user_mail($key, &$message, $params) {
  * Ensures KYC document upload directories exist under the private files path.
  */
 function niftybot_user_ensure_kyc_upload_directories(): void {
-  if (!\Drupal\Core\Site\Settings::get('file_private_path')) {
+  if (!niftybot_user_private_files_ready()) {
     return;
   }
 
@@ -98,6 +149,164 @@ function niftybot_user_ensure_kyc_upload_directories(): void {
   foreach (['private://kyc/pan', 'private://kyc/aadhaar', 'private://kyc/selfie'] as $directory) {
     $file_system->prepareDirectory($directory, $flags);
   }
+}
+
+/**
+ * Whether the private files directory is configured and writable.
+ */
+function niftybot_user_private_files_ready(): bool {
+  if (!\Drupal\Core\Site\Settings::get('file_private_path')) {
+    return FALSE;
+  }
+
+  $path = \Drupal::service('file_system')->realpath('private://');
+  return is_string($path) && $path !== '' && is_dir($path) && is_writable($path);
+}
+
+/**
+ * Reads a string value from a user profile field.
+ */
+function niftybot_user_profile_field_value(\Drupal\user\UserInterface $account, string $field_name): ?string {
+  if (!$account->hasField($field_name) || $account->get($field_name)->isEmpty()) {
+    return NULL;
+  }
+
+  $value = trim((string) $account->get($field_name)->value);
+  return $value !== '' ? $value : NULL;
+}
+
+/**
+ * Masks a bank account number for display (shows last 4 digits).
+ */
+function niftybot_user_mask_bank_account(string $account_number): string {
+  $account_number = trim($account_number);
+  if ($account_number === '') {
+    return '—';
+  }
+
+  $length = strlen($account_number);
+  if ($length <= 4) {
+    return str_repeat('*', $length);
+  }
+
+  return str_repeat('*', $length - 4) . substr($account_number, -4);
+}
+
+/**
+ * Formats Aadhaar for display using stored last-four digits only.
+ */
+function niftybot_user_format_aadhaar_display(string $aadhaar_last4): string {
+  $aadhaar_last4 = trim($aadhaar_last4);
+  if ($aadhaar_last4 === '') {
+    return '—';
+  }
+
+  return 'XXXX XXXX ' . $aadhaar_last4;
+}
+
+/**
+ * Returns KYC full name for a user, if available.
+ */
+function niftybot_user_kyc_full_name(int $uid): ?string {
+  if ($uid <= 0) {
+    return NULL;
+  }
+
+  $full_name = \Drupal::database()->select('niftybot_kyc', 'k')
+    ->fields('k', ['full_name'])
+    ->condition('uid', $uid)
+    ->execute()
+    ->fetchField();
+
+  if (!is_string($full_name)) {
+    return NULL;
+  }
+
+  $full_name = trim($full_name);
+  return $full_name !== '' ? $full_name : NULL;
+}
+
+/**
+ * Backfills empty profile full names from KYC submissions.
+ */
+function niftybot_user_backfill_profile_full_names(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('user');
+  $kyc_rows = \Drupal::database()->select('niftybot_kyc', 'k')
+    ->fields('k', ['uid', 'full_name'])
+    ->execute()
+    ->fetchAll();
+
+  foreach ($kyc_rows as $row) {
+    $full_name = trim((string) $row->full_name);
+    if ($full_name === '') {
+      continue;
+    }
+
+    $user = $storage->load((int) $row->uid);
+    if (!$user instanceof \Drupal\user\UserInterface || !$user->hasField('field_full_name')) {
+      continue;
+    }
+    if (!$user->get('field_full_name')->isEmpty()) {
+      continue;
+    }
+
+    $user->set('field_full_name', $full_name);
+    $user->save();
+  }
+}
+
+/**
+ * Returns the preferred display name for a user account.
+ */
+function niftybot_user_display_name(\Drupal\user\UserInterface $account): string {
+  $full_name = niftybot_user_profile_field_value($account, 'field_full_name');
+  if ($full_name !== NULL) {
+    return $full_name;
+  }
+
+  $kyc_full_name = niftybot_user_kyc_full_name((int) $account->id());
+  if ($kyc_full_name !== NULL) {
+    return $kyc_full_name;
+  }
+
+  /** @var \Drupal\niftybot_user\Service\MemberIdService $member_id_service */
+  $member_id_service = \Drupal::service('niftybot_user.member_id_service');
+  $member_id = $member_id_service->getMemberId((int) $account->id());
+  if ($member_id) {
+    return $member_id;
+  }
+
+  return $account->getDisplayName();
+}
+
+/**
+ * Status labels for KYC records.
+ *
+ * @return array<string, \Drupal\Core\StringTranslation\TranslatableMarkup>
+ */
+function niftybot_user_kyc_status_labels(): array {
+  return [
+    'pending' => t('Pending Review'),
+    'under_review' => t('Under Review'),
+    'approved' => t('Approved'),
+    'rejected' => t('Rejected'),
+  ];
+}
+
+/**
+ * Builds the KYC status render array.
+ */
+function niftybot_user_kyc_status_render(?object $kyc): array {
+  $labels = niftybot_user_kyc_status_labels();
+
+  return [
+    '#theme' => 'niftybot_kyc_status',
+    '#kyc' => $kyc,
+    '#status_label' => $kyc ? ($labels[$kyc->status] ?? $kyc->status) : t('Not Submitted'),
+    '#attached' => [
+      'library' => ['niftybot_user/kyc'],
+    ],
+  ];
 }
 
 /**
@@ -118,5 +327,13 @@ function niftybot_user_user_insert($account) {
 
   /** @var \Drupal\niftybot_user\Service\MemberIdService $member_id_service */
   $member_id_service = \Drupal::service('niftybot_user.member_id_service');
-  $member_id_service->assignMemberId((int) $account->id());
+  $member_id = $member_id_service->assignMemberId((int) $account->id());
+
+  if ($member_id !== $account->getAccountName()) {
+    $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
+    if ($user) {
+      $user->setUsername($member_id);
+      $user->save();
+    }
+  }
 }

@@ -1,0 +1,31 @@
+order:
+  version: 1.x
+  css:
+    theme:
+      css/order.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+
+trade_history:
+  version: 1.x
+  css:
+    theme:
+      css/trading-pages.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+
+positions:
+  version: 1.x
+  css:
+    theme:
+      css/trading-pages.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+
+orders:
+  version: 1.x
+  css:
+    theme:
+      css/trading-pages.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard

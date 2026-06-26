@@ -1,0 +1,35 @@
+{#
+/**
+ * @file
+ * User registration page shell.
+ */
+#}
+<div class="niftyoption-auth-container niftyoption-auth-container--register">
+  <div class="login-box login-box--register rounded-2 p-4 p-md-5">
+    <div class="login-form">
+      {% include directory ~ '/templates/includes/brand-logo.html.twig' with {
+        modifier: 'login-logo mb-3',
+        icon_height: 36,
+        show_wordmark: true,
+        link_url: front_page,
+      } %}
+
+      {% if page.highlighted %}
+        {{ page.highlighted }}
+      {% endif %}
+
+      <h5 class="fw-light mb-3">{{ 'Create your account.'|t }}</h5>
+
+      <p class="mb-4">
+        <span class="text-secondary">{{ 'Already have an account?'|t }}</span>
+        <a href="{{ path('user.login') }}" class="niftyoption-auth-link fw-bold ms-1">
+          {{ 'Sign in'|t }}
+        </a>
+      </p>
+
+      <div id="main-content">
+        {{ page.content }}
+      </div>
+    </div>
+  </div>
+</div>

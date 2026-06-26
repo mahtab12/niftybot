@@ -1,0 +1,364 @@
+/**
+ * Trade history & positions — trader list pages.
+ */
+
+.niftybot-trading-page {
+  --tp-primary: #1553a3;
+  --tp-primary-dark: #0f3d7a;
+  --tp-text: #17181c;
+  --tp-muted: #707f93;
+  --tp-border: #d7e0eb;
+  --tp-surface: #ffffff;
+  --tp-surface-muted: #f8fafc;
+  --tp-success: #119a2c;
+  --tp-danger: #e93443;
+  width: 100%;
+  color: var(--tp-text);
+}
+
+/* Hero */
+.niftybot-trading-page__hero {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(21, 83, 163, 0.18);
+  background: linear-gradient(135deg, #0f3d7a 0%, #1553a3 45%, #276dd9 100%);
+  color: #fff;
+}
+
+.niftybot-trading-page__hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.16) 0%, transparent 40%),
+    radial-gradient(circle at 8% 92%, rgba(255, 255, 255, 0.08) 0%, transparent 36%);
+  pointer-events: none;
+}
+
+.niftybot-trading-page__hero .card-body {
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+
+.niftybot-trading-page__hero-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.niftybot-trading-page__hero-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.niftybot-trading-page__hero-amount {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.niftybot-trading-page__hero-amount--positive {
+  color: #b8f5c8;
+}
+
+.niftybot-trading-page__hero-amount--negative {
+  color: #ffc9cf;
+}
+
+.niftybot-trading-page__hero-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.niftybot-trading-page__hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.niftybot-trading-page__hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.niftybot-trading-page__hero-stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.niftybot-trading-page__hero-stat-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.niftybot-trading-page__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.niftybot-trading-page__hero-actions .btn-light {
+  color: var(--tp-primary-dark);
+  font-weight: 600;
+}
+
+.niftybot-trading-page__hero-actions .btn-outline-light:hover {
+  color: var(--tp-primary-dark);
+}
+
+/* Stat cards */
+.niftybot-trading-page__stat-card {
+  background: var(--tp-surface);
+  border: 1px solid var(--tp-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.15rem;
+  height: 100%;
+  box-shadow: 0 6px 18px rgba(23, 24, 28, 0.05);
+}
+
+.niftybot-trading-page__stat-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.niftybot-trading-page__stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.niftybot-trading-page__stat-icon--trades {
+  background: #eaf2ff;
+  color: var(--tp-primary);
+}
+
+.niftybot-trading-page__stat-icon--buy {
+  background: #e8f8ec;
+  color: var(--tp-success);
+}
+
+.niftybot-trading-page__stat-icon--sell {
+  background: #fff0f2;
+  color: var(--tp-danger);
+}
+
+.niftybot-trading-page__stat-icon--investment {
+  background: #eef0ff;
+  color: #4f46e5;
+}
+
+.niftybot-trading-page__stat-icon--positions {
+  background: #fff8e6;
+  color: #c98a00;
+}
+
+.niftybot-trading-page__stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.niftybot-trading-page__stat-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--tp-muted);
+}
+
+/* Data table card */
+.niftybot-trading-page__table-card {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+  overflow: hidden;
+}
+
+.niftybot-trading-page__table-card .card-header {
+  padding: 1.15rem 1.25rem;
+  background: var(--tp-surface);
+  border-bottom: 1px solid var(--tp-border);
+}
+
+.niftybot-trading-page__table-title {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.niftybot-trading-page__table-title .bi {
+  color: var(--tp-primary);
+}
+
+.niftybot-trading-page__table-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--tp-muted);
+}
+
+.niftybot-trading-page__symbol {
+  font-weight: 600;
+  color: var(--tp-primary-dark);
+}
+
+.niftybot-trading-page__txn-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.niftybot-trading-page__txn-badge--buy {
+  background: #e8f8ec;
+  color: var(--tp-success);
+}
+
+.niftybot-trading-page__txn-badge--sell {
+  background: #fff0f2;
+  color: var(--tp-danger);
+}
+
+.niftybot-trading-page__status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.niftybot-trading-page__status-badge--executed,
+.niftybot-trading-page__status-badge--partially-executed {
+  background: #e8f8ec;
+  color: var(--tp-success);
+}
+
+.niftybot-trading-page__status-badge--pending,
+.niftybot-trading-page__status-badge--placed {
+  background: #fff8e6;
+  color: #c98a00;
+}
+
+.niftybot-trading-page__status-badge--cancelled,
+.niftybot-trading-page__status-badge--failed,
+.niftybot-trading-page__status-badge--rejected {
+  background: #fff0f2;
+  color: var(--tp-danger);
+}
+
+.niftybot-trading-page__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.niftybot-trading-page__pnl--positive {
+  color: var(--tp-success);
+  font-weight: 600;
+}
+
+.niftybot-trading-page__pnl--negative {
+  color: var(--tp-danger);
+  font-weight: 600;
+}
+
+.niftybot-trading-page__broker {
+  font-size: 0.875rem;
+  color: var(--tp-muted);
+}
+
+.niftybot-trading-page__strategy {
+  font-size: 0.8125rem;
+  color: var(--tp-muted);
+}
+
+/* Empty state */
+.niftybot-trading-page__empty {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.niftybot-trading-page__empty-icon {
+  font-size: 2.5rem;
+  color: #c5cad3;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.niftybot-trading-page__empty-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.niftybot-trading-page__empty-text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--tp-muted);
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.niftybot-trading-page__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: center;
+}
+
+@media (max-width: 991.98px) {
+  .niftybot-trading-page__hero-actions {
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .niftybot-trading-page__hero .card-body {
+    padding: 1.35rem 1.25rem;
+  }
+
+  .niftybot-trading-page__stat-value {
+    font-size: 1.3rem;
+  }
+}

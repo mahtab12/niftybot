@@ -83,6 +83,9 @@ class ReportController extends ControllerBase {
       '#theme' => 'niftybot_reports_overview',
       '#stats' => $stats,
       '#monthly_summary' => [],
+      '#attached' => [
+        'library' => ['niftybot_reports/reports'],
+      ],
     ];
   }
 
@@ -140,6 +143,9 @@ class ReportController extends ControllerBase {
       '#total_pnl' => $total_pnl,
       '#winning_trades' => $winning,
       '#losing_trades' => $losing,
+      '#attached' => [
+        'library' => ['niftybot_reports/pnl'],
+      ],
     ];
   }
 

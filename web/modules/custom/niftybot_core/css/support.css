@@ -1,0 +1,236 @@
+/**
+ * Support and FAQ pages — StrikeFlow theme palette.
+ */
+
+.niftybot-support-page,
+.niftybot-faq-page {
+  --nb-support-primary: #1553a3;
+  --nb-support-primary-light: #eaf2ff;
+  --nb-support-text: #17181c;
+  --nb-support-muted: #707f93;
+  --nb-support-border: #d7e0eb;
+}
+
+.niftybot-support-hero {
+  border: 0;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+  background: linear-gradient(135deg, #0f3d7a 0%, #1553a3 45%, #276dd9 100%);
+  color: #fff;
+}
+
+.niftybot-support-hero .card-body {
+  padding: 1.5rem 1.75rem;
+}
+
+.niftybot-support-hero__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.niftybot-support-hero__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.niftybot-support-hero__text {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.niftybot-support-card {
+  border: 0;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+}
+
+.niftybot-support-card .card-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.niftybot-support-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--nb-support-text);
+  margin-bottom: 0.65rem;
+}
+
+.niftybot-support-card__title i {
+  color: var(--nb-support-primary);
+}
+
+.niftybot-support-card__text {
+  color: var(--nb-support-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-support-card__link {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--nb-support-primary);
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+}
+
+.niftybot-support-card__link:hover {
+  color: #0f3d7a;
+  text-decoration: underline;
+}
+
+.niftybot-support-card__meta {
+  font-size: 0.8125rem;
+  color: var(--nb-support-muted);
+}
+
+.niftybot-support-hours {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--nb-support-muted);
+  font-size: 0.9rem;
+}
+
+.niftybot-support-hours li {
+  padding: 0.35rem 0;
+}
+
+.niftybot-support-hours strong {
+  color: var(--nb-support-text);
+  display: inline-block;
+  min-width: 9rem;
+}
+
+.niftybot-support-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--nb-support-text);
+  margin-bottom: 0.85rem;
+}
+
+.niftybot-support-quick-link {
+  border: 1px solid var(--nb-support-border);
+  box-shadow: 0 4px 12px rgba(23, 24, 28, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  color: inherit;
+}
+
+.niftybot-support-quick-link:hover {
+  border-color: #c5d9f5;
+  box-shadow: 0 8px 20px rgba(21, 83, 163, 0.1);
+}
+
+.niftybot-support-quick-link .card-body {
+  padding: 1.1rem 1.15rem;
+}
+
+.niftybot-support-quick-link__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--nb-support-primary-light);
+  color: var(--nb-support-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-support-quick-link__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--nb-support-text);
+  margin-bottom: 0.35rem;
+}
+
+.niftybot-support-quick-link__text {
+  font-size: 0.8125rem;
+  color: var(--nb-support-muted);
+  line-height: 1.45;
+}
+
+.niftybot-faq-intro {
+  font-size: 0.9rem;
+  color: var(--nb-support-muted);
+}
+
+.niftybot-faq-intro a {
+  font-weight: 600;
+  color: var(--nb-support-primary);
+  text-decoration: none;
+}
+
+.niftybot-faq-intro a:hover {
+  text-decoration: underline;
+}
+
+.niftybot-faq-section {
+  border: 0;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+  overflow: hidden;
+}
+
+.niftybot-faq-section .card-header {
+  background: var(--nb-support-primary-light);
+  border-bottom: 1px solid #c5d9f5;
+  padding: 0.9rem 1.25rem;
+}
+
+.niftybot-faq-section__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--nb-support-primary);
+}
+
+.niftybot-faq-accordion .accordion-item {
+  border-color: var(--nb-support-border);
+}
+
+.niftybot-faq-accordion .accordion-button {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--nb-support-text);
+  background: #fff;
+  box-shadow: none;
+}
+
+.niftybot-faq-accordion .accordion-button:not(.collapsed) {
+  color: var(--nb-support-primary);
+  background: #f8fafc;
+}
+
+.niftybot-faq-accordion .accordion-button:focus {
+  border-color: #c5d9f5;
+  box-shadow: 0 0 0 3px rgba(21, 83, 163, 0.12);
+}
+
+.niftybot-faq-accordion .accordion-body {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--nb-support-muted);
+}
+
+@media (max-width: 767.98px) {
+  .niftybot-support-hero .card-body,
+  .niftybot-support-card .card-body {
+    padding: 1.25rem;
+  }
+
+  .niftybot-support-hours strong {
+    display: block;
+    min-width: 0;
+    margin-bottom: 0.15rem;
+  }
+}

@@ -8,6 +8,7 @@ from app.middleware.auth import verify_api_key
 from app.models.schemas import (
     BrokerType,
     HoldingsResponse,
+    PortfolioSummaryResponse,
     PositionsResponse,
 )
 from app.services.broker_service import broker_service
@@ -35,6 +36,14 @@ async def get_holdings(user_id: int, broker: BrokerType):
     logger.info("Get holdings: user=%d, broker=%s", user_id, broker.value)
 
     return broker_service.get_holdings(broker)
+
+
+@router.get("/portfolio/summary/{user_id}", response_model=PortfolioSummaryResponse)
+async def get_portfolio_summary(user_id: int, broker: BrokerType):
+    """Get portfolio summary with P&L, day return, balances, holdings, and positions."""
+    logger.info("Get portfolio summary: user=%d, broker=%s", user_id, broker.value)
+
+    return broker_service.get_portfolio_summary(broker)
 
 
 @router.get("/ltp")

@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     debug: bool = False
 
+    # Auto trade defaults
+    auto_trade_lot_size: int = 75
+    auto_trade_sl_points: float = 10.0
+    auto_trade_target_points: float = 10.0
+    auto_trade_poll_seconds: int = 30
+
     @property
     def database_url(self) -> str:
         return (

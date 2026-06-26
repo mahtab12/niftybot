@@ -1,50 +1,196 @@
-<div class="niftybot-reports">
-  <h2>{{ 'Trading Reports'|t }}</h2>
+{#
+/**
+ * @file
+ * Trader reports overview.
+ */
+#}
+<div class="niftybot-reports niftybot-dashboard">
+  <div class="niftybot-reports__hero card mb-4">
+    <div class="niftybot-reports__hero-bg" aria-hidden="true"></div>
+    <div class="card-body position-relative">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <div class="d-flex align-items-start gap-3">
+            <div class="niftybot-reports__hero-icon" aria-hidden="true">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div>
+              <p class="niftybot-reports__hero-label mb-2">{{ 'Total profit & loss'|t }}</p>
+              <h2 class="niftybot-reports__hero-amount mb-0 {{ stats.total_pnl >= 0 ? 'niftybot-reports__hero-amount--positive' : 'niftybot-reports__hero-amount--negative' }}">
+                {{ stats.total_pnl >= 0 ? '+' : '' }}₹{{ stats.total_pnl|number_format(2) }}
+              </h2>
+              <p class="niftybot-reports__hero-hint mb-0">
+                {{ 'Performance across your open and closed positions'|t }}
+              </p>
+            </div>
+          </div>
 
-  <div class="reports-stats">
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.total_orders }}</div>
-      <div class="stat-label">{{ 'Total Orders'|t }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.executed_orders }}</div>
-      <div class="stat-label">{{ 'Executed'|t }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.cancelled_orders }}</div>
-      <div class="stat-label">{{ 'Cancelled'|t }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.success_rate }}%</div>
-      <div class="stat-label">{{ 'Success Rate'|t }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">₹{{ stats.total_investment|number_format(2) }}</div>
-      <div class="stat-label">{{ 'Total Investment'|t }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value {{ stats.total_pnl >= 0 ? 'pnl-positive' : 'pnl-negative' }}">
-        {{ stats.total_pnl >= 0 ? '+' : '' }}₹{{ stats.total_pnl|number_format(2) }}
+          <div class="niftybot-reports__hero-meta">
+            <div class="niftybot-reports__hero-stat">
+              <span class="niftybot-reports__hero-stat-label">{{ 'Total investment'|t }}</span>
+              <span class="niftybot-reports__hero-stat-value">₹{{ stats.total_investment|number_format(2) }}</span>
+            </div>
+            <div class="niftybot-reports__hero-stat">
+              <span class="niftybot-reports__hero-stat-label">{{ 'Success rate'|t }}</span>
+              <span class="niftybot-reports__hero-stat-value">{{ stats.success_rate }}%</span>
+            </div>
+            <div class="niftybot-reports__hero-stat">
+              <span class="niftybot-reports__hero-stat-label">{{ 'Total orders'|t }}</span>
+              <span class="niftybot-reports__hero-stat-value">{{ stats.total_orders }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="niftybot-reports__hero-actions">
+            <a href="{{ path('niftybot_reports.pnl') }}" class="btn btn-light">
+              <i class="bi bi-bar-chart-line me-2" aria-hidden="true"></i>
+              {{ 'View P&L report'|t }}
+            </a>
+            <a href="{{ path('niftybot_trading.history') }}" class="btn btn-outline-light">
+              <i class="bi bi-clock-history me-2" aria-hidden="true"></i>
+              {{ 'Trade history'|t }}
+            </a>
+          </div>
+        </div>
       </div>
-      <div class="stat-label">{{ 'Total P&L'|t }}</div>
     </div>
   </div>
 
-  <div class="reports-actions">
-    <h3>{{ 'Detailed Reports'|t }}</h3>
-    <ul class="reports-links">
-      <li><a href="{{ path('niftybot_reports.pnl') }}">{{ 'P&L Report'|t }}</a></li>
-      <li><a href="{{ path('niftybot_trading.history') }}">{{ 'Trade History'|t }}</a></li>
-      <li><a href="{{ path('niftybot_trading.positions') }}">{{ 'Position Report'|t }}</a></li>
-    </ul>
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="niftybot-reports__stat-card">
+        <div class="niftybot-reports__stat-card-top">
+          <div class="niftybot-reports__stat-icon niftybot-reports__stat-icon--orders" aria-hidden="true">
+            <i class="bi bi-list-check"></i>
+          </div>
+        </div>
+        <div class="niftybot-reports__stat-value">{{ stats.total_orders }}</div>
+        <div class="niftybot-reports__stat-label">{{ 'Total orders'|t }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="niftybot-reports__stat-card">
+        <div class="niftybot-reports__stat-card-top">
+          <div class="niftybot-reports__stat-icon niftybot-reports__stat-icon--executed" aria-hidden="true">
+            <i class="bi bi-check-circle"></i>
+          </div>
+        </div>
+        <div class="niftybot-reports__stat-value">{{ stats.executed_orders }}</div>
+        <div class="niftybot-reports__stat-label">{{ 'Executed'|t }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="niftybot-reports__stat-card">
+        <div class="niftybot-reports__stat-card-top">
+          <div class="niftybot-reports__stat-icon niftybot-reports__stat-icon--cancelled" aria-hidden="true">
+            <i class="bi bi-x-circle"></i>
+          </div>
+        </div>
+        <div class="niftybot-reports__stat-value">{{ stats.cancelled_orders }}</div>
+        <div class="niftybot-reports__stat-label">{{ 'Cancelled'|t }}</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="niftybot-reports__stat-card">
+        <div class="niftybot-reports__stat-card-top">
+          <div class="niftybot-reports__stat-icon niftybot-reports__stat-icon--rate" aria-hidden="true">
+            <i class="bi bi-percent"></i>
+          </div>
+        </div>
+        <div class="niftybot-reports__stat-value">{{ stats.success_rate }}%</div>
+        <div class="niftybot-reports__stat-label">{{ 'Execution rate'|t }}</div>
+      </div>
+    </div>
   </div>
 
-  <div class="reports-export">
-    <h3>{{ 'Export Data'|t }}</h3>
-    <div class="export-buttons">
-      <a href="{{ path('niftybot_reports.export', {'type': 'orders'}) }}" class="button">{{ 'Export Orders (CSV)'|t }}</a>
-      <a href="{{ path('niftybot_reports.export', {'type': 'trades'}) }}" class="button">{{ 'Export Trades (CSV)'|t }}</a>
-      <a href="{{ path('niftybot_reports.export', {'type': 'positions'}) }}" class="button">{{ 'Export Positions (CSV)'|t }}</a>
+  {% if stats.total_orders == 0 %}
+    <div class="niftybot-reports__empty mb-4">
+      <i class="bi bi-file-earmark-bar-graph niftybot-reports__empty-icon" aria-hidden="true"></i>
+      <h3 class="niftybot-reports__empty-title">{{ 'No trading activity yet'|t }}</h3>
+      <p class="niftybot-reports__empty-text">
+        {{ 'Once you place orders through your broker, your reports and exports will appear here.'|t }}
+      </p>
+      <a href="{{ path('niftybot_core.user_broker') }}" class="btn btn-primary">
+        <i class="bi bi-link-45deg me-1" aria-hidden="true"></i>
+        {{ 'Connect broker'|t }}
+      </a>
+    </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="niftybot-dashboard__panel niftybot-reports__section h-100">
+        <h3 class="niftybot-reports__section-title">
+          <i class="bi bi-journal-text" aria-hidden="true"></i>
+          {{ 'Detailed reports'|t }}
+        </h3>
+        <p class="niftybot-reports__section-subtitle">
+          {{ 'Drill into performance, history, and open positions'|t }}
+        </p>
+
+        <div class="niftybot-reports__links">
+          <a href="{{ path('niftybot_reports.pnl') }}" class="niftybot-reports__link-card">
+            <span class="niftybot-reports__link-card-icon" aria-hidden="true">
+              <i class="bi bi-bar-chart-line"></i>
+            </span>
+            <span class="niftybot-reports__link-card-body">
+              <span class="niftybot-reports__link-card-title">{{ 'P&L report'|t }}</span>
+              <span class="niftybot-reports__link-card-desc">{{ 'Daily profit and loss breakdown by session'|t }}</span>
+            </span>
+            <i class="bi bi-chevron-right niftybot-reports__link-card-arrow" aria-hidden="true"></i>
+          </a>
+
+          <a href="{{ path('niftybot_trading.history') }}" class="niftybot-reports__link-card">
+            <span class="niftybot-reports__link-card-icon" aria-hidden="true">
+              <i class="bi bi-clock-history"></i>
+            </span>
+            <span class="niftybot-reports__link-card-body">
+              <span class="niftybot-reports__link-card-title">{{ 'Trade history'|t }}</span>
+              <span class="niftybot-reports__link-card-desc">{{ 'Full list of executed and pending orders'|t }}</span>
+            </span>
+            <i class="bi bi-chevron-right niftybot-reports__link-card-arrow" aria-hidden="true"></i>
+          </a>
+
+          <a href="{{ path('niftybot_trading.positions') }}" class="niftybot-reports__link-card">
+            <span class="niftybot-reports__link-card-icon" aria-hidden="true">
+              <i class="bi bi-briefcase"></i>
+            </span>
+            <span class="niftybot-reports__link-card-body">
+              <span class="niftybot-reports__link-card-title">{{ 'Position report'|t }}</span>
+              <span class="niftybot-reports__link-card-desc">{{ 'Current holdings, average price, and unrealized P&L'|t }}</span>
+            </span>
+            <i class="bi bi-chevron-right niftybot-reports__link-card-arrow" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="niftybot-dashboard__panel niftybot-reports__section h-100">
+        <h3 class="niftybot-reports__section-title">
+          <i class="bi bi-download" aria-hidden="true"></i>
+          {{ 'Export data'|t }}
+        </h3>
+        <p class="niftybot-reports__section-subtitle">
+          {{ 'Download your records as CSV for accounting or analysis'|t }}
+        </p>
+
+        <div class="niftybot-reports__exports">
+          <a href="{{ path('niftybot_reports.export', {'type': 'orders'}) }}" class="btn btn-outline-primary niftybot-reports__export-btn w-100">
+            <i class="bi bi-filetype-csv" aria-hidden="true"></i>
+            {{ 'Export orders'|t }}
+          </a>
+          <a href="{{ path('niftybot_reports.export', {'type': 'trades'}) }}" class="btn btn-outline-primary niftybot-reports__export-btn w-100">
+            <i class="bi bi-filetype-csv" aria-hidden="true"></i>
+            {{ 'Export trades'|t }}
+          </a>
+          <a href="{{ path('niftybot_reports.export', {'type': 'positions'}) }}" class="btn btn-outline-primary niftybot-reports__export-btn w-100">
+            <i class="bi bi-filetype-csv" aria-hidden="true"></i>
+            {{ 'Export positions'|t }}
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>

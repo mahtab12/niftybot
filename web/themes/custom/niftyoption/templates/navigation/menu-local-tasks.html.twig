@@ -1,0 +1,26 @@
+{#
+/**
+ * @file
+ * Primary and secondary local tasks.
+ */
+#}
+{% if primary %}
+  <h2 class="visually-hidden">{{ 'Primary tabs'|t }}</h2>
+  {% if niftyoption_auth_tabs %}
+    <nav class="niftyoption-auth-tabs" aria-label="{{ 'Account pages'|t }}">
+      <ul class="niftyoption-auth-tabs__list list-unstyled d-flex flex-wrap gap-2 mb-0">{{ primary }}</ul>
+    </nav>
+  {% else %}
+    <ul class="niftyoption-local-tasks niftyoption-local-tasks--primary">{{ primary }}</ul>
+  {% endif %}
+{% endif %}
+{% if secondary %}
+  <h2 class="visually-hidden">{{ 'Secondary tabs'|t }}</h2>
+  {% if niftyoption_auth_tabs %}
+    <nav class="niftyoption-auth-tabs niftyoption-auth-tabs--secondary mt-2" aria-label="{{ 'Secondary tabs'|t }}">
+      <ul class="niftyoption-auth-tabs__list list-unstyled d-flex flex-wrap gap-2 mb-0">{{ secondary }}</ul>
+    </nav>
+  {% else %}
+    <ul class="niftyoption-local-tasks niftyoption-local-tasks--secondary">{{ secondary }}</ul>
+  {% endif %}
+{% endif %}

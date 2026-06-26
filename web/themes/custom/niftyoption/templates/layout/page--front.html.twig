@@ -1,0 +1,347 @@
+{#
+/**
+ * @file
+ * Public landing page — welcome, pricing, and stats sections.
+ */
+#}
+{% set brand_name = niftyoption_brand_name|default(site_name|default('StrikeFlow')) %}
+{% set assets_base = theme_assets_base|default('/' ~ directory) %}
+<div class="landing-page">
+  <header class="landing-header py-3">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between">
+        {% include directory ~ '/templates/includes/brand-logo.html.twig' with {
+          modifier: 'logo',
+          icon_height: 32,
+          show_wordmark: true,
+          link_url: front_page,
+        } %}
+        <div class="d-flex gap-2">
+          {% if logged_in %}
+            <a href="/niftybot/dashboard" class="btn btn-primary">{{ 'Dashboard'|t }}</a>
+          {% else %}
+            <a href="{{ path('user.login') }}" class="btn btn-outline-primary">{{ 'Login'|t }}</a>
+            <a href="{{ path('niftybot_user.register') }}" class="btn btn-primary">{{ 'Get Started'|t }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    {# Hero + overlapping feature cards #}
+    <section class="landing-hero">
+      <div class="hero-header shade-dark landing-hero__banner">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8 text-center">
+              <p class="text-uppercase text-white-50 small fw-semibold mb-3 letter-spacing-1">{{ 'Nifty & Sensex options platform'|t }}</p>
+              <h1 class="text-white mb-3 display-5 fw-semibold">
+                {{ 'Trade smarter with @brand'|t({'@brand': brand_name}) }}
+              </h1>
+              <p class="text-white mb-4 fs-5 fw-light opacity-75">
+                {{ 'Automated signals, portfolio tracking, wallet & KYC — built for Indian index options traders.'|t }}
+              </p>
+              <div class="d-flex gap-3 justify-content-center flex-wrap">
+                {% if logged_in %}
+                  <a href="/niftybot/dashboard" class="btn btn-success btn-lg px-4">{{ 'Go to Dashboard'|t }}</a>
+                {% else %}
+                  <a href="{{ path('niftybot_user.register') }}" class="btn btn-success btn-lg px-4">{{ 'Start Free'|t }}</a>
+                  <a href="{{ path('user.login') }}" class="btn btn-outline-light btn-lg px-4">{{ 'Sign In'|t }}</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-body landing-hero__cards">
+        <div class="row justify-content-center g-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="card h-100">
+              <div class="card-body p-4 p-lg-5 text-center">
+                <i class="bi bi-lightning-charge fs-1 text-primary mb-3 d-block"></i>
+                <h4 class="mb-2">{{ 'Auto Trade'|t }}</h4>
+                <p class="text-secondary mb-0">{{ 'OI, EMA, RSI, VWAP and chain OI aligned entries on Nifty & Sensex.'|t }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="card h-100">
+              <div class="card-body p-4 p-lg-5 text-center">
+                <i class="bi bi-graph-up-arrow fs-1 text-green mb-3 d-block"></i>
+                <h4 class="mb-2">{{ 'Investment Plans'|t }}</h4>
+                <p class="text-secondary mb-0">{{ 'Subscribe to plans and follow platform trades with full transparency.'|t }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="card h-100">
+              <div class="card-body p-4 p-lg-5 text-center">
+                <i class="bi bi-shield-check fs-1 text-yellow mb-3 d-block"></i>
+                <h4 class="mb-2">{{ 'Secure & Compliant'|t }}</h4>
+                <p class="text-secondary mb-0">{{ 'KYC verification, wallet management, and Groww broker integration.'|t }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# How it works #}
+    <section class="landing-section landing-section--alt">
+      <div class="container">
+        <div class="text-center mb-2">
+          <h2 class="landing-section__title">{{ 'How it works'|t }}</h2>
+          <p class="landing-section__subtitle">{{ 'From signup to your first automated trade in three simple steps.'|t }}</p>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="landing-step">
+              <div class="landing-step__icon"><i class="bi bi-person-plus"></i></div>
+              <h5>{{ '1. Create account'|t }}</h5>
+              <p class="text-secondary mb-0">{{ 'Register, complete KYC, and connect your trading profile.'|t }}</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="landing-step">
+              <div class="landing-step__icon"><i class="bi bi-wallet2"></i></div>
+              <h5>{{ '2. Fund wallet'|t }}</h5>
+              <p class="text-secondary mb-0">{{ 'Deposit via UPI or NEFT and choose a subscription or investment plan.'|t }}</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="landing-step">
+              <div class="landing-step__icon"><i class="bi bi-robot"></i></div>
+              <h5>{{ '3. Activate auto-trade'|t }}</h5>
+              <p class="text-secondary mb-0">{{ 'Turn on Nifty or Sensex auto-trade and let signals drive entries & exits.'|t }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# Platform stats #}
+    <section class="landing-section">
+      <div class="container">
+        <div class="text-center mb-4">
+          <h2 class="landing-section__title">{{ 'Built for active F&O traders'|t }}</h2>
+          <p class="landing-section__subtitle">{{ '@brand combines institutional-style signals with a trader-first dashboard.'|t({'@brand': brand_name}) }}</p>
+        </div>
+        <div class="row g-3 justify-content-center">
+          <div class="col-sm-6 col-lg-3">
+            <div class="landing-stat-box box-bdr-blue">
+              <h3 class="text-blue">75%+</h3>
+              <p>{{ 'Min signal confidence on entries'|t }}</p>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="landing-stat-box box-bdr-green">
+              <h3 class="text-green">2</h3>
+              <p>{{ 'Indices — Nifty & Sensex'|t }}</p>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="landing-stat-box box-bdr-yellow">
+              <h3 class="text-yellow">6+</h3>
+              <p>{{ 'Signal layers — OI, EMA, RSI, VWAP & more'|t }}</p>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="landing-stat-box box-bdr-red">
+              <h3 class="text-red">24/7</h3>
+              <p>{{ 'Portfolio & order visibility'|t }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# Pricing #}
+    <section class="landing-section landing-section--alt" id="plans">
+      <div class="container">
+        <div class="text-center mb-4">
+          <h2 class="landing-section__title">{{ 'Choose your plan'|t }}</h2>
+          <p class="landing-section__subtitle">{{ 'Flexible subscriptions for every trading style. Upgrade anytime from your dashboard.'|t }}</p>
+        </div>
+        <div class="row justify-content-center g-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="pricing-plan shade-primary">
+              <div class="pricing-header">
+                <h4 class="fw-lighter text-uppercase">{{ 'Starter'|t }}</h4>
+                <h1>₹4,999</h1>
+                <h5 class="fw-normal">{{ 'Per month'|t }}</h5>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>{{ 'Nifty & Sensex auto-trade'|t }}</li>
+                  <li>{{ 'Live signal dashboard'|t }}</li>
+                  <li>{{ 'SL / target automation'|t }}</li>
+                  <li>{{ '5 auto-trades per day'|t }}</li>
+                </ul>
+                <div class="pricing-footer">
+                  <div class="d-grid">
+                    <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-light btn-lg">{{ 'View Plans'|t }}</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="pricing-plan shade-green">
+              <div class="pricing-header">
+                <h4 class="fw-lighter text-uppercase">{{ 'Pro'|t }}</h4>
+                <h1>₹8,999</h1>
+                <h5 class="fw-normal">{{ 'Per month'|t }}</h5>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>{{ '10 auto-trades per day'|t }}</li>
+                  <li>{{ 'Everything in Starter'|t }}</li>
+                  <li>{{ 'Custom trade quantity'|t }}</li>
+                  <li>{{ 'Priority support'|t }}</li>
+                </ul>
+                <div class="pricing-footer">
+                  <div class="d-grid">
+                    <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-light btn-lg">{{ 'View Plans'|t }}</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="pricing-plan shade-blue">
+              <div class="pricing-header">
+                <h4 class="fw-lighter text-uppercase">{{ 'Elite'|t }}</h4>
+                <h1>₹14,999</h1>
+                <h5 class="fw-normal">{{ 'Per month'|t }}</h5>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>{{ '25 auto-trades per day'|t }}</li>
+                  <li>{{ 'Everything in Pro'|t }}</li>
+                  <li>{{ 'Highest capital limits'|t }}</li>
+                  <li>{{ 'Dedicated priority support'|t }}</li>
+                </ul>
+                <div class="pricing-footer">
+                  <div class="d-grid">
+                    <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-light btn-lg">{{ 'View Plans'|t }}</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# Why us + trust #}
+    <section class="landing-section">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <h2 class="landing-section__title">{{ 'Why @brand?'|t({'@brand': brand_name}) }}</h2>
+            <p class="text-secondary mb-4">
+              {{ 'We built @brand for traders who want disciplined entries — not guesswork. Every auto-trade is backed by futures OI, trend, momentum, VWAP, volume, and option-chain confirmation before a single lot is placed.'|t({'@brand': brand_name}) }}
+            </p>
+            <ul class="landing-trust-list">
+              <li><i class="bi bi-check-circle-fill"></i><span>{{ 'Pullback & day-break entry timing to avoid chasing tops'|t }}</span></li>
+              <li><i class="bi bi-check-circle-fill"></i><span>{{ 'Groww integration for live orders and positions'|t }}</span></li>
+              <li><i class="bi bi-check-circle-fill"></i><span>{{ 'Full audit trail — every trade saved for review & ML'|t }}</span></li>
+              <li><i class="bi bi-check-circle-fill"></i><span>{{ 'Wallet, KYC, and subscription management in one place'|t }}</span></li>
+            </ul>
+          </div>
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-4 p-lg-5">
+                <h5 class="mb-3"><i class="bi bi-bar-chart-line text-primary me-2"></i>{{ 'Professional signal stack'|t }}</h5>
+                <div class="row g-3">
+                  <div class="col-6">
+                    <div class="p-3 rounded bg-light text-center">
+                      <strong class="d-block text-primary">OI</strong>
+                      <small class="text-secondary">{{ 'Futures buildup'|t }}</small>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="p-3 rounded bg-light text-center">
+                      <strong class="d-block text-primary">EMA</strong>
+                      <small class="text-secondary">{{ 'Trend filter'|t }}</small>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="p-3 rounded bg-light text-center">
+                      <strong class="d-block text-primary">RSI</strong>
+                      <small class="text-secondary">{{ 'Momentum'|t }}</small>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="p-3 rounded bg-light text-center">
+                      <strong class="d-block text-primary">VWAP</strong>
+                      <small class="text-secondary">{{ 'Volume & chain OI'|t }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# CTA #}
+    <section class="landing-section landing-section--alt pb-5">
+      <div class="container">
+        <div class="landing-cta">
+          <h2>{{ 'Ready to automate your Nifty trades?'|t }}</h2>
+          <p>{{ 'Join @brand today — create your account in minutes and explore the dashboard.'|t({'@brand': brand_name}) }}</p>
+          <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="{{ path('niftybot_user.register') }}" class="btn btn-success btn-lg px-4">{{ 'Create Free Account'|t }}</a>
+            <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-outline-light btn-lg px-4">{{ 'See Plans'|t }}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {% if page.content %}
+      <section class="landing-section">
+        <div class="container">
+          {{ page.content }}
+        </div>
+      </section>
+    {% endif %}
+  </main>
+
+  <footer class="landing-footer py-5">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          {% include directory ~ '/templates/includes/brand-logo.html.twig' with {
+            modifier: 'mb-3',
+            icon_height: 28,
+            show_wordmark: true,
+            link_url: front_page,
+          } %}
+          <p class="text-secondary small mb-0">{{ 'Smart index options trading for the Indian market.'|t }}</p>
+        </div>
+        <div class="col-md-4">
+          <h6 class="mb-3">{{ 'Platform'|t }}</h6>
+          <ul class="list-unstyled small mb-0">
+            <li class="mb-2"><a href="/niftybot/dashboard">{{ 'Dashboard'|t }}</a></li>
+            <li class="mb-2"><a href="{{ path('niftybot_subscription.plans') }}">{{ 'Plans'|t }}</a></li>
+            <li class="mb-2"><a href="{{ path('niftybot_investment.dashboard') }}">{{ 'Investment'|t }}</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="mb-3">{{ 'Account'|t }}</h6>
+          <ul class="list-unstyled small mb-0">
+            <li class="mb-2"><a href="{{ path('user.login') }}">{{ 'Login'|t }}</a></li>
+            <li class="mb-2"><a href="{{ path('niftybot_user.register') }}">{{ 'Register'|t }}</a></li>
+            <li class="mb-2"><a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'KYC'|t }}</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="my-4" />
+      <p class="text-center text-secondary small mb-0">© {{ "now"|date("Y") }} {{ brand_name }}. {{ 'All rights reserved.'|t }}</p>
+    </div>
+  </footer>
+</div>

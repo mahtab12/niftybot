@@ -3,3 +3,16 @@ investment:
   css:
     theme:
       css/investment.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+    - niftyoption/global
+
+platform_trades:
+  version: 1.x
+  css:
+    theme:
+      css/investment.css: {}
+  dependencies:
+    - niftybot_investment/investment
+    - niftybot_trading/trade_history
+

@@ -41,3 +41,89 @@ function niftybot_subscription_cron() {
     ->condition('status', 'active')
     ->execute();
 }
+
+/**
+ * Implements hook_niftybot_wallet_deposit_approve().
+ */
+function niftybot_subscription_niftybot_wallet_deposit_approve($transaction) {
+  if (!$transaction || empty($transaction->notes)) {
+    return FALSE;
+  }
+
+  if (!preg_match('/^subscription:(\d+)$/', (string) $transaction->notes, $matches)) {
+    return FALSE;
+  }
+
+  $subscription_id = (int) $matches[1];
+  $database = \Drupal::database();
+  $now = \Drupal::time()->getRequestTime();
+
+  $subscription = $database->select('niftybot_user_subscriptions', 'us')
+    ->fields('us')
+    ->condition('subscription_id', $subscription_id)
+    ->condition('status', 'pending_payment')
+    ->execute()
+    ->fetchObject();
+
+  if (!$subscription || (int) $subscription->uid !== (int) $transaction->uid) {
+    return FALSE;
+  }
+
+  if (abs((float) $subscription->payment_amount - (float) $transaction->amount) > 0.01) {
+    return FALSE;
+  }
+
+  $plan = $database->select('niftybot_subscription_plans', 'sp')
+    ->fields('sp', ['duration_days'])
+    ->condition('plan_id', $subscription->plan_id)
+    ->execute()
+    ->fetchObject();
+
+  if (!$plan) {
+    return FALSE;
+  }
+
+  $end_date = $now + ((int) $plan->duration_days * 86400);
+
+  $database->update('niftybot_user_subscriptions')
+    ->fields([
+      'status' => 'active',
+      'start_date' => $now,
+      'end_date' => $end_date,
+      'payment_reference' => (string) $transaction->payment_reference,
+    ])
+    ->condition('subscription_id', $subscription_id)
+    ->condition('status', 'pending_payment')
+    ->execute();
+
+  /** @var \Drupal\niftybot_user\Service\WalletService $wallet_service */
+  $wallet_service = \Drupal::service('niftybot_user.wallet_service');
+  $wallet_service->markDepositCompleted((int) $transaction->transaction_id, FALSE);
+
+  \Drupal::messenger()->addStatus(t('Subscription payment verified and plan activated for the user.'));
+
+  return TRUE;
+}
+
+/**
+ * Implements hook_niftybot_wallet_deposit_reject().
+ */
+function niftybot_subscription_niftybot_wallet_deposit_reject($transaction, $notes) {
+  if (!$transaction || empty($transaction->notes)) {
+    return;
+  }
+
+  if (!preg_match('/^subscription:(\d+)$/', (string) $transaction->notes, $matches)) {
+    return;
+  }
+
+  $subscription_id = (int) $matches[1];
+  $database = \Drupal::database();
+
+  $database->update('niftybot_user_subscriptions')
+    ->fields(['status' => 'cancelled'])
+    ->condition('subscription_id', $subscription_id)
+    ->condition('status', 'pending_payment')
+    ->condition('uid', $transaction->uid)
+    ->execute();
+}

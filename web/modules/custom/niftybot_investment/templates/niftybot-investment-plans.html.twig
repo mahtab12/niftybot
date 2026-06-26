@@ -1,37 +1,152 @@
-<div class="niftybot-investment">
-  <p class="investment-intro">
-    {{ 'FXC Global Model — choose a plan. Principal is debited from your wallet. AI profit of 4–5% accrues weekly and is credited every Saturday morning.'|t }}
-  </p>
+{#
+/**
+ * @file
+ * StrikeFlow Investment plans — AI algo capital tiers.
+ */
+#}
+<div class="niftybot-investment-plans niftybot-dashboard">
+  <div class="niftybot-investment-plans__hero mb-4">
+    <div class="niftybot-investment-plans__hero-bg" aria-hidden="true"></div>
+    <div class="niftybot-investment-plans__hero-body">
+      <div class="niftybot-investment-plans__hero-icon" aria-hidden="true">
+        <i class="bi bi-stars"></i>
+      </div>
+      <p class="niftybot-investment-plans__hero-label">{{ 'StrikeFlow Investment'|t }}</p>
+      <h2 class="niftybot-investment-plans__hero-title">{{ 'Choose your capital tier'|t }}</h2>
+      <p class="niftybot-investment-plans__hero-subtitle">
+        {{ 'Deploy capital into our AI and algorithmic Nifty trading engine. Principal is debited from your wallet; 4–5% weekly AI profit accrues daily and credits every Saturday morning.'|t }}
+      </p>
+    </div>
+  </div>
 
-  <p class="wallet-balance-meta">
-    {{ 'Your wallet balance:'|t }} <strong>₹{{ wallet_balance|number_format(2) }}</strong>
-    <a href="{{ path('niftybot_user.wallet_deposit') }}">{{ 'Deposit'|t }}</a>
-  </p>
+  <div class="niftybot-investment-plans__wallet">
+    <div class="niftybot-investment-plans__wallet-inner">
+      <div class="niftybot-investment-plans__wallet-icon" aria-hidden="true">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div>
+        <span class="niftybot-investment-plans__wallet-label">{{ 'Wallet balance'|t }}</span>
+        <strong class="niftybot-investment-plans__wallet-value">₹{{ wallet_balance|number_format(2) }}</strong>
+      </div>
+    </div>
+    <a href="{{ path('niftybot_user.wallet_deposit') }}" class="niftybot-investment-plans__wallet-btn">
+      <i class="bi bi-plus-circle" aria-hidden="true"></i>
+      {{ 'Add funds'|t }}
+    </a>
+  </div>
+
+  <div class="niftybot-investment-plans__features">
+    <div class="niftybot-investment-plans__feature">
+      <div class="niftybot-investment-plans__feature-icon" aria-hidden="true"><i class="bi bi-cpu"></i></div>
+      <strong>{{ 'AI + algo strategies'|t }}</strong>
+      <p>{{ 'Quant models scan Nifty options flow and execute with automated risk controls.'|t }}</p>
+    </div>
+    <div class="niftybot-investment-plans__feature">
+      <div class="niftybot-investment-plans__feature-icon" aria-hidden="true"><i class="bi bi-calendar-check"></i></div>
+      <strong>{{ 'Weekly payouts'|t }}</strong>
+      <p>{{ 'Target 4–5% AI profit per week, accrued daily and credited Saturday morning.'|t }}</p>
+    </div>
+    <div class="niftybot-investment-plans__feature">
+      <div class="niftybot-investment-plans__feature-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></div>
+      <strong>{{ 'Full transparency'|t }}</strong>
+      <p>{{ 'Review every platform trade — see exactly how the algo performs.'|t }}</p>
+    </div>
+  </div>
 
   {% if active_investment %}
-    <div class="investment-alert alert--warning">
-      {{ 'You already have an active investment on @plan.'|t({'@plan': active_investment.name}) }}
-      <a href="{{ path('niftybot_investment.dashboard') }}">{{ 'View dashboard'|t }}</a>
+    <div class="niftybot-investment-plans__notice" role="status">
+      <i class="bi bi-info-circle" aria-hidden="true"></i>
+      <span>{{ 'You already have an active investment on @plan.'|t({'@plan': active_investment.name}) }}</span>
+      <a href="{{ path('niftybot_investment.dashboard') }}" class="niftybot-investment-plans__notice-link">{{ 'View dashboard'|t }}</a>
     </div>
   {% endif %}
 
-  <div class="plan-grid">
-    {% for plan in plans %}
-      <div class="plan-card">
-        <h3>{{ plan.name }}</h3>
-        <div class="plan-amount">₹{{ plan.amount|number_format(0) }}</div>
-        <p class="plan-weekly">{{ 'Weekly AI profit'|t }}: <strong>{{ plan.weekly_range }}</strong></p>
-        {% if plan.description %}
-          <p class="plan-desc">{{ plan.description }}</p>
-        {% endif %}
-        {% if not active_investment and wallet_balance >= plan.amount %}
-          <a href="{{ path('niftybot_investment.invest', {'plan_id': plan.plan_id}) }}" class="button button--primary">
-            {{ 'Invest now'|t }}
-          </a>
-        {% elseif not active_investment %}
-          <span class="plan-insufficient">{{ 'Insufficient wallet balance'|t }}</span>
-        {% endif %}
+  {% if plans|length > 0 %}
+    <div class="niftybot-investment-plans__panel">
+      <div class="niftybot-investment-plans__panel-header">
+        <h3>{{ 'Investment tiers'|t }}</h3>
+        <p>{{ 'Select a principal amount. Higher tiers unlock the same AI engine with larger weekly profit potential.'|t }}</p>
       </div>
-    {% endfor %}
+
+      <div class="niftybot-investment-plans__grid">
+        {% for plan in plans %}
+          {% set is_featured = plan.machine_name == 'plan_b' %}
+          {% set tier_class = plan.machine_name == 'plan_c' ? 'tier-elite' : (is_featured ? 'tier-growth' : 'tier-starter') %}
+          {% set can_invest = not active_investment and wallet_balance >= plan.amount %}
+
+          <article class="niftybot-investment-plans__card niftybot-investment-plans__card--{{ tier_class }}{% if is_featured %} is-featured{% endif %}">
+            {% if is_featured %}
+              <span class="niftybot-investment-plans__badge">{{ 'Most popular'|t }}</span>
+            {% endif %}
+
+            <div class="niftybot-investment-plans__card-glow" aria-hidden="true"></div>
+
+            <div class="niftybot-investment-plans__card-header">
+              <span class="niftybot-investment-plans__card-tier">{{ plan.name }}</span>
+              <div class="niftybot-investment-plans__card-price-row">
+                <span class="niftybot-investment-plans__card-price">₹{{ plan.amount|number_format(0) }}</span>
+                <span class="niftybot-investment-plans__card-period">{{ 'principal'|t }}</span>
+              </div>
+            </div>
+
+            <div class="niftybot-investment-plans__card-body">
+              <div class="niftybot-investment-plans__card-yield">
+                <span class="niftybot-investment-plans__card-yield-label">{{ 'Weekly AI profit'|t }}</span>
+                <strong class="niftybot-investment-plans__card-yield-value">{{ plan.weekly_range }}</strong>
+              </div>
+
+              {% if plan.weekly_profit_min is defined %}
+                <div class="niftybot-investment-plans__card-estimate">
+                  <i class="bi bi-cash-stack" aria-hidden="true"></i>
+                  <span>{{ 'Est. ₹@min – ₹@max / week'|t({
+                    '@min': plan.weekly_profit_min|number_format(0),
+                    '@max': plan.weekly_profit_max|number_format(0),
+                  }) }}</span>
+                </div>
+              {% endif %}
+
+              <ul class="niftybot-investment-plans__card-features list-unstyled mb-0">
+                <li><i class="bi bi-robot" aria-hidden="true"></i>{{ 'StrikeFlow AI algo engine'|t }}</li>
+                <li><i class="bi bi-lightning-charge" aria-hidden="true"></i>{{ 'Automated Nifty execution'|t }}</li>
+                <li><i class="bi bi-calendar-week" aria-hidden="true"></i>{{ 'Saturday wallet credit'|t }}</li>
+                <li><i class="bi bi-eye" aria-hidden="true"></i>{{ 'Live trade transparency'|t }}</li>
+              </ul>
+            </div>
+
+            <div class="niftybot-investment-plans__card-footer">
+              {% if active_investment %}
+                <span class="niftybot-investment-plans__cta is-disabled">{{ 'One plan at a time'|t }}</span>
+              {% elseif can_invest %}
+                <a href="{{ path('niftybot_investment.invest', {'plan_id': plan.plan_id}) }}" class="niftybot-investment-plans__cta is-primary">
+                  {{ 'Invest now'|t }}
+                  <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </a>
+              {% else %}
+                <span class="niftybot-investment-plans__cta-hint">
+                  <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                  {{ 'Insufficient wallet balance'|t }}
+                </span>
+                <a href="{{ path('niftybot_user.wallet_deposit') }}" class="niftybot-investment-plans__cta is-secondary">
+                  {{ 'Deposit funds'|t }}
+                </a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}
+    <div class="niftybot-investment-plans__empty">
+      <i class="bi bi-piggy-bank" aria-hidden="true"></i>
+      <h3>{{ 'No plans available'|t }}</h3>
+      <p>{{ 'Investment plans are being updated. Please check back soon.'|t }}</p>
+    </div>
+  {% endif %}
+
+  <div class="niftybot-investment-plans__footer-note">
+    <a href="{{ path('niftybot_investment.dashboard') }}">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i>
+      {{ 'Back to investment dashboard'|t }}
+    </a>
   </div>
 </div>

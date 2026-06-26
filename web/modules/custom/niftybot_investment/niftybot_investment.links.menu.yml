@@ -1,14 +1,14 @@
 niftybot_investment.dashboard_menu:
-  title: 'FXC Investment'
+  title: 'StrikeFlow Investment'
   route_name: niftybot_investment.dashboard
-  menu_name: niftybot-main
-  weight: 3
+  menu_name: dashboard-menu
+  weight: 9
 
 niftybot_investment.trades_menu:
   title: 'Platform Trades'
   route_name: niftybot_investment.platform_trades
-  menu_name: niftybot-main
-  weight: 8
+  menu_name: dashboard-menu
+  weight: 11
 
 niftybot_investment.admin_trades_menu:
   title: 'Platform Trades'

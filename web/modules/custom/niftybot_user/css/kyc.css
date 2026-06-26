@@ -1,0 +1,258 @@
+/* KYC verification — Bloom / dashboard form card layout */
+
+.niftybot-kyc-page {
+  width: 100%;
+}
+
+.niftybot-kyc-hero {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(21, 83, 163, 0.16);
+  background: linear-gradient(135deg, #0f3d7a 0%, #1553a3 45%, #276dd9 100%);
+  color: #fff;
+}
+
+.niftybot-kyc-hero .card-body {
+  padding: 1.5rem 1.75rem;
+}
+
+.niftybot-kyc-hero__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.niftybot-kyc-hero__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.niftybot-kyc-hero__text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 36rem;
+}
+
+.niftybot-kyc-form-card {
+  border: 0;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+}
+
+.niftybot-kyc-form-card > .card-body {
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.niftybot-kyc-form__section {
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e8edf4;
+}
+
+.niftybot-kyc-form__section:last-of-type {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.niftybot-kyc-form__section-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.niftybot-kyc-form__section-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #eaf2ff;
+  color: #1553a3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.niftybot-kyc-form__section-title h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #17181c;
+}
+
+.niftybot-kyc-form label,
+.niftybot-kyc-form .form-item label,
+.niftybot-kyc-form .form-item label.option {
+  font-weight: 500;
+  color: #17181c;
+  margin-bottom: 0.35rem;
+}
+
+.niftybot-kyc-form .form-item .description {
+  font-size: 0.8125rem;
+  color: #707f93;
+  margin-top: 0.35rem;
+}
+
+.niftybot-kyc-form .form-control,
+.niftybot-kyc-form input[type="date"],
+.niftybot-kyc-form textarea.form-control {
+  border-radius: 8px;
+  border-color: #d7e0eb;
+  min-height: calc(1.5em + 0.9rem + 2px);
+}
+
+.niftybot-kyc-form .form-control:focus,
+.niftybot-kyc-form input[type="date"]:focus {
+  border-color: #1553a3;
+  box-shadow: 0 0 0 3px rgba(21, 83, 163, 0.12);
+}
+
+.niftybot-kyc-form__file {
+  padding: 1rem;
+  border: 1px dashed #c5d4e8;
+  border-radius: 10px;
+  background: #f8fafc;
+  height: 100%;
+}
+
+.niftybot-kyc-form__file label {
+  font-weight: 600;
+}
+
+.niftybot-kyc-form__file .form-managed-file {
+  margin-top: 0.5rem;
+}
+
+.niftybot-kyc-form__file input[type="file"] {
+  font-size: 0.875rem;
+}
+
+.niftybot-kyc-form__file .button,
+.niftybot-kyc-form__file .form-submit {
+  margin-top: 0.5rem;
+}
+
+.niftybot-kyc-form__declaration {
+  padding: 1rem 1.15rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e8edf4;
+}
+
+.niftybot-kyc-form__declaration label {
+  font-weight: 400;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.niftybot-kyc-form .form-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e8edf4;
+}
+
+.niftybot-kyc-form__submit {
+  min-width: 14rem;
+}
+
+.niftybot-kyc-page .alert {
+  border-radius: 8px;
+}
+
+.niftybot-kyc-form .niftyoption-form-error {
+  margin-top: 0.5rem;
+}
+
+.niftybot-kyc-form .form-item--error .form-control,
+.niftybot-kyc-form .form-item--error input[type="date"],
+.niftybot-kyc-form .form-control.is-invalid,
+.niftybot-kyc-form input.is-invalid[type="date"] {
+  border-color: #e22132 !important;
+  background-color: #fff8f8;
+}
+
+/* KYC status page */
+.niftybot-kyc-status-page {
+  width: 100%;
+}
+
+.niftybot-kyc-status-card {
+  border: 0;
+  box-shadow: 0 8px 24px rgba(23, 24, 28, 0.06);
+}
+
+.niftybot-kyc-status-card .card-body {
+  padding: 1.5rem 1.75rem;
+}
+
+.niftybot-kyc-status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 1.25rem;
+}
+
+.kyc-status--approved,
+.niftybot-kyc-status-badge.kyc-status--approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.kyc-status--pending,
+.kyc-status--under_review,
+.niftybot-kyc-status-badge.kyc-status--pending,
+.niftybot-kyc-status-badge.kyc-status--under_review {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.kyc-status--rejected,
+.niftybot-kyc-status-badge.kyc-status--rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.niftybot-kyc-details-table {
+  margin-bottom: 0;
+}
+
+.niftybot-kyc-details-table td {
+  padding: 0.65rem 0;
+  border-color: #e8edf4;
+  vertical-align: top;
+}
+
+.niftybot-kyc-details-table td:first-child {
+  width: 38%;
+  color: #707f93;
+  font-weight: 500;
+}
+
+@media (max-width: 767.98px) {
+  .niftybot-kyc-form-card > .card-body,
+  .niftybot-kyc-hero .card-body {
+    padding: 1.25rem;
+  }
+
+  .niftybot-kyc-form__submit {
+    width: 100%;
+  }
+}

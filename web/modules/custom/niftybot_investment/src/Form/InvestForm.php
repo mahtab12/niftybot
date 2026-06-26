@@ -54,7 +54,7 @@ class InvestForm extends FormBase {
     }
 
     if ($this->investmentService->getActiveInvestment((int) $this->currentUser->id())) {
-      $this->messenger()->addWarning($this->t('You already have an active FXC investment.'));
+      $this->messenger()->addWarning($this->t('You already have an active StrikeFlow investment.'));
       $form_state->setRedirect('niftybot_investment.dashboard');
       return $form;
     }
@@ -74,7 +74,7 @@ class InvestForm extends FormBase {
         . number_format((float) $plan->weekly_return_min, 1) . '% – '
         . number_format((float) $plan->weekly_return_max, 1) . '%</p>'
         . '<p><strong>' . $this->t('Your wallet balance:') . '</strong> ₹' . number_format($balance, 2) . '</p>'
-        . '<p class="invest-note">' . $this->t('AI profit accrues daily and is credited to your wallet every Saturday morning.') . '</p>'
+        . '<p class="invest-note">' . $this->t('StrikeFlow AI algo strategies accrue profit daily. Payouts credit your wallet every Saturday morning.') . '</p>'
         . '</div>',
     ] + WalletService::walletRenderCache($uid);
 
@@ -91,7 +91,7 @@ class InvestForm extends FormBase {
 
     $form['confirm'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('I understand that ₹@amount will be debited from my wallet and invested in the FXC Global model.', [
+      '#title' => $this->t('I understand that ₹@amount will be debited from my wallet and invested in StrikeFlow Investment.', [
         '@amount' => number_format($amount, 2),
       ]),
       '#required' => TRUE,
@@ -116,7 +116,7 @@ class InvestForm extends FormBase {
 
     try {
       $this->investmentService->createInvestment($uid, $plan_id);
-      $this->messenger()->addStatus($this->t('Your FXC investment is now active. AI profit will accrue through the week.'));
+      $this->messenger()->addStatus($this->t('Your StrikeFlow investment is now active. AI algo profit will accrue through the week.'));
       $form_state->setRedirect('niftybot_investment.dashboard');
     }
     catch (\InvalidArgumentException $e) {

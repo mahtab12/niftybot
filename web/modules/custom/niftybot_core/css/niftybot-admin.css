@@ -1,0 +1,688 @@
+.niftybot-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.niftybot-stat-card {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.niftybot-stat-card .stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.niftybot-stat-card .stat-label {
+  color: #555;
+  font-size: 0.875rem;
+}
+
+.niftybot-status--connected {
+  color: #0a7a2f;
+}
+
+.niftybot-status--disconnected {
+  color: #c00;
+}
+
+.niftybot-broker-status__table {
+  width: 100%;
+  max-width: 640px;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.niftybot-broker-status__table th,
+.niftybot-broker-status__table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.niftybot-broker-status__table th {
+  background: #f5f5f5;
+  width: 40%;
+}
+
+.niftybot-broker-status__message {
+  margin: 1rem 0 0.5rem;
+}
+
+.niftybot-admin-links {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+.niftybot-portfolio__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 2rem;
+}
+
+.niftybot-portfolio__table th,
+.niftybot-portfolio__table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.niftybot-portfolio__table th {
+  background: #f5f5f5;
+}
+
+.niftybot-portfolio__table--summary th {
+  width: 22%;
+}
+
+.niftybot-portfolio__summary .stat-value {
+  font-size: 1.1rem;
+}
+
+.niftybot-fno-hero {
+  background: linear-gradient(135deg, #1a2a4a 0%, #243b6b 100%);
+  border-radius: 10px;
+  color: #fff;
+  margin: 1.5rem 0 2rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.niftybot-fno-hero__header {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.niftybot-fno-hero__header h3 {
+  color: #fff;
+  margin: 0;
+}
+
+.niftybot-fno-hero__badge {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.65rem;
+}
+
+.niftybot-fno-hero__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.niftybot-fno-hero__metric .stat-label {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+}
+
+.niftybot-fno-hero__metric .stat-value {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.niftybot-fno-hero__metric--primary .stat-value {
+  font-size: 1.75rem;
+}
+
+.niftybot-fno-hero__pct {
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.niftybot-fno-hero .niftybot-pnl--positive {
+  color: #6ee7a0;
+}
+
+.niftybot-fno-hero .niftybot-pnl--negative {
+  color: #fca5a5;
+}
+
+.niftybot-portfolio__toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.niftybot-portfolio__toolbar h2 {
+  margin: 0;
+}
+
+.niftybot-portfolio__live-meta {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.niftybot-live-status {
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+}
+
+.niftybot-live-status--connected {
+  background: #d4edda;
+  color: #0a7a2f;
+}
+
+.niftybot-live-status--reconnecting {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.niftybot-live-status--error {
+  background: #f8d7da;
+  color: #c00;
+}
+
+.niftybot-live-updated {
+  color: #666;
+}
+
+.niftybot-portfolio__message {
+  margin: 0.5rem 0 1rem;
+}
+
+.niftybot-pnl--positive {
+  color: #0a7a2f;
+}
+
+.niftybot-pnl--negative {
+  color: #c00;
+}
+
+.niftybot-portfolio__raw {
+  margin-top: 2rem;
+}
+
+.niftybot-portfolio__raw pre {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}
+
+/* Market watch */
+.niftybot-market__toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.niftybot-market__toolbar h2 {
+  margin: 0;
+}
+
+.niftybot-market__live-meta {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.niftybot-market__intro {
+  margin-bottom: 0.5rem;
+}
+
+.niftybot-market__note {
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.niftybot-market__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin: 1.5rem 0 2rem;
+}
+
+.niftybot-market-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: default;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.niftybot-market-card--clickable {
+  cursor: pointer;
+}
+
+.niftybot-market-card--clickable:hover,
+.niftybot-market-card--clickable:focus {
+  border-color: #243b6b;
+  box-shadow: 0 2px 8px rgba(36, 59, 107, 0.12);
+}
+
+.niftybot-market-card__label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.niftybot-market-card__exchange {
+  color: #666;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.niftybot-market-card__price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 0.75rem;
+}
+
+.niftybot-market-card__change {
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+}
+
+.niftybot-market-card__hint {
+  color: #243b6b;
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+.niftybot-option-chain {
+  background: #f9fafb;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 1rem;
+  padding: 1rem 1.25rem 1.5rem;
+}
+
+.niftybot-option-chain__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.niftybot-option-chain__header h3 {
+  margin: 0;
+}
+
+.niftybot-option-chain__controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-option-chain__underlying-ltp {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.niftybot-option-chain__status {
+  color: #666;
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+}
+
+.niftybot-option-chain__table-wrap {
+  max-height: 480px;
+  overflow: auto;
+}
+
+.niftybot-market__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.niftybot-market__table th,
+.niftybot-market__table td {
+  border: 1px solid #ddd;
+  padding: 0.4rem 0.6rem;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.niftybot-market__table th:first-child,
+.niftybot-market__table td:first-child {
+  text-align: left;
+}
+
+.niftybot-market__table thead th {
+  background: #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Auto trade */
+.niftybot-auto-trade__toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.niftybot-auto-trade__toolbar h2 {
+  margin: 0;
+}
+
+.niftybot-auto-trade__live-meta {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.niftybot-auto-trade__intro {
+  margin-bottom: 1rem;
+}
+
+.niftybot-auto-trade__hero {
+  align-items: center;
+  background: linear-gradient(135deg, #1a3a2a 0%, #24553c 100%);
+  border-radius: 10px;
+  color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.niftybot-auto-trade__nifty .stat-label {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
+}
+
+.niftybot-auto-trade__nifty .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.niftybot-auto-trade__mode {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
+.niftybot-auto-trade__mode legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.niftybot-auto-trade__mode label {
+  display: inline-block;
+  margin-right: 1rem;
+  font-size: 0.9rem;
+}
+
+.niftybot-auto-trade__levels {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f7f8fa;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+}
+
+.niftybot-auto-trade__level {
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.niftybot-auto-trade__level--sl {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+}
+
+.niftybot-auto-trade__level--entry {
+  background: #fff;
+  border: 1px solid #cbd5e0;
+}
+
+.niftybot-auto-trade__level--target {
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+}
+
+.niftybot-auto-trade__level-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #4a5568;
+  margin-bottom: 0.25rem;
+}
+
+.niftybot-auto-trade__level-price {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.niftybot-auto-trade__level-points {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-top: 0.15rem;
+}
+
+.niftybot-auto-trade__level-away {
+  display: block;
+  font-size: 0.75rem;
+  color: #718096;
+  margin-top: 0.2rem;
+}
+
+.niftybot-auto-trade__exit-btn {
+  margin-top: 0.75rem;
+  background-color: #c53030;
+  border-color: #9b2c2c;
+  color: #fff;
+}
+
+.niftybot-auto-trade__exit-btn:hover,
+.niftybot-auto-trade__exit-btn:focus {
+  background-color: #9b2c2c;
+  color: #fff;
+}
+
+.niftybot-auto-trade__exit-btn:disabled {
+  opacity: 0.6;
+}
+
+.niftybot-auto-trade__controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.niftybot-auto-trade__state--on {
+  background: #d4edda;
+  border-radius: 999px;
+  color: #0a7a2f;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+}
+
+.niftybot-auto-trade__state--off {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+}
+
+.niftybot-auto-trade__message {
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.niftybot-auto-trade__panels {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-bottom: 2rem;
+}
+
+.niftybot-auto-trade__panel {
+  background: #f9fafb;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.niftybot-auto-trade__panel h3 {
+  margin-top: 0;
+}
+
+.niftybot-auto-trade__table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.niftybot-auto-trade__table th,
+.niftybot-auto-trade__table td {
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.niftybot-auto-trade__table th {
+  color: #666;
+  font-weight: 600;
+  width: 38%;
+}
+
+.niftybot-auto-trade__history {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.niftybot-auto-trade__history th,
+.niftybot-auto-trade__history td {
+  border: 1px solid #ddd;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+}
+
+.niftybot-auto-trade__history th {
+  background: #f0f0f0;
+}
+
+/* Smart orders */
+.niftybot-smart-orders__hint {
+  color: #666;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-smart-orders__table {
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.niftybot-smart-orders__table th,
+.niftybot-smart-orders__table td {
+  border: 1px solid #ddd;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+}
+
+.niftybot-smart-orders__table th {
+  background: #f0f0f0;
+}
+
+.niftybot-smart-orders__api {
+  font-size: 0.9rem;
+}
+
+/* Option chain: CE left (green), strike center, PE right (red) */
+.niftybot-option-chain__table th,
+.niftybot-option-chain__table td {
+  text-align: right;
+}
+
+.niftybot-option-chain__table .niftybot-option-chain__th-ce {
+  background: #e8f5e9;
+  color: #1b5e20;
+  text-align: center;
+}
+
+.niftybot-option-chain__table .niftybot-option-chain__th-pe {
+  background: #ffebee;
+  color: #b71c1c;
+  text-align: center;
+}
+
+.niftybot-option-chain__table .niftybot-option-chain__th-strike {
+  background: #fff8e1;
+  color: #333;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.niftybot-option-chain__cell-ce {
+  background: #f1f8f4;
+  text-align: right;
+}
+
+.niftybot-option-chain__cell-pe {
+  background: #fff5f5;
+  text-align: right;
+}
+
+.niftybot-option-chain__cell-strike {
+  background: #fffde7;
+  font-weight: 600;
+  text-align: center;
+}
+
+.niftybot-option-chain__row--atm .niftybot-option-chain__cell-ce,
+.niftybot-option-chain__row--atm .niftybot-option-chain__cell-pe,
+.niftybot-option-chain__row--atm .niftybot-option-chain__cell-strike {
+  background: #fff3b0;
+  box-shadow: inset 0 0 0 2px #f9a825;
+}
+
+.niftybot-option-chain__row--atm .niftybot-option-chain__cell-strike::after {
+  content: ' ATM';
+  color: #e65100;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 0.25rem;
+}

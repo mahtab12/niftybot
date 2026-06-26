@@ -1,0 +1,22 @@
+uuid: d1a69f69-4b2f-4d10-ad07-4891e4cf0e14
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - niftyoption
+_core:
+  default_config_hash: VhBzWb7lMRtIOg9G7VSw_0uopi-7zXeHq4vXqqV1HFE
+id: niftyoption_breadcrumbs
+theme: niftyoption
+region: breadcrumb
+weight: 0
+provider: null
+plugin: system_breadcrumb_block
+settings:
+  id: system_breadcrumb_block
+  label: Breadcrumbs
+  label_display: '0'
+  provider: system
+visibility: {  }

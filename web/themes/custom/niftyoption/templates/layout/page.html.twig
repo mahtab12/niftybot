@@ -1,0 +1,58 @@
+{#
+/**
+ * @file
+ * Dashboard layout with sidebar.
+ */
+#}
+<div id="loading-wrapper">
+  <div class="spinner">
+    <div class="line1"></div>
+    <div class="line2"></div>
+    <div class="line3"></div>
+    <div class="line4"></div>
+    <div class="line5"></div>
+    <div class="line6"></div>
+  </div>
+</div>
+
+<div class="page-wrapper">
+  {% include directory ~ '/templates/includes/page-header.html.twig' %}
+
+  <div class="main-container">
+    {% include directory ~ '/templates/includes/sidebar.html.twig' %}
+
+    <div class="content-wrapper-scroll">
+      <div class="main-header niftyoption-page-header">
+        <div class="d-flex align-items-center justify-content-between position-relative w-100">
+          <div class="d-flex align-items-center justify-content-center">
+            <div class="page-icon">
+              <i class="bi bi-layout-sidebar"></i>
+            </div>
+            <div class="page-title d-none d-md-block">
+              <h5>{{ title|default(site_name) }}</h5>
+            </div>
+          </div>
+        </div>
+        {% if page.breadcrumb %}
+          <div class="niftyoption-breadcrumb-wrap">
+            {{ page.breadcrumb }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="content-wrapper" id="main-content">
+        {% if page.highlighted %}
+          {{ page.highlighted }}
+        {% endif %}
+        {% if page.help %}
+          {{ page.help }}
+        {% endif %}
+        {{ page.content }}
+      </div>
+
+      <div class="app-footer">
+        <span>© {{ "now"|date("Y") }} {{ site_name }}</span>
+      </div>
+    </div>
+  </div>
+</div>

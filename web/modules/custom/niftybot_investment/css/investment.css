@@ -1,124 +1,885 @@
-.niftybot-investment {
-  max-width: 1100px;
+/**
+ * StrikeFlow Investment — dashboard, plans, and platform trades.
+ */
+
+.niftybot-investment-page,
+.niftybot-investment-plans {
+  width: 100%;
+  --inv-primary: #0f766e;
+  --inv-primary-dark: #0a4d4a;
+  --inv-accent: #14b8a6;
+  --inv-text: #17181c;
+  --inv-muted: #707f93;
+  --inv-border: #d7e0eb;
+  --inv-surface: #ffffff;
+  --inv-surface-muted: #f8fafc;
+  --inv-success: #059669;
+  color: var(--inv-text);
+  padding: 0.25rem 0 1.5rem;
 }
 
-.investment-intro {
-  color: #475569;
-  margin-bottom: 1.25rem;
+body.layout-dashboard .content-wrapper:has(.niftybot-investment-page),
+body.layout-dashboard .content-wrapper:has(.niftybot-investment-plans) {
+  padding: 1.25rem 1.5rem 1.75rem;
 }
 
-.investment-alert {
+@media (min-width: 992px) {
+  body.layout-dashboard .content-wrapper:has(.niftybot-investment-page),
+  body.layout-dashboard .content-wrapper:has(.niftybot-investment-plans) {
+    padding: 1.5rem 2rem 2rem;
+  }
+}
+
+/* Shared hero */
+.niftybot-investment-page__hero,
+.niftybot-investment-plans__hero {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 118, 110, 0.2);
+  background: linear-gradient(135deg, var(--inv-primary-dark) 0%, var(--inv-primary) 45%, var(--inv-accent) 100%);
+  color: #fff;
+}
+
+.niftybot-investment-page__hero-bg,
+.niftybot-investment-plans__hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.16) 0%, transparent 40%),
+    radial-gradient(circle at 8% 92%, rgba(255, 255, 255, 0.08) 0%, transparent 36%);
+  pointer-events: none;
+}
+
+.niftybot-investment-page__hero .card-body,
+.niftybot-investment-plans__hero .card-body {
+  padding: 1.5rem 1.75rem;
+}
+
+.niftybot-investment-page__hero-icon,
+.niftybot-investment-plans__hero-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.niftybot-investment-plans__hero-icon {
+  width: 56px;
+  height: 56px;
+  font-size: 1.6rem;
+}
+
+.niftybot-investment-page__hero-label,
+.niftybot-investment-plans__hero-label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.niftybot-investment-page__hero-title,
+.niftybot-investment-plans__hero-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.niftybot-investment-plans__hero-subtitle {
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.niftybot-investment-page__hero-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.niftybot-investment-page__hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.niftybot-investment-page__hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.niftybot-investment-page__hero-stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.niftybot-investment-page__hero-stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.niftybot-investment-page__hero-stat-value.is-positive {
+  color: #a7f3d0;
+}
+
+.niftybot-investment-page__hero-payout {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
   padding: 1rem 1.25rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.investment-alert.alert--info {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+.niftybot-investment-page__hero-payout-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.75);
 }
 
-.investment-alert.alert--warning {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+.niftybot-investment-page__hero-payout-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
 }
 
-.investment-stats {
+.niftybot-investment-page__hero-cta {
+  font-weight: 600;
+}
+
+/* Algo explainer strip */
+.niftybot-investment-page__algo-strip {
+  border: 1px solid var(--inv-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(23, 24, 28, 0.04);
+}
+
+.niftybot-investment-page__algo-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--inv-text);
+}
+
+.niftybot-investment-page__algo-title .bi {
+  color: var(--inv-primary);
+}
+
+.niftybot-investment-page__algo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.niftybot-investment-page__algo-item h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--inv-text);
+}
+
+.niftybot-investment-page__algo-item p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--inv-muted);
+}
+
+.niftybot-investment-page__algo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--inv-primary);
+  margin-bottom: 0.75rem;
+}
+
+/* Dashboard stats */
+.niftybot-investment-page__stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin: 1.5rem 0;
+  margin-bottom: 1.5rem;
 }
 
-.investment-stats .stat-card {
-  padding: 1.25rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #fff;
+.niftybot-investment-page__stat-card {
+  padding: 1.15rem 1.25rem;
+  border: 1px solid var(--inv-border);
+  border-radius: 12px;
+  background: var(--inv-surface);
+  box-shadow: 0 4px 14px rgba(23, 24, 28, 0.04);
 }
 
-.investment-stats .stat-card--highlight {
-  border-color: #0f766e;
-  background: #f0fdfa;
+.niftybot-investment-page__stat-card--highlight {
+  border-color: #5eead4;
+  background: linear-gradient(180deg, #f0fdfa 0%, #fff 100%);
 }
 
-.investment-stats .stat-label {
-  font-size: 0.85rem;
-  color: #64748b;
+.niftybot-investment-page__stat-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--inv-muted);
   margin-bottom: 0.35rem;
 }
 
-.investment-stats .stat-value {
-  font-size: 1.5rem;
+.niftybot-investment-page__stat-value {
+  display: block;
+  font-size: 1.35rem;
   font-weight: 700;
+  color: var(--inv-text);
 }
 
-.investment-stats .stat-hint {
-  font-size: 0.8rem;
-  color: #0f766e;
+.niftybot-investment-page__stat-value.is-positive,
+.is-positive {
+  color: var(--inv-success);
+}
+
+.niftybot-investment-page__stat-hint {
+  display: block;
   margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--inv-primary);
 }
 
-.investment-meta-bar {
+/* Empty state */
+.niftybot-investment-page__empty {
+  border: 1px dashed var(--inv-border);
+  border-radius: 12px;
+  background: var(--inv-surface-muted);
+}
+
+.niftybot-investment-page__empty-icon {
+  font-size: 2.5rem;
+  color: var(--inv-primary);
+  margin-bottom: 0.75rem;
+}
+
+/* History table */
+.niftybot-investment-page__history {
+  border: 1px solid var(--inv-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.niftybot-investment-page__history-header {
+  padding: 1rem 1.25rem;
+  background: var(--inv-surface-muted);
+  border-bottom: 1px solid var(--inv-border);
+}
+
+.niftybot-investment-page__history-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--inv-text);
+}
+
+.niftybot-investment-page__history-header .bi {
+  color: var(--inv-primary);
+}
+
+.niftybot-investment-page__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
-.plan-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+/* ─── Plans page layout ─── */
+.niftybot-investment-plans {
+  --plans-bg: #eef5f4;
+  --plans-panel: linear-gradient(165deg, #062e2c 0%, #0a4d4a 38%, #0f3d3b 100%);
+  --plans-card-starter: linear-gradient(155deg, #134e4a 0%, #0f766e 52%, #14b8a6 100%);
+  --plans-card-growth: linear-gradient(155deg, #1e3a5f 0%, #1553a3 48%, #276dd9 100%);
+  --plans-card-elite: linear-gradient(155deg, #3b0764 0%, #6d28d9 48%, #a78bfa 100%);
 }
 
-.plan-card {
-  padding: 1.5rem;
-  border: 1px solid #e2e8f0;
+body.layout-dashboard .content-wrapper:has(.niftybot-investment-plans) {
+  background: var(--plans-bg);
+}
+
+.niftybot-investment-plans__hero {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.niftybot-investment-plans__hero-body {
+  position: relative;
+  z-index: 1;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+}
+
+.niftybot-investment-plans__hero-icon {
+  margin: 0 auto 1rem;
+}
+
+/* Wallet strip — teal glass, not white card */
+.niftybot-investment-plans__wallet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
   border-radius: 12px;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.14) 0%, rgba(20, 184, 166, 0.08) 100%);
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  box-shadow: 0 4px 18px rgba(15, 118, 110, 0.08);
+}
+
+.niftybot-investment-plans__wallet-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.niftybot-investment-plans__wallet-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: var(--inv-primary);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(15, 118, 110, 0.15);
+}
+
+.niftybot-investment-plans__wallet-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--inv-muted);
+}
+
+.niftybot-investment-plans__wallet-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--inv-text);
+}
+
+.niftybot-investment-plans__wallet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff;
+  background: var(--inv-primary);
+  border: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.niftybot-investment-plans__wallet-btn:hover {
+  color: #fff;
+  background: var(--inv-primary-dark);
+  transform: translateY(-1px);
+}
+
+/* Feature tiles — soft teal panels */
+.niftybot-investment-plans__features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.niftybot-investment-plans__feature {
+  padding: 1.1rem 1.15rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  backdrop-filter: blur(6px);
+}
+
+.niftybot-investment-plans__feature-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--inv-primary);
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  margin-bottom: 0.65rem;
+}
+
+.niftybot-investment-plans__feature strong {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 0.3rem;
+  color: var(--inv-text);
+}
+
+.niftybot-investment-plans__feature p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--inv-muted);
+}
+
+/* Active investment notice */
+.niftybot-investment-plans__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #92400e;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+}
+
+.niftybot-investment-plans__notice .bi {
+  font-size: 1rem;
+}
+
+.niftybot-investment-plans__notice-link {
+  margin-left: auto;
+  font-weight: 600;
+  color: #b45309;
+  text-decoration: none;
+}
+
+.niftybot-investment-plans__notice-link:hover {
+  text-decoration: underline;
+}
+
+/* Dark panel for plan cards */
+.niftybot-investment-plans__panel {
+  padding: 1.5rem 1.25rem 1.75rem;
+  border-radius: 16px;
+  background: var(--plans-panel);
+  box-shadow: 0 16px 48px rgba(6, 46, 44, 0.28);
+}
+
+.niftybot-investment-plans__panel-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #fff;
+}
+
+.niftybot-investment-plans__panel-header h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.niftybot-investment-plans__panel-header p {
+  margin: 0 auto;
+  max-width: 36rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.niftybot-investment-plans__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.15rem;
+  align-items: stretch;
+}
+
+@media (min-width: 900px) {
+  .niftybot-investment-plans__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+/* Plan cards — no theme .pricing-plan / .shade-* conflicts */
+.niftybot-investment-plans__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1.35rem 1.25rem 1.15rem;
+  border-radius: 14px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.niftybot-investment-plans__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+}
+
+.niftybot-investment-plans__card--tier-starter {
+  background: var(--plans-card-starter);
+}
+
+.niftybot-investment-plans__card--tier-growth {
+  background: var(--plans-card-growth);
+}
+
+.niftybot-investment-plans__card--tier-elite {
+  background: var(--plans-card-elite);
+}
+
+.niftybot-investment-plans__card.is-featured {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 992px) {
+  .niftybot-investment-plans__card.is-featured {
+    transform: translateY(-8px);
+  }
+
+  .niftybot-investment-plans__card.is-featured:hover {
+    transform: translateY(-12px);
+  }
+}
+
+.niftybot-investment-plans__card-glow {
+  position: absolute;
+  top: -40%;
+  right: -30%;
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.niftybot-investment-plans__badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.niftybot-investment-plans__card-header {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.niftybot-investment-plans__card-tier {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.niftybot-investment-plans__card-price {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.niftybot-investment-plans__card-period {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.niftybot-investment-plans__card-body {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+}
+
+.niftybot-investment-plans__card-yield {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.niftybot-investment-plans__card-yield-label {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.niftybot-investment-plans__card-yield-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #a7f3d0;
+}
+
+.niftybot-investment-plans__card-estimate {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.8125rem;
+  opacity: 0.92;
+}
+
+.niftybot-investment-plans__card-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.niftybot-investment-plans__card-features li:last-child {
+  border-bottom: 0;
+}
+
+.niftybot-investment-plans__card-features .bi {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  opacity: 0.9;
+}
+
+.niftybot-investment-plans__card-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.niftybot-investment-plans__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 9px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 0;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.niftybot-investment-plans__cta.is-primary {
+  color: #0f3d3b;
   background: #fff;
 }
 
-.plan-card h3 {
-  margin-top: 0;
+.niftybot-investment-plans__cta.is-primary:hover {
+  color: #062e2c;
+  background: #f0fdfa;
+  transform: translateY(-1px);
 }
 
-.plan-amount {
+.niftybot-investment-plans__cta.is-secondary {
+  margin-top: 0.5rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.niftybot-investment-plans__cta.is-secondary:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.niftybot-investment-plans__cta.is-disabled {
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(0, 0, 0, 0.2);
+  cursor: not-allowed;
+}
+
+.niftybot-investment-plans__cta-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.niftybot-investment-plans__empty {
+  padding: 2.5rem 1.5rem;
+  border-radius: 14px;
+  text-align: center;
+  background: var(--plans-panel);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.niftybot-investment-plans__empty .bi {
   font-size: 2rem;
-  font-weight: 700;
-  color: #0f766e;
-  margin: 0.5rem 0;
+  display: block;
+  margin-bottom: 0.75rem;
+  opacity: 0.7;
 }
 
-.plan-weekly {
-  color: #475569;
+.niftybot-investment-plans__empty h3 {
+  font-size: 1rem;
+  margin-bottom: 0.35rem;
+  color: #fff;
 }
 
-.plan-desc {
-  font-size: 0.9rem;
-  color: #64748b;
+.niftybot-investment-plans__empty p {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.75;
 }
 
-.plan-insufficient {
-  color: #b45309;
-  font-size: 0.9rem;
+.niftybot-investment-plans__footer-note {
+  text-align: center;
+  margin-top: 1.5rem;
 }
 
+.niftybot-investment-plans__footer-note a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--inv-primary);
+  text-decoration: none;
+}
+
+.niftybot-investment-plans__footer-note a:hover {
+  text-decoration: underline;
+}
+
+/* Invest form (confirm page) */
 .invest-summary {
   margin-bottom: 1.5rem;
-  padding: 1.25rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--inv-border);
+  border-radius: 12px;
+  background: var(--inv-surface-muted);
+}
+
+.invest-summary h3 {
+  margin-top: 0;
+  color: var(--inv-primary-dark);
 }
 
 .invest-note {
-  color: #64748b;
-  font-size: 0.9rem;
+  color: var(--inv-muted);
+  font-size: 0.875rem;
+  margin-bottom: 0;
+}
+
+.pnl-positive,
+.is-positive {
+  color: var(--inv-success);
+}
+
+.pnl-negative {
+  color: #dc2626;
+}
+
+/* Platform trades */
+.niftybot-platform-trades__hero {
+  background: linear-gradient(135deg, #0a4d4a 0%, #0f766e 45%, #14b8a6 100%);
+  box-shadow: 0 12px 32px rgba(15, 118, 110, 0.2);
+}
+
+.niftybot-platform-trades__section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--inv-text);
+}
+
+.niftybot-platform-trades__section-heading .bi {
+  color: var(--inv-primary);
+}
+
+.niftybot-platform-trades__day-card .card-header {
+  padding: 1rem 1.25rem;
+  background: var(--inv-surface-muted);
+}
+
+.niftybot-platform-trades__day-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--inv-text);
+}
+
+.niftybot-platform-trades__day-pnl {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid var(--inv-border);
 }
 
 .trade-day-group {
@@ -137,21 +898,34 @@
   font-weight: 600;
 }
 
-.investment-actions {
-  margin-top: 2rem;
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
 .admin-actions {
   margin-bottom: 1rem;
 }
 
-.pnl-positive {
-  color: #059669;
-}
+@media (max-width: 767.98px) {
+  body.layout-dashboard .content-wrapper:has(.niftybot-investment-page),
+  body.layout-dashboard .content-wrapper:has(.niftybot-investment-plans) {
+    padding: 1rem 1.15rem 1.5rem;
+  }
 
-.pnl-negative {
-  color: #dc2626;
+  .niftybot-investment-page__hero-payout {
+    align-items: flex-start;
+    margin-top: 0.5rem;
+  }
+
+  .niftybot-investment-plans__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .niftybot-investment-plans__card.is-featured {
+    transform: none;
+  }
+
+  .niftybot-investment-plans__card.is-featured:hover {
+    transform: translateY(-4px);
+  }
+
+  .niftybot-investment-plans__panel {
+    padding: 1.25rem 1rem 1.5rem;
+  }
 }

@@ -1,3 +1,11 @@
+niftybot_core.landing:
+  path: '/home'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\LandingController::content'
+    _title: 'Home'
+  requirements:
+    _access: 'TRUE'
+
 niftybot_core.settings:
   path: '/admin/config/niftybot'
   defaults:
@@ -13,3 +21,192 @@ niftybot_core.admin:
     _title: 'NiftyBot Admin'
   requirements:
     _permission: 'administer niftybot'
+
+niftybot_core.broker_status:
+  path: '/admin/niftybot/broker'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\BrokerStatusController::status'
+    _title: 'Broker Connection'
+  requirements:
+    _permission: 'administer niftybot'
+
+niftybot_core.portfolio:
+  path: '/admin/niftybot/portfolio'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\PortfolioController::portfolio'
+    _title: 'Portfolio'
+  requirements:
+    _permission: 'administer niftybot'
+
+niftybot_core.market:
+  path: '/admin/niftybot/market'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\MarketController::market'
+    _title: 'Market Watch'
+  requirements:
+    _permission: 'administer niftybot'
+
+niftybot_core.auto_trade:
+  path: '/admin/niftybot/auto-trade'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\AutoTradeController::niftyAutoTrade'
+    _title: 'Nifty Auto Trade'
+  requirements:
+    _permission: 'administer niftybot'
+
+niftybot_core.auto_trade_sensex:
+  path: '/admin/niftybot/auto-trade/sensex'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\AutoTradeController::sensexAutoTrade'
+    _title: 'Sensex Auto Trade'
+  requirements:
+    _permission: 'administer niftybot'
+
+niftybot_core.smart_orders:
+  path: '/admin/niftybot/smart-orders'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\SmartOrdersController::smartOrders'
+    _title: 'Smart Orders'
+  requirements:
+    _permission: 'administer niftybot'
+
+niftybot_core.support:
+  path: '/niftybot/support'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\SupportController::support'
+    _title: 'Support'
+  requirements:
+    _permission: 'access niftybot platform'
+
+niftybot_core.faq:
+  path: '/niftybot/faq'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\SupportController::faq'
+    _title: 'FAQ'
+  requirements:
+    _permission: 'access niftybot platform'
+
+niftybot_core.user_broker:
+  path: '/niftybot/broker'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserBrokerController::connection'
+    _title: 'Broker Connection'
+  requirements:
+    _permission: 'manage niftybot broker'
+
+niftybot_core.user_auto_trade:
+  path: '/niftybot/auto-trade'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeController::overview'
+    _title: 'Auto Trade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+
+niftybot_core.user_auto_trade_nifty:
+  path: '/niftybot/auto-trade/nifty'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeController::niftyAutoTrade'
+    _title: 'Nifty Auto Trade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+
+niftybot_core.user_auto_trade_sensex:
+  path: '/niftybot/auto-trade/sensex'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeController::sensexAutoTrade'
+    _title: 'Sensex Auto Trade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+
+niftybot_core.user_notifications_list:
+  path: '/niftybot/notifications/list'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserNotificationController::list'
+  requirements:
+    _permission: 'access niftybot platform'
+  methods: [GET]
+
+niftybot_core.user_notifications_unread:
+  path: '/niftybot/notifications/unread'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserNotificationController::unreadCount'
+  requirements:
+    _permission: 'access niftybot platform'
+  methods: [GET]
+
+niftybot_core.user_notifications_mark_read:
+  path: '/niftybot/notifications/{alert_id}/read'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserNotificationController::markRead'
+  requirements:
+    _permission: 'access niftybot platform'
+    alert_id: \d+
+  methods: [POST]
+
+niftybot_core.user_notifications_mark_all_read:
+  path: '/niftybot/notifications/read-all'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserNotificationController::markAllRead'
+  requirements:
+    _permission: 'access niftybot platform'
+  methods: [POST]
+
+niftybot_core.user_auto_trade_api_settings:
+  path: '/niftybot/api/auto-trade/settings'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::settings'
+  requirements:
+    _permission: 'access niftybot auto trade'
+  methods: [GET]
+
+niftybot_core.user_auto_trade_api_save_settings:
+  path: '/niftybot/api/auto-trade/settings'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::saveSettings'
+  requirements:
+    _permission: 'access niftybot auto trade'
+  methods: [POST]
+
+niftybot_core.user_auto_trade_api_status:
+  path: '/niftybot/api/auto-trade/{instrument}/status'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::status'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  methods: [GET]
+
+niftybot_core.user_auto_trade_api_activate:
+  path: '/niftybot/api/auto-trade/{instrument}/activate'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::activate'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  methods: [POST]
+
+niftybot_core.user_auto_trade_api_deactivate:
+  path: '/niftybot/api/auto-trade/{instrument}/deactivate'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::deactivate'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  methods: [POST]
+
+niftybot_core.user_auto_trade_api_exit:
+  path: '/niftybot/api/auto-trade/{instrument}/exit'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::exit'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  methods: [POST]
+
+niftybot_core.internal_auto_trade_charge:
+  path: '/niftybot/internal/auto-trade/charge'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::charge'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]

@@ -69,6 +69,9 @@ class TradeHistoryController extends ControllerBase {
       '#theme' => 'niftybot_trade_history',
       '#trades' => $trades,
       '#summary' => $summary,
+      '#attached' => [
+        'library' => ['niftybot_trading/trade_history'],
+      ],
     ];
   }
 

@@ -1,0 +1,60 @@
+admin:
+  css:
+    theme:
+      css/niftybot-admin.css: {}
+
+support:
+  css:
+    theme:
+      css/support.css: {}
+  dependencies:
+    - niftyoption/global
+
+portfolio_realtime:
+  js:
+    js/portfolio-realtime.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+market_realtime:
+  js:
+    js/market-realtime.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+auto_trade_realtime:
+  js:
+    js/auto-trade-realtime.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+auto_trade_user:
+  css:
+    theme:
+      css/auto-trade-user.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard
+    - niftybot_core/auto_trade_realtime
+
+notifications:
+  css:
+    theme:
+      css/notifications.css: {}
+  js:
+    js/notifications.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+broker_connection:
+  css:
+    theme:
+      css/broker-connection.css: {}
+  dependencies:
+    - niftybot_dashboard/dashboard

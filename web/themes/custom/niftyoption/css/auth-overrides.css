@@ -1,0 +1,126 @@
+/**
+ * Auth page overrides — loads after login.min.css.
+ */
+
+body.layout-login {
+  background: linear-gradient(145deg, #0a1628 0%, #122a52 45%, #1a3d6e 100%);
+  min-height: 100vh;
+}
+
+body.layout-login #loading-wrapper,
+body.layout-login .page-wrapper,
+body.layout-login .page-header,
+body.layout-login .main-header {
+  display: none !important;
+}
+
+body.layout-login .block-system-branding-block,
+body.layout-login .page-title,
+body.layout-login h1.title,
+body.layout-login .block-page-title-block {
+  display: none !important;
+}
+
+body.login-container.layout-login {
+  display: block;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+body.login-container .niftyoption-auth-container {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+body.login-container .niftyoption-auth-container--register {
+  max-width: 440px;
+}
+
+body.login-container .login-box,
+body.login-container .niftyoption-auth-container--register .login-box,
+body.login-container .login-box.login-box--register {
+  width: 100% !important;
+  max-width: 440px !important;
+  min-width: 0 !important;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+body.login-container .login-box {
+  background: #ffffff;
+}
+
+body.login-container .login-box .login-logo,
+body.login-container .login-logo.niftyoption-brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+body.login-container .login-box .login-logo img,
+body.login-container .niftyoption-brand-logo__icon {
+  width: auto;
+  max-width: none;
+  height: auto;
+}
+
+body.login-container .niftybot-registration-form .form-item,
+body.login-container .niftybot-registration-form .form-actions {
+  max-width: none;
+}
+
+body.login-container .niftybot-registration-form .niftyoption-contact-fields .form-item {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.login-container .niftyoption-auth-container--access-denied {
+  max-width: 480px;
+}
+
+body.login-container .niftyoption-access-denied-alert {
+  text-align: left;
+}
+
+body.login-container .block-local-tasks-block,
+body.login-container #block-niftyoption-primary-local-tasks {
+  margin-bottom: 1.25rem;
+}
+
+.niftyoption-auth-tabs__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.niftyoption-auth-tabs__item {
+  display: inline-flex;
+  margin: 0;
+}
+
+.niftyoption-auth-tabs__item .btn {
+  white-space: nowrap;
+}
+
+.niftyoption-auth-link {
+  color: #0d6efd;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.niftyoption-auth-link:hover,
+.niftyoption-auth-link:focus {
+  color: #0a58ca;
+}
+
+.niftyoption-auth-help {
+  line-height: 1.5;
+}
+
+.niftyoption-auth-message p:last-child {
+  margin-bottom: 0;
+}

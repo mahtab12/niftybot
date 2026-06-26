@@ -1,14 +1,23 @@
 <div class="niftybot-my-subscription">
   {% if subscription and plan %}
-    <div class="subscription-card active">
+    <div class="subscription-card {{ subscription.status == 'pending_payment' ? 'pending' : 'active' }}">
       <div class="subscription-status">
-        <span class="status status--success">{{ 'Active'|t }}</span>
+        {% if subscription.status == 'pending_payment' %}
+          <span class="status status--warning">{{ 'Payment pending verification'|t }}</span>
+        {% else %}
+          <span class="status status--success">{{ 'Active'|t }}</span>
+        {% endif %}
       </div>
 
       <h3>{{ plan.name }} {{ 'Plan'|t }}</h3>
       <p>{{ plan.description }}</p>
 
+      {% if subscription.status == 'pending_payment' %}
+        <p class="subscription-pending-note">{{ 'We received your payment request. Your plan will activate after admin verification.'|t }}</p>
+      {% endif %}
+
       <table class="subscription-details">
+        {% if subscription.status != 'pending_payment' %}
         <tr>
           <td><strong>{{ 'Start Date'|t }}</strong></td>
           <td>{{ subscription.start_date|date('d M Y') }}</td>
@@ -21,18 +30,25 @@
           <td><strong>{{ 'Days Remaining'|t }}</strong></td>
           <td>{{ days_remaining }} {{ 'days'|t }}</td>
         </tr>
+        {% endif %}
         <tr>
-          <td><strong>{{ 'Max Orders/Day'|t }}</strong></td>
-          <td>{{ plan.max_orders_per_day }}</td>
+          <td><strong>{{ 'Trades/Day'|t }}</strong></td>
+          <td>{% if plan.max_orders_per_day > 0 %}{{ plan.max_orders_per_day }}{% else %}{{ 'Unlimited'|t }}{% endif %}</td>
         </tr>
         <tr>
           <td><strong>{{ 'Auto-Renew'|t }}</strong></td>
           <td>{{ subscription.auto_renew ? 'Yes'|t : 'No'|t }}</td>
         </tr>
         <tr>
-          <td><strong>{{ 'Amount Paid'|t }}</strong></td>
+          <td><strong>{{ subscription.status == 'pending_payment' ? 'Amount due'|t : 'Amount Paid'|t }}</strong></td>
           <td>₹{{ subscription.payment_amount|number_format(2) }}</td>
         </tr>
+        {% if subscription.status == 'pending_payment' and subscription.payment_reference %}
+        <tr>
+          <td><strong>{{ 'Payment reference'|t }}</strong></td>
+          <td>{{ subscription.payment_reference }}</td>
+        </tr>
+        {% endif %}
       </table>
 
       {% if plan.features_list %}
@@ -48,7 +64,7 @@
     <div class="no-subscription">
       <h3>{{ 'No Active Subscription'|t }}</h3>
       <p>{{ 'You do not have an active subscription. Subscribe to a plan to start trading.'|t }}</p>
-      <a href="{{ path('niftybot_subscription.plans') }}" class="button button--primary">{{ 'View Plans'|t }}</a>
+      <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-primary">{{ 'View Plans'|t }}</a>
     </div>
   {% endif %}
 </div>

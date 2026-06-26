@@ -1,0 +1,64 @@
+{#
+/**
+ * @file
+ * Dashboard sidebar menu.
+ */
+#}
+{% import _self as menus %}
+
+{{ menus.sidebar_links(items, 0) }}
+
+{% macro sidebar_links(items, menu_level) %}
+  {% import _self as menus %}
+  {% if items %}
+    {% if menu_level == 0 %}
+      <ul>
+    {% else %}
+      <ul>
+    {% endif %}
+    {% for item in items %}
+      {% if menu_level == 0 and item.below %}
+        <li class="sidebar-dropdown{{ item.expand_submenu|default(item.in_active_trail) ? ' active' : '' }}">
+          <a href="{{ item.url }}" class="{{ item.is_active ? 'current-page' : '' }}">
+            <i class="bi {{ item.icon|default('bi-folder') }}"></i>
+            <span class="menu-text">{{ item.title }}</span>
+          </a>
+          <div class="sidebar-submenu"{{ item.expand_submenu|default(item.in_active_trail) ? ' style="display:block;"' : '' }}>
+            {{ menus.sidebar_links(item.below, menu_level + 1) }}
+          </div>
+        </li>
+      {% else %}
+        {% set item_classes = [] %}
+        {% if item.is_active %}
+          {% if menu_level == 0 %}
+            {% set item_classes = item_classes|merge(['active-page-link']) %}
+          {% else %}
+            {% set item_classes = item_classes|merge(['menu-item--active']) %}
+          {% endif %}
+        {% endif %}
+        <li{{ item.attributes.addClass(item_classes) }}>
+          <a href="{{ item.url }}" class="{{ item.is_active ? 'current-page' : '' }}">
+            {% if menu_level == 0 %}
+              <i class="bi {{ item.icon|default('bi-circle') }}"></i>
+              <span class="menu-text">{{ item.title }}</span>
+            {% else %}
+              {{ item.title }}
+            {% endif %}
+          </a>
+          {% if item.below %}
+            {{ menus.sidebar_links(item.below, menu_level + 1) }}
+          {% endif %}
+        </li>
+      {% endif %}
+    {% endfor %}
+    {% if menu_level == 0 %}
+      <li>
+        <a href="{{ path('user.logout') }}">
+          <i class="bi bi-box-arrow-right"></i>
+          <span class="menu-text">{{ 'Logout'|t }}</span>
+        </a>
+      </li>
+    {% endif %}
+    </ul>
+  {% endif %}
+{% endmacro %}
