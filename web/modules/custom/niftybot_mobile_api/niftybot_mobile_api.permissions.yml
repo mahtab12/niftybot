@@ -1,0 +1,8 @@
+use niftybot mobile api:
+  title: 'Use NiftyBot mobile API'
+  description: 'Access mobile REST endpoints when authenticated via JWT or OAuth2.'
+
+administer niftybot mobile api:
+  title: 'Administer NiftyBot mobile API'
+  description: 'Configure mobile OAuth client and view integration settings.'
+  restrict access: true

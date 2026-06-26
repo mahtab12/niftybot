@@ -11,24 +11,24 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         'e69f7f6ee287b969198c3c9d6777bd38' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/bootstrap.php',
+        'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
         '8825ede83f2f289127722d4e842cf7e8' => __DIR__ . '/..' . '/symfony/polyfill-intl-grapheme/bootstrap.php',
         'b6b991a57620e2fb6b2f66f03fe9ddc2' => __DIR__ . '/..' . '/symfony/string/Resources/functions.php',
-        'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
-        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         '606a39d89246991a373564698c2d8383' => __DIR__ . '/..' . '/symfony/polyfill-php85/bootstrap.php',
+        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
         '89efb1254ef2d1c5d80096acd12c4098' => __DIR__ . '/..' . '/twig/twig/src/Resources/core.php',
         'ffecb95d45175fd40f75be8a23b34f90' => __DIR__ . '/..' . '/twig/twig/src/Resources/debug.php',
         'c7baa00073ee9c61edf148c51917cfb4' => __DIR__ . '/..' . '/twig/twig/src/Resources/escaper.php',
         'f844ccf1d25df8663951193c3fc307c8' => __DIR__ . '/..' . '/twig/twig/src/Resources/string_loader.php',
-        '23c18046f52bef3eea034657bafda50f' => __DIR__ . '/..' . '/symfony/polyfill-php81/bootstrap.php',
         '9d2b9fc6db0f153a0a149fefb182415e' => __DIR__ . '/..' . '/symfony/polyfill-php84/bootstrap.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         '662a729f963d39afe703c9d9b7ab4a8c' => __DIR__ . '/..' . '/symfony/polyfill-php83/bootstrap.php',
         'def43f6c87e4f8dfd0c9e1b1bab14fe8' => __DIR__ . '/..' . '/symfony/polyfill-iconv/bootstrap.php',
         '2c2415ec15363ede1bff13a287462ba1' => __DIR__ . '/..' . '/symfony/polyfill-php86/bootstrap.php',
         '1052008401d4a2a5be02f7b4e274d051' => __DIR__ . '/..' . '/twig/html-extra/Resources/functions.php',
+        '23c18046f52bef3eea034657bafda50f' => __DIR__ . '/..' . '/symfony/polyfill-php81/bootstrap.php',
         '2f69d3914119f042cca9e44442d5ce95' => __DIR__ . '/../..' . '/web/core/includes/bootstrap.inc',
         '47e1160838b5e5a10346ac4084b58c23' => __DIR__ . '/..' . '/laravel/prompts/src/helpers.php',
         '801c31d8ed748cfa537fa45402288c95' => __DIR__ . '/..' . '/psy/psysh/src/functions.php',
@@ -94,13 +94,19 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         array (
             'Psy\\' => 4,
             'Psr\\Log\\' => 8,
+            'Psr\\Http\\Server\\' => 16,
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
             'Psr\\EventDispatcher\\' => 20,
             'Psr\\Container\\' => 14,
+            'Psr\\Clock\\' => 10,
             'PhpTuf\\ComposerStager\\' => 22,
             'PhpParser\\' => 10,
             'Peast\\' => 6,
+        ),
+        'O' =>
+        array (
+            'OpenIDConnectServer\\' => 20,
         ),
         'M' =>
         array (
@@ -109,7 +115,11 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         ),
         'L' =>
         array (
+            'League\\Uri\\' => 11,
+            'League\\OAuth2\\Server\\' => 21,
+            'League\\Event\\' => 13,
             'League\\Container\\' => 17,
+            'Lcobucci\\JWT\\' => 13,
             'Laravel\\Prompts\\' => 16,
         ),
         'J' =>
@@ -123,6 +133,10 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
             'GuzzleHttp\\' => 11,
             'Grasmash\\YamlCli\\' => 17,
             'Grasmash\\Expander\\' => 18,
+        ),
+        'F' =>
+        array (
+            'Firebase\\JWT\\' => 13,
         ),
         'E' =>
         array (
@@ -139,6 +153,7 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
             'DrupalCodeGenerator\\' => 20,
             'Doctrine\\Common\\Lexer\\' => 22,
             'Dflydev\\DotAccessData\\' => 22,
+            'Defuse\\Crypto\\' => 14,
         ),
         'C' =>
         array (
@@ -339,6 +354,11 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
         ),
+        'Psr\\Http\\Server\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-server-middleware/src',
+            1 => __DIR__ . '/..' . '/psr/http-server-handler/src',
+        ),
         'Psr\\Http\\Message\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/http-factory/src',
@@ -356,6 +376,10 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
         ),
+        'Psr\\Clock\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/clock/src',
+        ),
         'PhpTuf\\ComposerStager\\' =>
         array (
             0 => __DIR__ . '/..' . '/php-tuf/composer-stager/src',
@@ -368,6 +392,10 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         array (
             0 => __DIR__ . '/..' . '/mck89/peast/lib/Peast',
         ),
+        'OpenIDConnectServer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/steverhoades/oauth2-openid-connect-server/src',
+        ),
         'Masterminds\\' =>
         array (
             0 => __DIR__ . '/..' . '/masterminds/html5/src',
@@ -376,9 +404,26 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         array (
             0 => __DIR__ . '/..' . '/marc-mabe/php-enum/src',
         ),
+        'League\\Uri\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/uri',
+            1 => __DIR__ . '/..' . '/league/uri-interfaces',
+        ),
+        'League\\OAuth2\\Server\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/oauth2-server/src',
+        ),
+        'League\\Event\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/event/src',
+        ),
         'League\\Container\\' =>
         array (
             0 => __DIR__ . '/..' . '/league/container/src',
+        ),
+        'Lcobucci\\JWT\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/lcobucci/jwt/src',
         ),
         'Laravel\\Prompts\\' =>
         array (
@@ -407,6 +452,10 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         'Grasmash\\Expander\\' =>
         array (
             0 => __DIR__ . '/..' . '/grasmash/expander/src',
+        ),
+        'Firebase\\JWT\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
         'Egulias\\EmailValidator\\' =>
         array (
@@ -447,6 +496,10 @@ class ComposerStaticInite7f19e2fd9901f23f6eabb062b71de6f
         'Dflydev\\DotAccessData\\' =>
         array (
             0 => __DIR__ . '/..' . '/dflydev/dot-access-data/src',
+        ),
+        'Defuse\\Crypto\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/defuse/php-encryption/src',
         ),
         'Consolidation\\SiteProcess\\' =>
         array (

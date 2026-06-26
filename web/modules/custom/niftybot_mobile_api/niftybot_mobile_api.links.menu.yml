@@ -1,0 +1,6 @@
+niftybot_mobile_api.settings:
+  title: 'Mobile API'
+  description: 'Flutter/mobile REST API, JWT and OAuth2 settings.'
+  parent: niftybot_core.settings
+  route_name: niftybot_mobile_api.settings
+  weight: 15

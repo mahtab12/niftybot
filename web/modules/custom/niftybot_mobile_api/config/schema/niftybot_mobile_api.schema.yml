@@ -1,0 +1,10 @@
+niftybot_mobile_api.settings:
+  type: config_object
+  label: 'NiftyBot Mobile API settings'
+  mapping:
+    oauth_client_id:
+      type: string
+      label: 'OAuth client ID'
+    token_ttl_seconds:
+      type: integer
+      label: 'JWT access token TTL in seconds'

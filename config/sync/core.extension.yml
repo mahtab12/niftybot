@@ -28,6 +28,13 @@ module:
   menu_ui: 0
   mysql: 0
   navigation: 0
+  consumers: 0
+  jwt: 0
+  jwt_auth_consumer: 0
+  jwt_auth_issuer: 0
+  key: 0
+  niftybot_mobile_api: 0
+  simple_oauth: 0
   niftybot_core: 0
   niftybot_dashboard: 0
   niftybot_investment: 0
@@ -40,6 +47,7 @@ module:
   page_cache: 0
   path: 0
   path_alias: 0
+  serialization: 0
   system: 0
   taxonomy: 0
   text: 0

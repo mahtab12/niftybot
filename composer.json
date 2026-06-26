@@ -16,10 +16,14 @@
     ],
     "require": {
         "composer/installers": "^2.3",
+        "drupal/consumers": "^1.0",
         "drupal/core-composer-scaffold": "^11.4",
         "drupal/core-project-message": "^11.4",
         "drupal/core-recipe-unpack": "^11.4",
         "drupal/core-recommended": "^11.4",
+        "drupal/jwt": "^2.0",
+        "drupal/key": "^1.20",
+        "drupal/simple_oauth": "^6.1",
         "drush/drush": "^13.7"
     },
     "conflict": {

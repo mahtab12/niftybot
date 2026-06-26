@@ -1,0 +1,32 @@
+services:
+  niftybot_mobile_api.user_payload:
+    class: Drupal\niftybot_mobile_api\Service\MobileUserPayloadService
+    arguments:
+      - '@database'
+      - '@entity_type.manager'
+      - '@niftybot_user.member_id_service'
+      - '@niftybot_user.wallet_service'
+      - '@niftybot_core.broker_connection'
+      - '@datetime.time'
+
+  niftybot_mobile_api.auth:
+    class: Drupal\niftybot_mobile_api\Service\MobileAuthService
+    arguments:
+      - '@user.auth'
+      - '@entity_type.manager'
+      - '@jwt.authentication.jwt'
+      - '@http_kernel'
+      - '@request_stack'
+      - '@config.factory'
+      - '@state'
+
+  niftybot_mobile_api.account:
+    class: Drupal\niftybot_mobile_api\Service\MobileAccountService
+    arguments:
+      - '@database'
+      - '@entity_type.manager'
+      - '@niftybot_user.wallet_service'
+      - '@file.repository'
+      - '@file_system'
+      - '@datetime.time'
+      - '@niftybot_mobile_api.user_payload'

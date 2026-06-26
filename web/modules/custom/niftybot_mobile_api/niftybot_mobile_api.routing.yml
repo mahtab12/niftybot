@@ -1,0 +1,280 @@
+# Public discovery and authentication (no token required).
+niftybot_mobile_api.meta:
+  path: '/api/mobile/v1/meta'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAuthController::meta'
+  requirements:
+    _access: 'TRUE'
+  methods: [GET]
+
+niftybot_mobile_api.auth_login:
+  path: '/api/mobile/v1/auth/login'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAuthController::login'
+  requirements:
+    _access: 'TRUE'
+    _user_is_logged_in: 'FALSE'
+  methods: [POST]
+
+niftybot_mobile_api.auth_refresh:
+  path: '/api/mobile/v1/auth/refresh'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAuthController::refresh'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2']
+  methods: [POST]
+
+niftybot_mobile_api.auth_oauth_token:
+  path: '/api/mobile/v1/auth/oauth/token'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAuthController::oauthToken'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
+
+niftybot_mobile_api.me:
+  path: '/api/mobile/v1/me'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAuthController::me'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.dashboard:
+  path: '/api/mobile/v1/dashboard'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileDashboardController::dashboard'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.plans:
+  path: '/api/mobile/v1/plans'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileDashboardController::plans'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.subscription:
+  path: '/api/mobile/v1/subscription'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileDashboardController::subscription'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.wallet:
+  path: '/api/mobile/v1/wallet'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileDashboardController::wallet'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.wallet_transactions:
+  path: '/api/mobile/v1/wallet/transactions'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileDashboardController::walletTransactions'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.wallet_deposit_info:
+  path: '/api/mobile/v1/wallet/deposit-info'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAccountController::depositInfo'
+  requirements:
+    _permission: 'manage wallet+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.wallet_deposit:
+  path: '/api/mobile/v1/wallet/deposit'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAccountController::createDeposit'
+  requirements:
+    _permission: 'manage wallet+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.wallet_withdraw:
+  path: '/api/mobile/v1/wallet/withdraw'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAccountController::createWithdrawal'
+  requirements:
+    _permission: 'manage wallet+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.kyc_status:
+  path: '/api/mobile/v1/kyc'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAccountController::kycStatus'
+  requirements:
+    _permission: 'view own kyc+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.kyc_submit:
+  path: '/api/mobile/v1/kyc'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAccountController::submitKyc'
+  requirements:
+    _permission: 'submit kyc+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.plan_checkout:
+  path: '/api/mobile/v1/plans/{plan_id}/checkout'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAccountController::planCheckout'
+  requirements:
+    _permission: 'access niftybot platform+use niftybot mobile api'
+    plan_id: \d+
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.plan_subscribe:
+  path: '/api/mobile/v1/plans/{plan_id}/subscribe'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAccountController::subscribe'
+  requirements:
+    _permission: 'access niftybot platform+use niftybot mobile api'
+    plan_id: \d+
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.broker:
+  path: '/api/mobile/v1/broker'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileDashboardController::broker'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.auto_trade_settings_get:
+  path: '/api/mobile/v1/auto-trade/settings'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::autoTradeSettings'
+  requirements:
+    _permission: 'access niftybot auto trade'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.auto_trade_settings_post:
+  path: '/api/mobile/v1/auto-trade/settings'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::saveAutoTradeSettings'
+  requirements:
+    _permission: 'access niftybot auto trade'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.auto_trade_status:
+  path: '/api/mobile/v1/auto-trade/{instrument}/status'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::autoTradeStatus'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.auto_trade_activate:
+  path: '/api/mobile/v1/auto-trade/{instrument}/activate'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::activateAutoTrade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.auto_trade_deactivate:
+  path: '/api/mobile/v1/auto-trade/{instrument}/deactivate'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::deactivateAutoTrade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.auto_trade_exit:
+  path: '/api/mobile/v1/auto-trade/{instrument}/exit'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::exitAutoTrade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.notifications:
+  path: '/api/mobile/v1/notifications'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::notifications'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.notification_read:
+  path: '/api/mobile/v1/notifications/{alert_id}/read'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::markNotificationRead'
+  requirements:
+    _permission: 'use niftybot mobile api'
+    alert_id: \d+
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.notifications_read_all:
+  path: '/api/mobile/v1/notifications/read-all'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::markAllNotificationsRead'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.settings:
+  path: '/admin/config/niftybot/mobile-api'
+  defaults:
+    _form: '\Drupal\niftybot_mobile_api\Form\MobileApiSettingsForm'
+    _title: 'Mobile API'
+  requirements:
+    _permission: 'administer niftybot mobile api'

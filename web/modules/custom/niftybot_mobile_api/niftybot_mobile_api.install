@@ -1,0 +1,209 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for NiftyBot Mobile API.
+ */
+
+use Drupal\Core\Site\Settings;
+use Drupal\consumers\Entity\Consumer;
+use Drupal\key\Entity\Key;
+use Drupal\simple_oauth\Entity\Oauth2Scope;
+use Drupal\simple_oauth\Oauth2ScopeInterface;
+
+/**
+ * Implements hook_install().
+ */
+function niftybot_mobile_api_install(): void {
+  niftybot_mobile_api_setup_jwt_key();
+  niftybot_mobile_api_setup_oauth_keys();
+  niftybot_mobile_api_setup_oauth_scope_and_consumer();
+
+  \Drupal::configFactory()->getEditable('jwt_auth_issuer.config')
+    ->set('jwt_in_login_response', TRUE)
+    ->save(TRUE);
+
+  $authenticated_role = \Drupal::entityTypeManager()->getStorage('user_role')->load('authenticated');
+  if ($authenticated_role) {
+    $authenticated_role->grantPermission('use niftybot mobile api');
+    $authenticated_role->save();
+  }
+}
+
+/**
+ * Creates the HMAC signing key for JWT mobile tokens.
+ */
+function niftybot_mobile_api_setup_jwt_key(): void {
+  $key_id = 'niftybot_mobile_jwt';
+  $storage = \Drupal::entityTypeManager()->getStorage('key');
+
+  if (!$storage->load($key_id)) {
+    $secret = base64_encode(random_bytes(64));
+    $key = Key::create([
+      'id' => $key_id,
+      'label' => 'NiftyBot Mobile JWT',
+      'description' => 'HMAC key for mobile app JWT access tokens.',
+      'key_type' => 'jwt_hs',
+      'key_type_settings' => ['algorithm' => 'HS256'],
+      'key_provider' => 'config',
+      'key_provider_settings' => [
+        'base64_encoded' => TRUE,
+        'key_value' => $secret,
+      ],
+      'key_input' => 'none',
+    ]);
+    $key->save();
+  }
+
+  \Drupal::configFactory()->getEditable('jwt.config')
+    ->set('algorithm', 'HS256')
+    ->set('key_id', $key_id)
+    ->save(TRUE);
+}
+
+/**
+ * Generates RSA key pair for Simple OAuth access tokens.
+ */
+function niftybot_mobile_api_setup_oauth_keys(): void {
+  $settings = \Drupal::configFactory()->getEditable('simple_oauth.settings');
+  $public = $settings->get('public_key');
+  $private = $settings->get('private_key');
+
+  if ($public && $private && file_exists($public) && file_exists($private)) {
+    return;
+  }
+
+  $dir = Settings::get('config_sync_directory')
+    ? dirname(Settings::get('config_sync_directory')) . '/oauth-keys'
+    : 'private://oauth-keys';
+
+  if (str_starts_with($dir, 'private://')) {
+    $file_system = \Drupal::service('file_system');
+    $real_dir = $file_system->realpath('private://');
+    if ($real_dir) {
+      $dir = $real_dir . '/oauth-keys';
+    }
+  }
+
+  if (!is_dir($dir)) {
+    mkdir($dir, 0770, TRUE);
+  }
+
+  $private_path = $dir . '/simple_oauth_private.key';
+  $public_path = $dir . '/simple_oauth_public.key';
+
+  if (!file_exists($private_path) || !file_exists($public_path)) {
+    $config = [
+      'private_key_bits' => 2048,
+      'private_key_type' => OPENSSL_KEYTYPE_RSA,
+    ];
+    $resource = openssl_pkey_new($config);
+    if ($resource === FALSE) {
+      throw new \RuntimeException('Could not generate OAuth RSA key pair.');
+    }
+
+    openssl_pkey_export($resource, $private_key);
+    $details = openssl_pkey_get_details($resource);
+    $public_key = $details['key'] ?? '';
+    file_put_contents($private_path, $private_key);
+    file_put_contents($public_path, $public_key);
+    chmod($private_path, 0660);
+    chmod($public_path, 0660);
+  }
+
+  $settings
+    ->set('public_key', $public_path)
+    ->set('private_key', $private_path)
+    ->set('access_token_expiration', 3600)
+    ->set('refresh_token_expiration', 1209600)
+    ->save(TRUE);
+}
+
+/**
+ * Creates OAuth2 scope and first-party mobile consumer.
+ */
+function niftybot_mobile_api_setup_oauth_scope_and_consumer(): void {
+  $scope_id = 'niftybot_mobile';
+  $scope_storage = \Drupal::entityTypeManager()->getStorage('oauth2_scope');
+
+  if (!$scope_storage->load($scope_id)) {
+    $scope = Oauth2Scope::create([
+      'id' => $scope_id,
+      'name' => 'niftybot:mobile',
+      'description' => 'Access NiftyBot mobile REST API.',
+      'grant_types' => [
+        'authorization_code' => [
+          'status' => TRUE,
+          'description' => 'Mobile authorization code flow.',
+        ],
+        'refresh_token' => [
+          'status' => TRUE,
+          'description' => 'Refresh OAuth access tokens.',
+        ],
+        'client_credentials' => [
+          'status' => FALSE,
+          'description' => 'Not used for user sessions.',
+        ],
+      ],
+      'umbrella' => FALSE,
+      'granularity_id' => Oauth2ScopeInterface::GRANULARITY_PERMISSION,
+      'granularity_configuration' => [
+        'permission' => 'use niftybot mobile api',
+      ],
+    ]);
+    $scope->save();
+  }
+
+  $client_id = \Drupal::config('niftybot_mobile_api.settings')->get('oauth_client_id') ?: 'niftybot_mobile';
+  $consumer_storage = \Drupal::entityTypeManager()->getStorage('consumer');
+  $existing = $consumer_storage->loadByProperties(['client_id' => $client_id]);
+
+  if ($existing) {
+    return;
+  }
+
+  $secret = bin2hex(random_bytes(32));
+  $consumer = Consumer::create([
+    'label' => 'NiftyBot Mobile App',
+    'client_id' => $client_id,
+    'secret' => $secret,
+    'is_default' => FALSE,
+    'grant_types' => [
+      'authorization_code',
+      'refresh_token',
+    ],
+    'scopes' => [$scope_id],
+    'redirect' => ['niftybot://oauth/callback'],
+    'pkce' => TRUE,
+  ]);
+  $consumer->save();
+
+  \Drupal::state()->set('niftybot_mobile_api.oauth_client_secret', $secret);
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function niftybot_mobile_api_requirements($phase): array {
+  $requirements = [];
+
+  if ($phase === 'runtime') {
+    $jwt_key = \Drupal::config('jwt.config')->get('key_id');
+    if (!$jwt_key || !\Drupal::entityTypeManager()->getStorage('key')->load($jwt_key)) {
+      $requirements['niftybot_mobile_api_jwt'] = [
+        'title' => t('NiftyBot Mobile API'),
+        'value' => t('JWT signing key is not configured.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+    else {
+      $requirements['niftybot_mobile_api_jwt'] = [
+        'title' => t('NiftyBot Mobile API'),
+        'value' => t('JWT configured'),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+  }
+
+  return $requirements;
+}
