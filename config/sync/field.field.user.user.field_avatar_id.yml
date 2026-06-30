@@ -1,0 +1,20 @@
+uuid: 07babb0b-d5b1-4107-8728-941a4929640a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_avatar_id
+  module:
+    - user
+id: user.user.field_avatar_id
+field_name: field_avatar_id
+entity_type: user
+bundle: user
+label: Avatar
+description: 'Preset profile avatar id (1-9).'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

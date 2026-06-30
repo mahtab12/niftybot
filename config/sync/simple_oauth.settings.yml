@@ -1,0 +1,9 @@
+_core:
+  default_config_hash: ci56aVE-Jo4w_Xy5Gkk1coAwO-fj7Q87l0PKc5E9sfo
+scope_provider: dynamic
+token_cron_batch_size: 0
+disable_openid_connect: false
+public_key: ../config/oauth-keys/simple_oauth_public.key
+private_key: ../config/oauth-keys/simple_oauth_private.key
+access_token_expiration: 3600
+refresh_token_expiration: 1209600

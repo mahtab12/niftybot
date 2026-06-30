@@ -39,8 +39,17 @@
     <div class="col-xl-5">
       <div class="niftybot-dashboard__panel niftybot-dashboard__profile">
         <div class="niftybot-dashboard__profile-head">
-          <div class="niftybot-dashboard__avatar">
-            <img src="/themes/custom/niftyoption/assets/images/user7.png" alt="" />
+          <div class="niftybot-dashboard__avatar-wrap">
+            <div class="niftybot-dashboard__avatar">
+              <img src="{{ avatar_url }}" alt="{{ 'Your profile picture'|t }}" id="niftybot-dashboard-avatar-img" width="72" height="72" />
+            </div>
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary niftybot-dashboard__avatar-change"
+                    data-bs-toggle="modal"
+                    data-bs-target="#niftybot-avatar-modal">
+              <i class="bi bi-camera" aria-hidden="true"></i>
+              {{ 'Change photo'|t }}
+            </button>
           </div>
           <div>
             <div class="niftybot-dashboard__profile-name">{{ display_name }}</div>
@@ -183,7 +192,7 @@
           <i class="bi bi-plug me-1" aria-hidden="true"></i>{{ 'Broker connection'|t }}
         </h3>
         <a href="{{ path('niftybot_core.user_broker') }}" class="btn btn-sm btn-outline-primary">
-          {% if broker.connected %}{{ 'Manage'|t }}{% else %}{{ 'Connect Groww'|t }}{% endif %}
+          {% if broker.connected %}{{ 'Manage'|t }}{% elseif broker.pending_approval %}{{ 'Activate on Groww'|t }}{% else %}{{ 'Connect Groww'|t }}{% endif %}
         </a>
       </div>
       <div class="row g-3">
@@ -198,6 +207,10 @@
             <span class="niftybot-dashboard__broker-stat-label">{{ 'Status'|t }}</span>
             {% if broker.connected %}
               <span class="badge bg-success">{{ 'Connected'|t }}</span>
+            {% elseif broker.pending_approval %}
+              <span class="badge bg-warning text-dark">{{ 'Pending Groww approval'|t }}</span>
+            {% elseif broker.credentials_saved %}
+              <span class="badge bg-danger">{{ 'Activation required'|t }}</span>
             {% else %}
               <span class="badge bg-secondary">{{ 'Not connected'|t }}</span>
             {% endif %}
@@ -222,7 +235,11 @@
           </div>
         </div>
       </div>
-      {% if broker.ucc %}
+      {% if broker.pending_approval %}
+        <p class="small text-warning mb-0 mt-2">
+          {{ 'Credentials saved. <a href="@url" target="_blank" rel="noopener noreferrer">Approve your API key on Groww</a> for today.'|t({'@url': broker.groww_api_keys_url}) }}
+        </p>
+      {% elseif broker.ucc %}
         <p class="small text-secondary mb-0 mt-2">{{ 'UCC'|t }}: {{ broker.ucc }}</p>
       {% endif %}
     </div>
@@ -340,5 +357,37 @@
     <a href="{{ path('niftybot_investment.dashboard') }}" class="btn btn-outline-primary">{{ 'Investment'|t }}</a>
     <a href="{{ path('niftybot_reports.user') }}" class="btn btn-outline-primary">{{ 'Reports'|t }}</a>
     <a href="{{ path('niftybot_subscription.plans') }}" class="btn btn-outline-primary">{{ 'Plans'|t }}</a>
+  </div>
+
+  <div class="modal fade" id="niftybot-avatar-modal" tabindex="-1" aria-labelledby="niftybot-avatar-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content niftybot-dashboard__avatar-modal">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="niftybot-avatar-modal-title">{{ 'Choose your profile picture'|t }}</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'Close'|t }}"></button>
+        </div>
+        <div class="modal-body">
+          <p class="niftybot-dashboard__avatar-modal-intro">{{ 'Pick an avatar — it appears on your dashboard and in the header.'|t }}</p>
+          <div class="niftybot-dashboard__avatar-grid" id="niftybot-avatar-grid" role="listbox" aria-label="{{ 'Avatar choices'|t }}">
+            {% for choice in avatar_choices %}
+              <button type="button"
+                      class="niftybot-dashboard__avatar-option{% if choice.id == avatar_id %} is-selected{% endif %}"
+                      data-avatar-id="{{ choice.id }}"
+                      data-avatar-url="{{ choice.url }}"
+                      role="option"
+                      aria-selected="{{ choice.id == avatar_id ? 'true' : 'false' }}"
+                      aria-label="{{ choice.label }}">
+                <img src="{{ choice.url }}" alt="" loading="lazy" />
+              </button>
+            {% endfor %}
+          </div>
+          <p class="niftybot-dashboard__avatar-status" id="niftybot-avatar-status" role="status" hidden></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ 'Cancel'|t }}</button>
+          <button type="button" class="btn btn-primary" id="niftybot-avatar-save" disabled>{{ 'Save profile picture'|t }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

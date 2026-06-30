@@ -5,7 +5,10 @@ namespace Drupal\niftybot_core\Service;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Manages communication with the Python trading API service.
@@ -79,6 +82,13 @@ class BrokerManager {
    *   Response data or NULL on failure.
    */
   public function request(string $method, string $endpoint, array $data = []): ?array {
+    if (!$this->hasApiKey()) {
+      return [
+        'success' => FALSE,
+        'message' => 'Trading service API key is not configured. Ask an administrator to set it under NiftyBot settings.',
+      ];
+    }
+
     $url = rtrim($this->getBaseUrl(), '/') . '/' . ltrim($endpoint, '/');
     $api_key = $this->configFactory
       ->get('niftybot_core.settings')
@@ -87,9 +97,12 @@ class BrokerManager {
     $options = [
       'headers' => [
         'Content-Type' => 'application/json',
+        'Accept' => 'application/json',
         'X-API-Key' => $api_key,
       ],
-      'timeout' => 30,
+      'timeout' => 45,
+      'connect_timeout' => 10,
+      'http_errors' => TRUE,
     ];
 
     if (!empty($data)) {
@@ -103,17 +116,89 @@ class BrokerManager {
 
     try {
       $response = $this->httpClient->request($method, $url, $options);
-      $body = $response->getBody()->getContents();
-      $decoded = json_decode($body, TRUE);
-      return is_array($decoded) ? $decoded : NULL;
+      $decoded = $this->decodeResponse($response);
+      return is_array($decoded) ? $decoded : [
+        'success' => FALSE,
+        'message' => 'Trading service returned an invalid response.',
+      ];
+    }
+    catch (ClientException $e) {
+      $decoded = $this->decodeResponse($e->getResponse());
+      $message = $this->extractApiErrorMessage($decoded)
+        ?? 'Trading service rejected the request.';
+      $this->logger->warning('Trading API client error: @endpoint - @message', [
+        '@endpoint' => $endpoint,
+        '@message' => $message,
+      ]);
+      return is_array($decoded) ? $decoded + ['success' => $decoded['success'] ?? FALSE] : [
+        'success' => FALSE,
+        'message' => $message,
+      ];
+    }
+    catch (ConnectException $e) {
+      $this->logger->error('Trading API connection failed: @endpoint - @message', [
+        '@endpoint' => $endpoint,
+        '@message' => $e->getMessage(),
+      ]);
+      return [
+        'success' => FALSE,
+        'message' => 'Could not reach the trading verification service. Please try again in a moment.',
+      ];
     }
     catch (GuzzleException $e) {
       $this->logger->error('Trading API request failed: @endpoint - @message', [
         '@endpoint' => $endpoint,
         '@message' => $e->getMessage(),
       ]);
+      return [
+        'success' => FALSE,
+        'message' => 'Trading service request failed. Please try again.',
+      ];
+    }
+  }
+
+  /**
+   * Decodes a trading API HTTP response body.
+   */
+  protected function decodeResponse(?ResponseInterface $response): ?array {
+    if ($response === NULL) {
       return NULL;
     }
+    $body = (string) $response->getBody();
+    if ($body === '') {
+      return NULL;
+    }
+    $decoded = json_decode($body, TRUE);
+    return is_array($decoded) ? $decoded : NULL;
+  }
+
+  /**
+   * Extracts a human-readable error from a FastAPI-style response.
+   */
+  protected function extractApiErrorMessage(?array $decoded): ?string {
+    if ($decoded === NULL) {
+      return NULL;
+    }
+    if (!empty($decoded['message']) && is_string($decoded['message'])) {
+      return $decoded['message'];
+    }
+    if (!empty($decoded['detail'])) {
+      if (is_string($decoded['detail'])) {
+        return $decoded['detail'];
+      }
+      if (is_array($decoded['detail'])) {
+        $parts = [];
+        foreach ($decoded['detail'] as $item) {
+          if (is_array($item) && !empty($item['msg'])) {
+            $parts[] = (string) $item['msg'];
+          }
+        }
+        if ($parts !== []) {
+          return implode(' ', $parts);
+        }
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -371,6 +456,14 @@ class BrokerManager {
   public function getUserAutoTradeStatus(int $uid, string $instrument): ?array {
     $instrument = strtolower($instrument);
     return $this->request('GET', "/api/v1/user-auto-trade/{$uid}/{$instrument}/status");
+  }
+
+  /**
+   * Live AI market suggestions for an instrument (no activation required).
+   */
+  public function getAutoTradeSuggestions(string $instrument): ?array {
+    $instrument = strtolower($instrument);
+    return $this->request('GET', "/api/v1/auto-trade/{$instrument}/suggestions");
   }
 
 }

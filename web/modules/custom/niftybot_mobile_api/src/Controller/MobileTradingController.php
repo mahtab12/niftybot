@@ -41,10 +41,7 @@ class MobileTradingController extends ControllerBase {
       'access' => $this->autoTradeUser->getAccessInfo($uid),
       'fee_summary' => $this->autoTradeUser->getFeeSummary($uid),
       'fee_history' => $this->autoTradeUser->getFeeHistory($uid, NULL, 10),
-      'lot_steps' => [
-        'nifty' => AutoTradeUserService::NIFTY_LOT_STEP,
-        'sensex' => AutoTradeUserService::SENSEX_LOT_STEP,
-      ],
+      'lot_steps' => $this->autoTradeUser->getLotSteps(),
     ]);
   }
 
@@ -60,6 +57,8 @@ class MobileTradingController extends ControllerBase {
         $uid,
         (int) ($data['nifty_quantity'] ?? 0),
         (int) ($data['sensex_quantity'] ?? 0),
+        isset($data['crude_oil_quantity']) ? (int) $data['crude_oil_quantity'] : NULL,
+        isset($data['gold_quantity']) ? (int) $data['gold_quantity'] : NULL,
       );
     }
     catch (\InvalidArgumentException $e) {
@@ -89,10 +88,16 @@ class MobileTradingController extends ControllerBase {
 
     if ($quantity > 0) {
       $settings = $this->autoTradeUser->getSettings($uid);
-      $key = strtolower($instrument) === 'sensex' ? 'sensex_quantity' : 'nifty_quantity';
+      $key = $this->autoTradeUser->quantityKey($instrument);
       $settings[$key] = $quantity;
       try {
-        $this->autoTradeUser->saveSettings($uid, $settings['nifty_quantity'], $settings['sensex_quantity']);
+        $this->autoTradeUser->saveSettings(
+          $uid,
+          $settings['nifty_quantity'],
+          $settings['sensex_quantity'],
+          $settings['crude_oil_quantity'],
+          $settings['gold_quantity'],
+        );
       }
       catch (\InvalidArgumentException $e) {
         return new JsonResponse(['success' => FALSE, 'message' => $e->getMessage()], 400);

@@ -97,7 +97,7 @@ class MobileDashboardController extends ControllerBase {
     $broker = \Drupal::service('niftybot_core.broker_connection');
     return new JsonResponse([
       'success' => TRUE,
-      'broker' => $broker->getDashboardSummary($uid, 'groww'),
+      'broker' => $broker->attemptAutoConnect($uid, 'groww'),
     ]);
   }
 

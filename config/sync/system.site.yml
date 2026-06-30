@@ -2,9 +2,9 @@ _core:
   default_config_hash: ijfbzDTN4CbE7Sr-6ubWzy_t1vH4OtU1doNCLssVz-4
 langcode: en
 uuid: 9db5afa2-19d9-48a7-a3f8-7d195a159b95
-name: StrikeFlow
-mail: admin@example.com
-slogan: 'Automated trading bot'
+name: GrassRed
+mail: support@grassred.com
+slogan: 'Automated algo trading portal'
 page:
   403: ''
   404: ''

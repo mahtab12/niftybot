@@ -132,6 +132,68 @@
   border-radius: 4px;
 }
 
+.niftybot-broker-masked-credential {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.02em;
+}
+
+.niftybot-broker-stored {
+  border: 1px solid #d4edda;
+  border-radius: 10px;
+  background: #f6fbf7;
+  padding: 1rem 1.15rem;
+}
+
+.niftybot-broker-stored__header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e6b3a;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-broker-stored__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.niftybot-broker-stored__label {
+  flex: 0 0 5.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #707f93;
+}
+
+.niftybot-broker-stored__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.niftybot-broker-stored__value code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  color: #1553a3;
+  background: #fff;
+  border: 1px solid #d7e0eb;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.niftybot-broker-stored__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: #707f93;
+}
+
 .niftybot-broker-status-card__footer {
   margin: auto 0 0;
   padding-top: 1rem;

@@ -57,14 +57,16 @@ body.login-container .login-box .login-logo,
 body.login-container .login-logo.niftyoption-brand-logo {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
+  width: 100%;
 }
 
 body.login-container .login-box .login-logo img,
-body.login-container .niftyoption-brand-logo__icon {
-  width: auto;
-  max-width: none;
+body.login-container .niftyoption-brand-logo__image {
+  width: 100%;
+  max-width: min(300px, 100%);
   height: auto;
+  max-height: none;
 }
 
 body.login-container .niftybot-registration-form .form-item,

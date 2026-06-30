@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from app.auto_trade_profiles import VALID_INSTRUMENTS
 from app.config import settings
 from app.services.auto_trade_service import get_auto_trade_service
 
@@ -34,8 +35,11 @@ async def auto_trade_websocket(websocket: WebSocket):
         await websocket.close(code=4401, reason="Invalid API key")
         return
 
-    if instrument not in ("nifty", "sensex"):
-        await websocket.close(code=4400, reason="instrument must be nifty or sensex")
+    if instrument not in VALID_INSTRUMENTS:
+        await websocket.close(
+            code=4400,
+            reason=f"instrument must be one of: {', '.join(sorted(VALID_INSTRUMENTS))}",
+        )
         return
 
     await websocket.accept()

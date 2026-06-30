@@ -81,7 +81,7 @@ class InvestmentService {
    */
   public function createInvestment(int $uid, int $plan_id): int {
     if ($this->getActiveInvestment($uid)) {
-      throw new \InvalidArgumentException('You already have an active StrikeFlow investment.');
+      throw new \InvalidArgumentException('You already have an active GrassRed investment.');
     }
 
     $plan = $this->getPlan($plan_id);
@@ -106,7 +106,7 @@ class InvestmentService {
         'amount' => $amount,
         'status' => 'completed',
         'payment_method' => 'fxc_investment',
-        'notes' => 'StrikeFlow Investment — ' . $plan->name,
+        'notes' => 'GrassRed Investment — ' . $plan->name,
         'balance_applied' => 1,
         'created' => $now,
         'updated' => $now,
@@ -218,7 +218,7 @@ class InvestmentService {
         (int) $investment->uid,
         $profit,
         'investment_profit',
-        'StrikeFlow weekly AI profit payout',
+        'GrassRed weekly AI profit payout',
       );
 
       $this->database->insert('niftybot_investment_profits')

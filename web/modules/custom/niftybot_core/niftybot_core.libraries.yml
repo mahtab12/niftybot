@@ -3,6 +3,15 @@ admin:
     theme:
       css/niftybot-admin.css: {}
 
+google_analytics:
+  js:
+    https://www.googletagmanager.com/gtag/js?id=G-CQ6J9HS2E4: { type: external, attributes: { async: true } }
+    js/gtag-init.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+  header: true
+
 support:
   css:
     theme:
@@ -27,6 +36,7 @@ market_realtime:
     - core/once
 
 auto_trade_realtime:
+  version: 1.2
   js:
     js/auto-trade-realtime.js: {}
   dependencies:

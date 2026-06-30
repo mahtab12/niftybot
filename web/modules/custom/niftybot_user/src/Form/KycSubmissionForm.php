@@ -278,7 +278,7 @@ class KycSubmissionForm extends FormBase {
 
     $form['declaration'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('I declare that all information provided is accurate and I authorize StrikeFlow to verify my identity.'),
+      '#title' => $this->t('I declare that all information provided is accurate and I authorize GrassRed to verify my identity.'),
       '#required' => TRUE,
       '#wrapper_attributes' => ['class' => ['niftybot-kyc-form__declaration', 'mb-0']],
     ];

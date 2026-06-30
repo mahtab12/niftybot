@@ -8,10 +8,26 @@
 
   const settings = drupalSettings.niftybotAutoTrade || {};
   const RECONNECT_MS = 5000;
-  const POLL_MS = 3000;
+  const POLL_MS = 5000;
+  const SUGGESTIONS_POLL_MS = 60000;
+  const SUGGESTIONS_START_DELAY_MS = 20000;
+  const STATUS_TIMEOUT_MS = 45000;
+  const SUGGESTIONS_TIMEOUT_MS = 120000;
   const instrument = settings.instrument || 'nifty';
   const useDrupalApi = !!settings.useDrupalApi;
   const lotStep = Number(settings.lotStep) || 65;
+  const quantitySettings = settings.quantities || {};
+
+  const QUANTITY_KEYS = {
+    nifty: 'nifty_quantity',
+    sensex: 'sensex_quantity',
+    crude_oil: 'crude_oil_quantity',
+    gold: 'gold_quantity',
+  };
+
+  function quantityFieldForInstrument(inst) {
+    return QUANTITY_KEYS[inst] || 'nifty_quantity';
+  }
 
   function formatPrice(value) {
     if (value === null || value === undefined || value === '') {
@@ -121,7 +137,87 @@
     badge.textContent = message;
   }
 
-  function drupalApi(method, path, body) {
+  function updateAiSuggestion(payload) {
+    const panel = document.getElementById('niftybot-auto-trade-ai-panel');
+    if (!panel || !settings.brokerConnected) {
+      return;
+    }
+
+    if (payload && payload.active) {
+      panel.hidden = true;
+      return;
+    }
+
+    const suggestion = payload && payload.ai_suggestion;
+    if (!suggestion) {
+      panel.hidden = true;
+      return;
+    }
+
+    panel.hidden = false;
+    panel.classList.remove(
+      'niftybot-auto-trade-user__ai-suggestions--bullish',
+      'niftybot-auto-trade-user__ai-suggestions--bearish',
+      'niftybot-auto-trade-user__ai-suggestions--neutral',
+      'niftybot-auto-trade-user__ai-suggestions--high',
+      'niftybot-auto-trade-user__ai-suggestions--medium',
+      'niftybot-auto-trade-user__ai-suggestions--wait'
+    );
+    panel.classList.add('niftybot-auto-trade-user__ai-suggestions--' + (suggestion.bias || 'neutral'));
+    panel.classList.add('niftybot-auto-trade-user__ai-suggestions--' + (suggestion.confidence_tier || 'wait'));
+
+    setText('niftybot-auto-trade-ai-headline', suggestion.headline || '');
+    setText('niftybot-auto-trade-ai-summary', suggestion.summary || '');
+    setText('niftybot-auto-trade-ai-hint', suggestion.manual_hint || '');
+    setText('niftybot-auto-trade-ai-disclaimer', suggestion.disclaimer || '');
+
+    const confEl = document.getElementById('niftybot-auto-trade-ai-confidence');
+    if (confEl) {
+      const tierLabels = {
+        high: Drupal.t('High confidence'),
+        medium: Drupal.t('Developing'),
+        low: Drupal.t('Low confidence'),
+        wait: Drupal.t('Wait'),
+      };
+      const tier = suggestion.confidence_tier || 'wait';
+      confEl.textContent = (suggestion.confidence_pct != null ? suggestion.confidence_pct + '% · ' : '') +
+        (tierLabels[tier] || tier);
+    }
+
+    const biasEl = document.getElementById('niftybot-auto-trade-ai-bias');
+    if (biasEl) {
+      const biasMap = {
+        bullish: Drupal.t('Bullish bias'),
+        bearish: Drupal.t('Bearish bias'),
+        neutral: Drupal.t('Neutral'),
+      };
+      biasEl.textContent = biasMap[suggestion.bias] || '';
+    }
+
+    const updatedEl = document.getElementById('niftybot-auto-trade-ai-updated');
+    if (updatedEl) {
+      updatedEl.textContent = payload.last_check_at
+        ? Drupal.t('Updated @time', { '@time': new Date().toLocaleTimeString() })
+        : '';
+    }
+
+    const factorsEl = document.getElementById('niftybot-auto-trade-ai-factors');
+    if (factorsEl) {
+      const items = suggestion.factors || suggestion.reasons || [];
+      factorsEl.innerHTML = items.map(function (item) {
+        return '<li>' + Drupal.checkPlain(String(item)) + '</li>';
+      }).join('');
+      factorsEl.hidden = items.length === 0;
+    }
+  }
+
+  function drupalApi(method, path, body, timeoutMs) {
+    const controller = new AbortController();
+    const wait = timeoutMs || STATUS_TIMEOUT_MS;
+    const timeoutId = window.setTimeout(function () {
+      controller.abort();
+    }, wait);
+
     const options = {
       method: method,
       headers: {
@@ -129,12 +225,18 @@
         'Content-Type': 'application/json',
       },
       credentials: 'same-origin',
+      signal: controller.signal,
     };
     if (body) {
       options.body = JSON.stringify(body);
     }
     return fetch((settings.apiBase || '/niftybot/api/auto-trade') + path, options).then(function (response) {
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
       return response.json();
+    }).finally(function () {
+      window.clearTimeout(timeoutId);
     });
   }
 
@@ -422,32 +524,108 @@
   function connectPolling() {
     let timer = null;
     let stopped = false;
+    let inFlight = false;
 
     function poll() {
-      if (stopped) {
+      if (stopped || inFlight) {
+        if (!stopped) {
+          timer = window.setTimeout(poll, POLL_MS);
+        }
         return;
       }
+      inFlight = true;
       drupalApi('GET', '/' + instrument + '/status').then(function (data) {
         if (data && data.success !== false) {
           updateState(data);
+          if (data.active) {
+            updateAiSuggestion({ active: true });
+          }
           setLiveStatus('connected', Drupal.t('Live'));
         }
         else {
           setLiveStatus('error', Drupal.t('Unavailable'));
         }
-      }).catch(function () {
-        setLiveStatus('error', Drupal.t('Connection error'));
+      }).catch(function (error) {
+        if (error && error.name === 'AbortError') {
+          setLiveStatus('reconnecting', Drupal.t('Updating…'));
+        }
+        else {
+          setLiveStatus('error', Drupal.t('Connection error'));
+        }
       }).finally(function () {
+        inFlight = false;
         if (!stopped) {
           timer = window.setTimeout(poll, POLL_MS);
         }
       });
     }
 
-    setLiveStatus('reconnecting', Drupal.t('Connecting…'));
     poll();
+    return function () {
+      stopped = true;
+      if (timer) {
+        window.clearTimeout(timer);
+      }
+    };
+  }
 
-    return function cleanup() {
+  function connectSuggestionsPolling() {
+    let timer = null;
+    let stopped = false;
+    let inFlight = false;
+
+    function pollSuggestions() {
+      if (stopped || !settings.brokerConnected) {
+        return;
+      }
+      const stateOn = document.querySelector('#niftybot-auto-trade-state .niftybot-auto-trade__state--on');
+      if (stateOn) {
+        updateAiSuggestion({ active: true });
+        if (!stopped) {
+          timer = window.setTimeout(pollSuggestions, SUGGESTIONS_POLL_MS);
+        }
+        return;
+      }
+      if (inFlight) {
+        if (!stopped) {
+          timer = window.setTimeout(pollSuggestions, SUGGESTIONS_POLL_MS);
+        }
+        return;
+      }
+      inFlight = true;
+      drupalApi('GET', '/' + instrument + '/suggestions', null, SUGGESTIONS_TIMEOUT_MS).then(function (data) {
+        if (data && data.success !== false) {
+          updateAiSuggestion({
+            active: false,
+            ai_suggestion: data.ai_suggestion || data.suggestion,
+            last_check_at: data.last_check_at,
+          });
+          if (data.last_signal) {
+            updateState({
+              success: true,
+              active: false,
+              underlying_ltp: data.underlying_ltp,
+              last_signal: data.last_signal,
+              last_check_at: data.last_check_at,
+            });
+          }
+        }
+      }).catch(function () {
+        // Suggestions are optional; status polling keeps the dashboard usable.
+      }).finally(function () {
+        inFlight = false;
+        if (!stopped) {
+          timer = window.setTimeout(pollSuggestions, SUGGESTIONS_POLL_MS);
+        }
+      });
+    }
+
+    const panel = document.getElementById('niftybot-auto-trade-ai-panel');
+    if (panel && settings.brokerConnected) {
+      panel.hidden = false;
+    }
+    timer = window.setTimeout(pollSuggestions, SUGGESTIONS_START_DELAY_MS);
+    return function () {
       stopped = true;
       if (timer) {
         window.clearTimeout(timer);
@@ -517,8 +695,10 @@
     }
 
     const payload = {
-      nifty_quantity: instrument === 'sensex' ? (Number(settings.niftyQuantity) || 65) : qty,
-      sensex_quantity: instrument === 'sensex' ? qty : (Number(settings.sensexQuantity) || 20),
+      nifty_quantity: instrument === 'nifty' ? qty : (Number(quantitySettings.nifty_quantity) || 65),
+      sensex_quantity: instrument === 'sensex' ? qty : (Number(quantitySettings.sensex_quantity) || 20),
+      crude_oil_quantity: instrument === 'crude_oil' ? qty : (Number(quantitySettings.crude_oil_quantity) || 100),
+      gold_quantity: instrument === 'gold' ? qty : (Number(quantitySettings.gold_quantity) || 100),
     };
 
     const saveBtn = document.getElementById('niftybot-auto-trade-save-qty');
@@ -528,9 +708,8 @@
 
     return drupalApi('POST', '/settings', payload).then(function (data) {
       if (data && data.success) {
-        settings.niftyQuantity = data.settings.nifty_quantity;
-        settings.sensexQuantity = data.settings.sensex_quantity;
-        settings.quantity = instrument === 'sensex' ? data.settings.sensex_quantity : data.settings.nifty_quantity;
+        Object.assign(quantitySettings, data.settings);
+        settings.quantity = data.settings[quantityFieldForInstrument(instrument)];
         setQuantityHint(Drupal.t('Quantity saved.'), 'success');
       }
       else if (data && data.message) {
@@ -597,8 +776,13 @@
         }
         apiPost('/api/v1/auto-trade/' + instrument + '/activate', body).then(function (data) {
           if (data) {
-            if (data.message) {
+            if (data.success === false && data.message) {
               setText('niftybot-auto-trade-message', data.message);
+              setQuantityHint(data.message, 'error');
+            }
+            else if (data.message) {
+              setText('niftybot-auto-trade-message', data.message);
+              setQuantityHint('', '');
             }
             if (data.trade_mode) {
               setText('niftybot-auto-trade-trade-mode', data.trade_mode.toUpperCase());
@@ -653,15 +837,24 @@
           return;
         }
         let cleanup = null;
+        let suggestionsCleanup = null;
         if (useDrupalApi) {
           cleanup = connectPolling();
+          if (settings.brokerConnected) {
+            suggestionsCleanup = connectSuggestionsPolling();
+          }
         }
         else {
           cleanup = connectWebSocket();
         }
-        if (cleanup) {
+        if (cleanup || suggestionsCleanup) {
           root.addEventListener('drupalDetach', function () {
-            cleanup();
+            if (cleanup) {
+              cleanup();
+            }
+            if (suggestionsCleanup) {
+              suggestionsCleanup();
+            }
           }, { once: true });
         }
       });

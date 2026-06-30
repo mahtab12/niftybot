@@ -649,6 +649,7 @@ class BrokerCredentialsVerifyResponse(BaseModel):
     """Result of broker credential verification."""
     success: bool
     message: str = ""
+    approval_required: bool = False
     profile: Optional[UserProfileResponse] = None
     margin: Optional[AvailableMarginResponse] = None
 

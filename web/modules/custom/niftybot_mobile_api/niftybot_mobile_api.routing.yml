@@ -202,7 +202,7 @@ niftybot_mobile_api.auto_trade_status:
     _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::autoTradeStatus'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
   options:
     _auth: ['jwt_auth', 'oauth2', 'cookie']
   methods: [GET]
@@ -213,7 +213,7 @@ niftybot_mobile_api.auto_trade_activate:
     _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::activateAutoTrade'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
   options:
     _auth: ['jwt_auth', 'oauth2', 'cookie']
   methods: [POST]
@@ -224,7 +224,7 @@ niftybot_mobile_api.auto_trade_deactivate:
     _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::deactivateAutoTrade'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
   options:
     _auth: ['jwt_auth', 'oauth2', 'cookie']
   methods: [POST]
@@ -235,7 +235,7 @@ niftybot_mobile_api.auto_trade_exit:
     _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::exitAutoTrade'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
   options:
     _auth: ['jwt_auth', 'oauth2', 'cookie']
   methods: [POST]

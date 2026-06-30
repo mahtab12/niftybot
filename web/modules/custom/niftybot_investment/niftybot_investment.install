@@ -14,7 +14,7 @@ function niftybot_investment_schema(): array {
   $schema = [];
 
   $schema['niftybot_investment_plans'] = [
-    'description' => 'StrikeFlow Investment plan definitions.',
+    'description' => 'GrassRed Investment plan definitions.',
     'fields' => [
       'plan_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
       'name' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
@@ -39,7 +39,7 @@ function niftybot_investment_schema(): array {
   ];
 
   $schema['niftybot_user_investments'] = [
-    'description' => 'User StrikeFlow Investment enrollments.',
+    'description' => 'User GrassRed Investment enrollments.',
     'fields' => [
       'investment_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
       'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
@@ -91,7 +91,7 @@ function niftybot_investment_schema(): array {
       'trade_id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
       'trade_date' => ['type' => 'varchar', 'length' => 10, 'not null' => TRUE],
       'symbol' => ['type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'NIFTY'],
-      'strategy' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'StrikeFlow Investment'],
+      'strategy' => ['type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => 'GrassRed Investment'],
       'transaction_type' => ['type' => 'varchar', 'length' => 16, 'not null' => TRUE],
       'quantity' => ['type' => 'int', 'not null' => TRUE, 'default' => 1],
       'entry_price' => ['type' => 'numeric', 'precision' => 12, 'scale' => 2, 'not null' => TRUE],
@@ -124,7 +124,7 @@ function niftybot_investment_install(): void {
       'amount' => 20000.00,
       'weekly_return_min' => 4.00,
       'weekly_return_max' => 5.00,
-      'description' => 'StrikeFlow Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
+      'description' => 'GrassRed Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
       'status' => 'active',
       'weight' => 0,
     ],
@@ -134,7 +134,7 @@ function niftybot_investment_install(): void {
       'amount' => 50000.00,
       'weekly_return_min' => 4.00,
       'weekly_return_max' => 5.00,
-      'description' => 'StrikeFlow Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
+      'description' => 'GrassRed Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
       'status' => 'active',
       'weight' => 1,
     ],
@@ -144,7 +144,7 @@ function niftybot_investment_install(): void {
       'amount' => 100000.00,
       'weekly_return_min' => 4.00,
       'weekly_return_max' => 5.00,
-      'description' => 'StrikeFlow Investment — ₹1,00,000 principal with 4–5% weekly AI algo profit.',
+      'description' => 'GrassRed Investment — ₹1,00,000 principal with 4–5% weekly AI algo profit.',
       'status' => 'active',
       'weight' => 2,
     ],
@@ -158,18 +158,18 @@ function niftybot_investment_install(): void {
 }
 
 /**
- * Rebrand FXC Global to StrikeFlow Investment in stored plan and trade data.
+ * Rebrand FXC Global to GrassRed Investment in stored plan and trade data.
  */
 function niftybot_investment_update_9001(): void {
   $database = \Drupal::database();
 
   $replacements = [
     'FXC Global Model — ₹10,000 principal with 4–5% weekly AI profit.' =>
-      'StrikeFlow Investment — ₹10,000 principal with 4–5% weekly AI algo profit.',
+      'GrassRed Investment — ₹10,000 principal with 4–5% weekly AI algo profit.',
     'FXC Global Model — ₹20,000 principal with 4–5% weekly AI profit.' =>
-      'StrikeFlow Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
+      'GrassRed Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
     'FXC Global Model — ₹50,000 principal with 4–5% weekly AI profit.' =>
-      'StrikeFlow Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
+      'GrassRed Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
   ];
 
   foreach ($replacements as $old => $new) {
@@ -181,7 +181,7 @@ function niftybot_investment_update_9001(): void {
 
   if ($database->schema()->tableExists('niftybot_platform_trades')) {
     $database->update('niftybot_platform_trades')
-      ->fields(['strategy' => 'StrikeFlow Investment'])
+      ->fields(['strategy' => 'GrassRed Investment'])
       ->condition('strategy', 'FXC Global')
       ->execute();
   }
@@ -197,7 +197,7 @@ function niftybot_investment_update_9001(): void {
     }
     $database->update('niftybot_wallet_transactions')
       ->fields([
-        'notes' => str_replace('FXC Global investment', 'StrikeFlow Investment', (string) $txn->notes),
+        'notes' => str_replace('FXC Global investment', 'GrassRed Investment', (string) $txn->notes),
       ])
       ->condition('transaction_id', $txn->transaction_id)
       ->execute();
@@ -215,17 +215,17 @@ function niftybot_investment_update_9002(): void {
     'plan_a' => [
       'name' => 'Starter',
       'amount' => 20000.00,
-      'description' => 'StrikeFlow Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
+      'description' => 'GrassRed Investment — ₹20,000 principal with 4–5% weekly AI algo profit.',
     ],
     'plan_b' => [
       'name' => 'Growth',
       'amount' => 50000.00,
-      'description' => 'StrikeFlow Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
+      'description' => 'GrassRed Investment — ₹50,000 principal with 4–5% weekly AI algo profit.',
     ],
     'plan_c' => [
       'name' => 'Elite',
       'amount' => 100000.00,
-      'description' => 'StrikeFlow Investment — ₹1,00,000 principal with 4–5% weekly AI algo profit.',
+      'description' => 'GrassRed Investment — ₹1,00,000 principal with 4–5% weekly AI algo profit.',
     ],
   ];
 
@@ -234,6 +234,88 @@ function niftybot_investment_update_9002(): void {
     $database->update('niftybot_investment_plans')
       ->fields($fields)
       ->condition('machine_name', $machine_name)
+      ->execute();
+  }
+}
+
+/**
+ * Rebrand StrikeFlow Investment to GrassRed Investment in stored data.
+ */
+function niftybot_investment_update_9003(): void {
+  $database = \Drupal::database();
+
+  $plans = $database->select('niftybot_investment_plans', 'p')
+    ->fields('p', ['plan_id', 'description'])
+    ->condition('description', '%StrikeFlow%', 'LIKE')
+    ->execute();
+
+  foreach ($plans as $plan) {
+    $database->update('niftybot_investment_plans')
+      ->fields([
+        'description' => str_replace('StrikeFlow', 'GrassRed', (string) $plan->description),
+      ])
+      ->condition('plan_id', $plan->plan_id)
+      ->execute();
+  }
+
+  $database->update('niftybot_platform_trades')
+    ->fields(['strategy' => 'GrassRed Investment'])
+    ->condition('strategy', 'StrikeFlow Investment')
+    ->execute();
+
+  $txns = $database->select('niftybot_wallet_transactions', 't')
+    ->fields('t', ['transaction_id', 'notes'])
+    ->condition('notes', '%StrikeFlow%', 'LIKE')
+    ->execute();
+
+  foreach ($txns as $txn) {
+    $database->update('niftybot_wallet_transactions')
+      ->fields([
+        'notes' => str_replace('StrikeFlow', 'GrassRed', (string) $txn->notes),
+      ])
+      ->condition('transaction_id', $txn->transaction_id)
+      ->execute();
+  }
+}
+
+/**
+ * Normalize lowercase grassred brand strings to GrassRed in stored data.
+ */
+function niftybot_investment_update_9004(): void {
+  $database = \Drupal::database();
+
+  $normalize = static function (string $text): string {
+    $text = str_replace('grassred.com', '__GRASSRED_DOMAIN__', $text);
+    $text = str_replace('grassred', 'GrassRed', $text);
+    return str_replace('__GRASSRED_DOMAIN__', 'grassred.com', $text);
+  };
+
+  $plans = $database->select('niftybot_investment_plans', 'p')
+    ->fields('p', ['plan_id', 'description'])
+    ->condition('description', '%grassred%', 'LIKE')
+    ->execute();
+
+  foreach ($plans as $plan) {
+    $database->update('niftybot_investment_plans')
+      ->fields(['description' => $normalize((string) $plan->description)])
+      ->condition('plan_id', $plan->plan_id)
+      ->execute();
+  }
+
+  $database->update('niftybot_platform_trades')
+    ->fields(['strategy' => 'GrassRed Investment'])
+    ->condition('strategy', 'grassred Investment')
+    ->execute();
+
+  $txns = $database->select('niftybot_wallet_transactions', 't')
+    ->fields('t', ['transaction_id', 'notes'])
+    ->condition('notes', '%grassred%', 'LIKE')
+    ->execute();
+
+  foreach ($txns as $txn) {
+    $database->update('niftybot_wallet_transactions')
+      ->fields(['notes' => $normalize((string) $txn->notes)])
+      ->condition('transaction_id', $txn->transaction_id)
       ->execute();
   }
 }

@@ -16,6 +16,22 @@ class AutoTradeUserService {
 
   public const SENSEX_LOT_STEP = 20;
 
+  public const CRUDE_OIL_LOT_STEP = 100;
+
+  public const GOLD_LOT_STEP = 100;
+
+  /**
+   * Supported auto-trade instruments and lot steps.
+   *
+   * @var array<string, int>
+   */
+  public const LOT_STEPS = [
+    'nifty' => self::NIFTY_LOT_STEP,
+    'sensex' => self::SENSEX_LOT_STEP,
+    'crude_oil' => self::CRUDE_OIL_LOT_STEP,
+    'gold' => self::GOLD_LOT_STEP,
+  ];
+
   public function __construct(
     protected Connection $database,
     protected ConfigFactoryInterface $configFactory,
@@ -43,7 +59,29 @@ class AutoTradeUserService {
    * Lot step for an instrument.
    */
   public function lotStep(string $instrument): int {
-    return strtolower($instrument) === 'sensex' ? self::SENSEX_LOT_STEP : self::NIFTY_LOT_STEP;
+    $key = strtolower($instrument);
+    return self::LOT_STEPS[$key] ?? self::NIFTY_LOT_STEP;
+  }
+
+  /**
+   * Settings field name for an instrument quantity.
+   */
+  public function quantityKey(string $instrument): string {
+    return match (strtolower($instrument)) {
+      'sensex' => 'sensex_quantity',
+      'crude_oil' => 'crude_oil_quantity',
+      'gold' => 'gold_quantity',
+      default => 'nifty_quantity',
+    };
+  }
+
+  /**
+   * Lot steps for all instruments (API / UI).
+   *
+   * @return array<string, int>
+   */
+  public function getLotSteps(): array {
+    return self::LOT_STEPS;
   }
 
   /**
@@ -64,7 +102,7 @@ class AutoTradeUserService {
   /**
    * Loads or returns default quantity settings for a user.
    *
-   * @return array{nifty_quantity: int, sensex_quantity: int}
+   * @return array<string, int>
    */
   public function getSettings(int $uid): array {
     $row = $this->database->select('niftybot_user_auto_trade_settings', 's')
@@ -77,12 +115,20 @@ class AutoTradeUserService {
       return [
         'nifty_quantity' => (int) $row->nifty_quantity,
         'sensex_quantity' => (int) $row->sensex_quantity,
+        'crude_oil_quantity' => isset($row->crude_oil_quantity)
+          ? (int) $row->crude_oil_quantity
+          : self::CRUDE_OIL_LOT_STEP,
+        'gold_quantity' => isset($row->gold_quantity)
+          ? (int) $row->gold_quantity
+          : self::GOLD_LOT_STEP,
       ];
     }
 
     return [
       'nifty_quantity' => self::NIFTY_LOT_STEP,
       'sensex_quantity' => self::SENSEX_LOT_STEP,
+      'crude_oil_quantity' => self::CRUDE_OIL_LOT_STEP,
+      'gold_quantity' => self::GOLD_LOT_STEP,
     ];
   }
 
@@ -91,20 +137,36 @@ class AutoTradeUserService {
    */
   public function getQuantityForInstrument(int $uid, string $instrument): int {
     $settings = $this->getSettings($uid);
-    return strtolower($instrument) === 'sensex'
-      ? $settings['sensex_quantity']
-      : $settings['nifty_quantity'];
+    $key = $this->quantityKey($instrument);
+    return $settings[$key];
   }
 
   /**
    * Persists quantity settings after validation.
    */
-  public function saveSettings(int $uid, int $nifty_quantity, int $sensex_quantity): void {
-    if (!$this->validateQuantity('nifty', $nifty_quantity)) {
-      throw new \InvalidArgumentException('Nifty quantity must be a multiple of 65.');
-    }
-    if (!$this->validateQuantity('sensex', $sensex_quantity)) {
-      throw new \InvalidArgumentException('Sensex quantity must be a multiple of 20.');
+  public function saveSettings(
+    int $uid,
+    int $nifty_quantity,
+    int $sensex_quantity,
+    ?int $crude_oil_quantity = NULL,
+    ?int $gold_quantity = NULL,
+  ): void {
+    $current = $this->getSettings($uid);
+    $crude_oil_quantity = $crude_oil_quantity ?? $current['crude_oil_quantity'];
+    $gold_quantity = $gold_quantity ?? $current['gold_quantity'];
+
+    foreach ([
+      'nifty' => $nifty_quantity,
+      'sensex' => $sensex_quantity,
+      'crude_oil' => $crude_oil_quantity,
+      'gold' => $gold_quantity,
+    ] as $instrument => $quantity) {
+      if (!$this->validateQuantity($instrument, $quantity)) {
+        $step = $this->lotStep($instrument);
+        throw new \InvalidArgumentException(
+          ucfirst(str_replace('_', ' ', $instrument)) . " quantity must be a multiple of {$step}."
+        );
+      }
     }
 
     $now = $this->time->getRequestTime();
@@ -117,6 +179,8 @@ class AutoTradeUserService {
     $fields = [
       'nifty_quantity' => $nifty_quantity,
       'sensex_quantity' => $sensex_quantity,
+      'crude_oil_quantity' => $crude_oil_quantity,
+      'gold_quantity' => $gold_quantity,
       'updated' => $now,
     ];
 
@@ -284,7 +348,7 @@ class AutoTradeUserService {
    */
   public function activateUserAutoTrade(int $uid, string $instrument, string $mode): ?array {
     $connection = $this->brokerConnection->getConnection($uid, 'groww');
-    if (!$connection || $connection->status !== 'connected') {
+    if (!$connection || $connection->status !== BrokerConnectionService::STATUS_CONNECTED) {
       return [
         'success' => FALSE,
         'message' => 'Connect your Groww broker account first.',
@@ -293,8 +357,14 @@ class AutoTradeUserService {
 
     $vault = \Drupal::service('niftybot_core.credential_vault');
     $api_key = $vault->decrypt($connection->api_key_enc);
-    $api_secret = $vault->decrypt($connection->api_secret_enc);
-    if ($api_key === '' || $api_secret === '') {
+    $api_secret = $vault->decrypt($connection->api_secret_enc ?? '');
+    if ($api_key === '') {
+      return [
+        'success' => FALSE,
+        'message' => 'Stored broker credentials could not be loaded.',
+      ];
+    }
+    if ($api_secret === '' && !$this->brokerConnection->looksLikeAccessToken($api_key)) {
       return [
         'success' => FALSE,
         'message' => 'Stored broker credentials could not be loaded.',

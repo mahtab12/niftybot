@@ -1,0 +1,22 @@
+uuid: aab01fee-2263-4744-87fa-97ac61df7b5a
+langcode: en
+status: true
+dependencies: {  }
+id: niftybot_mobile
+name: 'niftybot:mobile'
+description: 'Access NiftyBot mobile REST API.'
+grant_types:
+  authorization_code:
+    status: true
+    description: 'Mobile authorization code flow.'
+  refresh_token:
+    status: true
+    description: 'Refresh OAuth access tokens.'
+  client_credentials:
+    status: false
+    description: 'Not used for user sessions.'
+umbrella: false
+parent: null
+granularity_id: permission
+granularity_configuration:
+  permission: 'use niftybot mobile api'

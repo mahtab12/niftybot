@@ -1,0 +1,50 @@
+{#
+/**
+ * @file
+ * Public site header with anonymous-only top navigation.
+ */
+#}
+<header class="landing-header">
+  <div class="container">
+    <nav class="navbar navbar-expand-lg landing-navbar" aria-label="{{ 'Main navigation'|t }}">
+      {% include directory ~ '/templates/includes/brand-logo.html.twig' with {
+        modifier: 'navbar-brand landing-navbar__brand',
+        logo_size: 'header',
+        link_url: front_page,
+      } %}
+
+      <div class="landing-header__actions landing-header__actions--compact d-lg-none">
+        {% if logged_in %}
+          <a href="/niftybot/dashboard" class="btn btn-primary btn-sm">{{ 'Dashboard'|t }}</a>
+        {% else %}
+          <a href="{{ path('user.login') }}" class="btn btn-outline-primary btn-sm">{{ 'Login'|t }}</a>
+          <a href="{{ path('niftybot_user.register') }}" class="btn btn-primary btn-sm">{{ 'Sign up'|t }}</a>
+        {% endif %}
+      </div>
+
+      <button class="navbar-toggler landing-navbar__toggler" type="button" data-bs-toggle="collapse" data-bs-target="#grassredPublicNav" aria-controls="grassredPublicNav" aria-expanded="false" aria-label="{{ 'Toggle navigation'|t }}">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse landing-navbar__collapse" id="grassredPublicNav">
+        {% if not logged_in and niftyoption_public_nav %}
+          <ul class="navbar-nav landing-nav">
+            {% for item in niftyoption_public_nav %}
+              <li class="nav-item">
+                <a href="{{ item.url }}" class="nav-link{{ item.active ? ' active' : '' }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.title }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <div class="landing-header__actions landing-header__actions--desktop d-none d-lg-flex">
+          {% if logged_in %}
+            <a href="/niftybot/dashboard" class="btn btn-primary">{{ 'Dashboard'|t }}</a>
+          {% else %}
+            <a href="{{ path('user.login') }}" class="btn btn-outline-primary">{{ 'Login'|t }}</a>
+            <a href="{{ path('niftybot_user.register') }}" class="btn btn-primary">{{ 'Get Started'|t }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>

@@ -45,10 +45,7 @@ class UserAutoTradeApiController extends ControllerBase {
       'access' => $access,
       'fee_summary' => $this->autoTradeUser->getFeeSummary($uid),
       'fee_history' => $this->autoTradeUser->getFeeHistory($uid, NULL, 10),
-      'lot_steps' => [
-        'nifty' => AutoTradeUserService::NIFTY_LOT_STEP,
-        'sensex' => AutoTradeUserService::SENSEX_LOT_STEP,
-      ],
+      'lot_steps' => $this->autoTradeUser->getLotSteps(),
     ]);
   }
 
@@ -64,9 +61,11 @@ class UserAutoTradeApiController extends ControllerBase {
 
     $nifty = (int) ($data['nifty_quantity'] ?? 0);
     $sensex = (int) ($data['sensex_quantity'] ?? 0);
+    $crude_oil = isset($data['crude_oil_quantity']) ? (int) $data['crude_oil_quantity'] : NULL;
+    $gold = isset($data['gold_quantity']) ? (int) $data['gold_quantity'] : NULL;
 
     try {
-      $this->autoTradeUser->saveSettings($uid, $nifty, $sensex);
+      $this->autoTradeUser->saveSettings($uid, $nifty, $sensex, $crude_oil, $gold);
     }
     catch (\InvalidArgumentException $e) {
       return new JsonResponse([
@@ -98,6 +97,22 @@ class UserAutoTradeApiController extends ControllerBase {
   }
 
   /**
+   * GET live AI suggestions for manual trade planning.
+   */
+  public function suggestions(string $instrument): JsonResponse {
+    $result = $this->brokerManager->getAutoTradeSuggestions($instrument);
+    if ($result === NULL) {
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => 'Could not load AI suggestions.',
+      ], 502);
+    }
+
+    $code = !empty($result['success']) ? 200 : 400;
+    return new JsonResponse($result, $code);
+  }
+
+  /**
    * POST activate user auto-trade.
    */
   public function activate(string $instrument, Request $request): JsonResponse {
@@ -108,10 +123,16 @@ class UserAutoTradeApiController extends ControllerBase {
 
     if ($quantity > 0) {
       $settings = $this->autoTradeUser->getSettings($uid);
-      $key = strtolower($instrument) === 'sensex' ? 'sensex_quantity' : 'nifty_quantity';
+      $key = $this->autoTradeUser->quantityKey($instrument);
       $settings[$key] = $quantity;
       try {
-        $this->autoTradeUser->saveSettings($uid, $settings['nifty_quantity'], $settings['sensex_quantity']);
+        $this->autoTradeUser->saveSettings(
+          $uid,
+          $settings['nifty_quantity'],
+          $settings['sensex_quantity'],
+          $settings['crude_oil_quantity'],
+          $settings['gold_quantity'],
+        );
       }
       catch (\InvalidArgumentException $e) {
         return new JsonResponse(['success' => FALSE, 'message' => $e->getMessage()], 400);
@@ -172,7 +193,7 @@ class UserAutoTradeApiController extends ControllerBase {
     $instrument = (string) ($data['instrument'] ?? '');
     $trade_id = (string) ($data['trade_id'] ?? '');
 
-    if ($uid <= 0 || $trade_id === '' || !in_array(strtolower($instrument), ['nifty', 'sensex'], TRUE)) {
+    if ($uid <= 0 || $trade_id === '' || !array_key_exists(strtolower($instrument), AutoTradeUserService::LOT_STEPS)) {
       throw new BadRequestHttpException('uid, instrument, and trade_id are required.');
     }
 

@@ -1,6 +1,6 @@
 name: 'NiftyBot Investment'
 type: module
-description: 'StrikeFlow Investment plans, weekly AI profit payouts, and platform trade transparency.'
+description: 'GrassRed Investment plans, weekly AI profit payouts, and platform trade transparency.'
 package: NiftyBot
 core_version_requirement: ^11
 dependencies:

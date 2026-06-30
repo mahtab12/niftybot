@@ -4,7 +4,7 @@
  * Trader profile — account overview.
  */
 #}
-{% set avatar_url = '/themes/custom/niftyoption/assets/images/user7.png' %}
+{% set avatar_url = avatar_url|default('/themes/custom/niftyoption/assets/images/user7.png') %}
 {% set kyc_label = {
   'approved': 'Verified'|t,
   'pending': 'Pending review'|t,
@@ -16,8 +16,13 @@
 <div class="niftybot-profile niftybot-dashboard">
   <div class="niftybot-profile__hero niftybot-dashboard__panel">
     <div class="niftybot-dashboard__profile-head">
-      <div class="niftybot-dashboard__avatar">
-        <img src="{{ avatar_url }}" alt="" width="64" height="64" />
+      <div class="niftybot-dashboard__avatar-wrap">
+        <div class="niftybot-dashboard__avatar">
+          <img src="{{ avatar_url }}" alt="{{ 'Your profile picture'|t }}" width="72" height="72" />
+        </div>
+        <a href="{{ path('niftybot_dashboard.main') }}" class="btn btn-sm btn-outline-primary niftybot-dashboard__avatar-change">
+          {{ 'Change photo'|t }}
+        </a>
       </div>
       <div class="niftybot-profile__hero-main">
         <p class="niftybot-profile__eyebrow mb-1">{{ 'My account'|t }}</p>

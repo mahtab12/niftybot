@@ -17,6 +17,20 @@ from app.services.broker_service import broker_service
 
 logger = logging.getLogger("niftybot.broker_credentials")
 
+_APPROVAL_TOKENS = (
+    "approve",
+    "approval",
+    "checksum",
+)
+
+
+def _approval_required(success: bool, *messages: str) -> bool:
+    if success:
+        return False
+    haystack = " ".join(m for m in messages if m).lower()
+    return any(token in haystack for token in _APPROVAL_TOKENS)
+
+
 router = APIRouter(
     prefix="/api/v1/broker",
     tags=["Broker"],
@@ -37,9 +51,16 @@ async def verify_broker_credentials(body: BrokerCredentialsVerifyRequest):
     message = "Connected successfully" if success else (
         profile.message or margin.message or "Verification failed"
     )
+    approval_required = _approval_required(
+        success,
+        message,
+        profile.message or "",
+        margin.message or "",
+    )
     return BrokerCredentialsVerifyResponse(
         success=success,
         message=message,
+        approval_required=approval_required,
         profile=profile,
         margin=margin,
     )
@@ -52,11 +73,17 @@ def _instrument_symbol_match(trading_symbol: str, instrument: str) -> bool:
         return "NIFTY" in symbol and "SENSEX" not in symbol
     if key == "sensex":
         return "SENSEX" in symbol
+    if key in ("crude_oil", "crude"):
+        return "CRUDEOIL" in symbol
+    if key == "gold":
+        return "GOLD" in symbol
     return True
 
 
 def _parse_option_type(symbol: str) -> str:
     symbol = (symbol or "").upper()
+    if symbol.endswith("FUT"):
+        return "FUT"
     if symbol.endswith("CE"):
         return "CE"
     if symbol.endswith("PE"):
@@ -101,7 +128,11 @@ async def get_credentials_order_book(body: BrokerCredentialsOrderBookRequest):
         if body.instrument and not _instrument_symbol_match(symbol, body.instrument):
             continue
         segment = str(order.get("segment") or order.get("order_segment") or "").upper()
-        if segment and segment not in ("FNO", "FO", "DERIVATIVE"):
+        allowed_segments = {"FNO", "FO", "DERIVATIVE"}
+        instrument_key = (body.instrument or "").strip().lower()
+        if instrument_key in ("crude_oil", "crude", "gold"):
+            allowed_segments.add("COMMODITY")
+        if segment and segment not in allowed_segments:
             continue
         price = order.get("average_price") or order.get("averagePrice") or order.get("price")
         try:

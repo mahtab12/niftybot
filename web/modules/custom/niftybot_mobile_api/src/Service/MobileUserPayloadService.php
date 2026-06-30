@@ -41,7 +41,7 @@ class MobileUserPayloadService {
       'kyc_status' => $this->kycStatus($uid),
       'wallet' => $this->walletSummary($uid),
       'subscription' => $this->subscriptionSummary($uid),
-      'broker' => $this->brokerConnection->getDashboardSummary($uid, 'groww'),
+      'broker' => $this->brokerConnection->attemptAutoConnect($uid, 'groww'),
     ];
   }
 
@@ -74,7 +74,7 @@ class MobileUserPayloadService {
       ],
       'wallet' => $this->walletSummary($uid),
       'subscription' => $subscription,
-      'broker' => $this->brokerConnection->getDashboardSummary($uid, 'groww'),
+      'broker' => $this->brokerConnection->attemptAutoConnect($uid, 'groww'),
       'stats' => [
         'open_positions' => $open_positions,
         'orders_today' => $orders_today,

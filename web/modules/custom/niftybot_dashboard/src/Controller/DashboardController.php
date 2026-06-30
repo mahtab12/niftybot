@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\niftybot_investment\Service\InvestmentService;
 use Drupal\niftybot_core\Service\BrokerConnectionService;
+use Drupal\niftybot_user\Service\AvatarService;
 use Drupal\niftybot_user\Service\MemberIdService;
 use Drupal\niftybot_user\Service\WalletService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,6 +26,8 @@ class DashboardController extends ControllerBase {
 
   protected BrokerConnectionService $brokerConnection;
 
+  protected AvatarService $avatarService;
+
   /**
    * Constructs the controller.
    */
@@ -33,12 +36,14 @@ class DashboardController extends ControllerBase {
     MemberIdService $member_id_service,
     WalletService $wallet_service,
     BrokerConnectionService $broker_connection,
+    AvatarService $avatar_service,
     ?InvestmentService $investment_service = NULL,
   ) {
     $this->database = $database;
     $this->memberIdService = $member_id_service;
     $this->walletService = $wallet_service;
     $this->brokerConnection = $broker_connection;
+    $this->avatarService = $avatar_service;
     $this->investmentService = $investment_service;
   }
 
@@ -55,6 +60,7 @@ class DashboardController extends ControllerBase {
       $container->get('niftybot_user.member_id_service'),
       $container->get('niftybot_user.wallet_service'),
       $container->get('niftybot_core.broker_connection'),
+      $container->get('niftybot_user.avatar_service'),
       $investment_service,
     );
   }
@@ -128,7 +134,9 @@ class DashboardController extends ControllerBase {
     $investment_principal = $fxc_investment ? (float) $fxc_investment->principal_amount : 0.0;
     $investment_profit_pending = $fxc_investment ? (float) $fxc_investment->ai_profit_pending : 0.0;
     $investment_profit_total = $fxc_investment ? (float) $fxc_investment->total_profit_earned : 0.0;
-    $broker = $this->brokerConnection->getDashboardSummary($uid, 'groww');
+    $broker = $this->brokerConnection->attemptAutoConnect($uid, 'groww');
+    $avatar_id = $this->avatarService->getUserAvatarId($user);
+    $avatar_url = $this->avatarService->getUserAvatarUrl($user);
 
     return [
       '#theme' => 'niftybot_dashboard',
@@ -137,6 +145,9 @@ class DashboardController extends ControllerBase {
       '#member_id' => $member_id,
       '#phone' => $phone,
       '#city' => $city,
+      '#avatar_id' => $avatar_id,
+      '#avatar_url' => $avatar_url,
+      '#avatar_choices' => $this->avatarService->getChoices(),
       '#kyc_status' => $kyc_status ?: 'not_submitted',
       '#subscription' => $subscription,
       '#plan' => $plan,
@@ -153,6 +164,14 @@ class DashboardController extends ControllerBase {
       '#broker' => $broker,
       '#attached' => [
         'library' => ['niftybot_dashboard/dashboard'],
+        'drupalSettings' => [
+          'niftybotAvatar' => [
+            'saveUrl' => '/niftybot/api/user/avatar',
+            'csrfToken' => \Drupal::csrfToken()->get('rest'),
+            'currentId' => $avatar_id,
+            'currentUrl' => $avatar_url,
+          ],
+        ],
       ],
     ] + WalletService::walletRenderCache($uid);
   }

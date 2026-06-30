@@ -2,7 +2,46 @@ niftybot_core.landing:
   path: '/home'
   defaults:
     _controller: '\Drupal\niftybot_core\Controller\LandingController::content'
-    _title: 'Home'
+    _title: 'GrassRed — Automated Algo Trading Portal'
+  requirements:
+    _access: 'TRUE'
+
+niftybot_core.public_features:
+  path: '/features'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\PublicMarketingController::features'
+    _title: 'Algo Trading Features'
+  requirements:
+    _access: 'TRUE'
+
+niftybot_core.public_pricing:
+  path: '/pricing'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\PublicMarketingController::pricing'
+    _title: 'Pricing & Plans'
+  requirements:
+    _access: 'TRUE'
+
+niftybot_core.public_about:
+  path: '/about'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\PublicMarketingController::about'
+    _title: 'About GrassRed'
+  requirements:
+    _access: 'TRUE'
+
+niftybot_core.public_faq:
+  path: '/faq'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\PublicMarketingController::faq'
+    _title: 'FAQ'
+  requirements:
+    _access: 'TRUE'
+
+niftybot_core.sitemap:
+  path: '/sitemap.xml'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\PublicMarketingController::sitemap'
   requirements:
     _access: 'TRUE'
 
@@ -118,6 +157,22 @@ niftybot_core.user_auto_trade_sensex:
   requirements:
     _permission: 'access niftybot auto trade'
 
+niftybot_core.user_auto_trade_crude_oil:
+  path: '/niftybot/auto-trade/crude-oil'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeController::crudeOilAutoTrade'
+    _title: 'Crude Oil Auto Trade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+
+niftybot_core.user_auto_trade_gold:
+  path: '/niftybot/auto-trade/gold'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeController::goldAutoTrade'
+    _title: 'Gold Auto Trade'
+  requirements:
+    _permission: 'access niftybot auto trade'
+
 niftybot_core.user_notifications_list:
   path: '/niftybot/notifications/list'
   defaults:
@@ -173,7 +228,16 @@ niftybot_core.user_auto_trade_api_status:
     _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::status'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
+  methods: [GET]
+
+niftybot_core.user_auto_trade_api_suggestions:
+  path: '/niftybot/api/auto-trade/{instrument}/suggestions'
+  defaults:
+    _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::suggestions'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex|crude_oil|gold
   methods: [GET]
 
 niftybot_core.user_auto_trade_api_activate:
@@ -182,7 +246,7 @@ niftybot_core.user_auto_trade_api_activate:
     _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::activate'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
   methods: [POST]
 
 niftybot_core.user_auto_trade_api_deactivate:
@@ -191,7 +255,7 @@ niftybot_core.user_auto_trade_api_deactivate:
     _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::deactivate'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
   methods: [POST]
 
 niftybot_core.user_auto_trade_api_exit:
@@ -200,7 +264,7 @@ niftybot_core.user_auto_trade_api_exit:
     _controller: '\Drupal\niftybot_core\Controller\UserAutoTradeApiController::exit'
   requirements:
     _permission: 'access niftybot auto trade'
-    instrument: nifty|sensex
+    instrument: nifty|sensex|crude_oil|gold
   methods: [POST]
 
 niftybot_core.internal_auto_trade_charge:

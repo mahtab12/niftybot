@@ -1,28 +1,24 @@
 {#
 /**
  * @file
- * StrikeFlow brand logo — icon + site name wordmark.
+ * GrassRed brand logo — full wordmark image.
  *
  * Variables:
- * - show_wordmark: Show site name text (default true).
- * - icon_only: Icon only, no wordmark (default false).
+ * - logo_size: header | auth | footer (default header)
  * - link_url: Logo link target (default front_page).
  * - modifier: Extra CSS classes on the wrapper link.
- * - icon_height: Icon height in px (default 32).
  */
 #}
-{% set brand = niftyoption_brand_name|default(site_name|default('StrikeFlow')) %}
-{% set icon_src = niftyoption_logo_icon_url|default(theme_assets_base|default('/themes/custom/niftyoption') ~ '/assets/images/logo-sm.svg?v=' ~ niftyoption_logo_version|default('1')) %}
+{% set brand = niftyoption_brand_name|default(site_name|default('GrassRed')) %}
+{% set logo_src = niftyoption_logo_url|default(theme_assets_base|default('/themes/custom/niftyoption') ~ '/assets/images/logo.png?v=' ~ niftyoption_logo_version|default('1')) %}
 {% set href = link_url|default(front_page) %}
-<a href="{{ href }}" class="niftyoption-brand-logo d-inline-flex align-items-center gap-2 text-decoration-none {{ modifier|default('') }}" aria-label="{{ brand }}">
+{% set size = logo_size|default('header') %}
+<a href="{{ href }}" class="niftyoption-brand-logo niftyoption-brand-logo--{{ size }} d-inline-flex align-items-center text-decoration-none {{ modifier|default('') }}" aria-label="{{ brand }}">
   <img
-    src="{{ icon_src }}"
-    class="niftyoption-brand-logo__icon flex-shrink-0"
-    height="{{ icon_height|default(32) }}"
-    width="{{ icon_height|default(32) }}"
-    alt=""
+    src="{{ logo_src }}"
+    class="niftyoption-brand-logo__image"
+    alt="{{ brand }}"
+    loading="eager"
+    decoding="async"
   />
-  {% if show_wordmark|default(true) and not icon_only|default(false) %}
-    <span class="niftyoption-brand-logo__text">{{ brand }}</span>
-  {% endif %}
 </a>

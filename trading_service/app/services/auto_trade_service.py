@@ -1,4 +1,4 @@
-"""Auto-trade engine for Nifty and Sensex index options."""
+"""Auto-trade engine for Nifty, Sensex options and MCX futures."""
 
 from __future__ import annotations
 
@@ -56,6 +56,7 @@ MONTH_CODES = (
 
 # Option premiums are never index-scale; guards against index LTP fallback bugs.
 MAX_OPTION_PREMIUM = 5000.0
+MAX_FUTURES_PRICE = 500_000.0
 
 
 def resolve_strike_price(
@@ -257,16 +258,67 @@ class AutoTradeService:
 
         return self.get_status()
 
-    def get_status(self, message: str = "") -> AutoTradeStatusResponse:
+    def refresh_market_signal(self) -> dict[str, Any]:
+        """Evaluate live market signal without activating auto-trade."""
         with self._lock:
+            broker = self._groww_broker()
+            self._underlying_ltp = self._fetch_index_ltp(broker)
+            if self._current_trade and self._current_trade.get("status") == "open":
+                self._last_check_at = datetime.now().isoformat(timespec="seconds")
+                return self._last_signal or {
+                    "action": "HOLD",
+                    "confidence": 0.0,
+                    "reasons": ["open_position"],
+                    "indicators": {},
+                }
+
+            signal = self._evaluate_signal(broker)
+            self._last_signal = {
+                "action": signal.action,
+                "confidence": signal.confidence,
+                "reasons": signal.reasons,
+                "indicators": signal.indicators,
+            }
+            self._last_check_at = datetime.now().isoformat(timespec="seconds")
+            maybe_insert_trade_alert(
+                self.profile.instrument_id,
+                signal.action,
+                signal.confidence,
+                self._underlying_ltp,
+                signal.reasons,
+                signal.indicators,
+            )
+            return dict(self._last_signal)
+
+    def get_status(self, message: str = "") -> AutoTradeStatusResponse:
+        acquired = self._lock.acquire(timeout=2.0)
+        if not acquired:
+            logger.debug(
+                "%s status lock busy; returning cached snapshot",
+                self.profile.instrument_id,
+            )
+            return self._build_status_response(message=message, live_refresh=False)
+        try:
+            return self._build_status_response(message=message, live_refresh=True)
+        finally:
+            self._lock.release()
+
+    def _build_status_response(
+        self,
+        message: str = "",
+        *,
+        live_refresh: bool = True,
+    ) -> AutoTradeStatusResponse:
+        has_open_trade = bool(
+            self._current_trade
+            and self._current_trade.get("status") == "open"
+        )
+        if live_refresh and (self._active or has_open_trade):
             try:
                 broker = self._groww_broker()
                 self._underlying_ltp = self._fetch_index_ltp(broker)
                 self._sync_with_broker_positions(broker)
-                if (
-                    self._current_trade
-                    and self._current_trade.get("status") == "open"
-                ):
+                if has_open_trade:
                     try:
                         self._monitor_open_trade(broker)
                     except Exception:
@@ -277,49 +329,49 @@ class AutoTradeService:
             except Exception:
                 logger.exception("Live status refresh failed")
 
-            trade = self._serialize_trade(self._current_trade)
-            db_history = get_recent_closed_trades(
-                self.profile.instrument_id, limit=10,
-            )
-            seen_ids = {t.get("trade_id") for t in db_history}
-            for t in self._trade_history[-10:]:
-                if t.get("trade_id") not in seen_ids:
-                    db_history.append(self._sanitize_history_trade(t))
-            history = [
-                self._serialize_trade(t)
-                for t in db_history[:10]
-            ]
-            signal = None
-            if self._last_signal:
-                signal = AutoTradeSignalInfo(**self._last_signal)
+        trade = self._serialize_trade(self._current_trade)
+        db_history = get_recent_closed_trades(
+            self.profile.instrument_id, limit=10,
+        )
+        seen_ids = {t.get("trade_id") for t in db_history}
+        for t in self._trade_history[-10:]:
+            if t.get("trade_id") not in seen_ids:
+                db_history.append(self._sanitize_history_trade(t))
+        history = [
+            self._serialize_trade(t)
+            for t in db_history[:10]
+        ]
+        signal = None
+        if self._last_signal:
+            signal = AutoTradeSignalInfo(**self._last_signal)
 
-            return AutoTradeStatusResponse(
-                success=True,
-                instrument=self.profile.instrument_id,
-                instrument_label=self.profile.label,
-                trade_mode=self._trade_mode,
-                active=self._active,
-                message=message or self._status_message,
-                underlying_ltp=self._underlying_ltp,
-                nifty_ltp=self._underlying_ltp,
-                last_check_at=self._last_check_at,
-                last_signal=signal,
-                current_trade=trade,
-                trade_history=history,
-                config={
-                    "trade_mode": self._trade_mode,
-                    "lot_size": self.profile.lot_size,
-                    "buy_sl_points": self.profile.buy_sl_points,
-                    "buy_target_points": self.profile.buy_target_points,
-                    "sell_sl_points": self.profile.sell_sl_points,
-                    "sell_target_points": self.profile.sell_target_points,
-                    "sell_otm_offset": self.profile.sell_otm_offset,
-                    "strike_step": self.profile.strike_step,
-                    "weekly_expiry_weekday": self.profile.weekly_expiry_weekday,
-                    "poll_seconds": settings.auto_trade_poll_seconds,
-                    "min_entry_confidence": MIN_ENTRY_CONFIDENCE,
-                },
-            )
+        return AutoTradeStatusResponse(
+            success=True,
+            instrument=self.profile.instrument_id,
+            instrument_label=self.profile.label,
+            trade_mode=self._trade_mode,
+            active=self._active,
+            message=message or self._status_message,
+            underlying_ltp=self._underlying_ltp,
+            nifty_ltp=self._underlying_ltp,
+            last_check_at=self._last_check_at,
+            last_signal=signal,
+            current_trade=trade,
+            trade_history=history,
+            config={
+                "trade_mode": self._trade_mode,
+                "lot_size": self.profile.lot_size,
+                "buy_sl_points": self.profile.buy_sl_points,
+                "buy_target_points": self.profile.buy_target_points,
+                "sell_sl_points": self.profile.sell_sl_points,
+                "sell_target_points": self.profile.sell_target_points,
+                "sell_otm_offset": self.profile.sell_otm_offset,
+                "strike_step": self.profile.strike_step,
+                "weekly_expiry_weekday": self.profile.weekly_expiry_weekday,
+                "poll_seconds": settings.auto_trade_poll_seconds,
+                "min_entry_confidence": MIN_ENTRY_CONFIDENCE,
+            },
+        )
 
     def _run_loop(self) -> None:
         while not self._stop_event.is_set():
@@ -328,6 +380,17 @@ class AutoTradeService:
             except Exception:
                 logger.exception("%s auto trade tick failed", self.profile.instrument_id)
             self._stop_event.wait(settings.auto_trade_poll_seconds)
+
+    def _is_futures_profile(self) -> bool:
+        return self.profile.trade_kind == "futures"
+
+    def _quote_segment(self) -> str:
+        return self.profile.market_segment
+
+    def _candle_segment_attr(self, groww) -> str:
+        segment = self.profile.candle_segment.upper()
+        attr = f"SEGMENT_{segment}"
+        return getattr(groww, attr, groww.SEGMENT_CASH)
 
     def _tick(self) -> None:
         broker = self._groww_broker()
@@ -421,7 +484,7 @@ class AutoTradeService:
                 exchange=getattr(
                     groww, f"EXCHANGE_{self.profile.cash_exchange}",
                 ),
-                segment=groww.SEGMENT_CASH,
+                segment=self._candle_segment_attr(groww),
                 groww_symbol=self.profile.candle_groww_symbol,
                 start_time=start.strftime("%Y-%m-%d %H:%M:%S"),
                 end_time=end.strftime("%Y-%m-%d %H:%M:%S"),
@@ -441,17 +504,17 @@ class AutoTradeService:
         oi_change: Optional[float] = None
         if fut_symbol:
             quote = broker.get_quote(
-                fut_symbol, self.profile.option_exchange, "FNO",
+                fut_symbol, self.profile.option_exchange, self._quote_segment(),
             )
             if quote.success:
                 price_change = quote.day_change
                 oi_change = quote.oi_day_change
 
-        if self._trade_mode == "sell":
+        if self._trade_mode == "sell" and not self._is_futures_profile():
             return evaluate_option_selling_signal(
                 candles, price_change, oi_change,
             )
-        chain = self._fetch_weekly_option_chain(broker)
+        chain = None if self._is_futures_profile() else self._fetch_weekly_option_chain(broker)
         return evaluate_option_buying_signal(
             candles,
             price_change,
@@ -547,6 +610,10 @@ class AutoTradeService:
         reasons: list[str],
         position_side: str = "long",
     ) -> None:
+        if self._is_futures_profile():
+            self._place_futures_entry_trade(broker, option_type, reasons, position_side)
+            return
+
         strike_offset = self._strike_offset_for_trade(option_type, position_side)
         contract = self._pick_option_contract(broker, option_type, strike_offset)
         if not contract:
@@ -702,6 +769,157 @@ class AutoTradeService:
         )
         logger.info(self._status_message)
 
+    def _place_futures_entry_trade(
+        self,
+        broker,
+        option_type: str,
+        reasons: list[str],
+        position_side: str = "long",
+    ) -> None:
+        """Enter nearest MCX futures contract (manual SL/target monitoring)."""
+        contract = self._pick_future_contract(broker)
+        if not contract:
+            self._status_message = (
+                f"Could not resolve nearest {self.profile.label} futures contract"
+            )
+            return
+
+        symbol, expiry, chain_ltp = contract
+        qty = self.profile.lot_size
+        order_id = int(time.time()) % 2_000_000_000
+        entry_txn = (
+            TransactionType.SELL if position_side == "short" else TransactionType.BUY
+        )
+        product_type = ProductType.NRML
+
+        request = PlaceOrderRequest(
+            order_id=order_id,
+            user_id=0,
+            broker=BrokerType.GROWW,
+            symbol=symbol,
+            exchange=self.profile.order_exchange,
+            transaction_type=entry_txn,
+            order_type=OrderType.MARKET,
+            product_type=product_type,
+            quantity=qty,
+        )
+        result = self._place_order(request)
+        if not result.success:
+            self._status_message = f"Entry order failed: {result.message}"
+            return
+
+        entry_price = self._fetch_future_price(broker, symbol, hint=chain_ltp)
+        if entry_price is None:
+            self._status_message = (
+                f"Order placed on {symbol} but price could not be verified — "
+                "exits disabled until price is available. Check position manually."
+            )
+            trade = {
+                "trade_id": str(uuid.uuid4())[:8],
+                "status": "open",
+                "trade_mode": self._trade_mode,
+                "position_side": position_side,
+                "option_type": "FUT",
+                "symbol": symbol,
+                "strike": None,
+                "expiry_date": expiry,
+                "quantity": qty,
+                "product_type": product_type.value,
+                "broker_order_id": result.order_id,
+                "signal_reasons": reasons,
+                "opened_at": datetime.now().isoformat(timespec="seconds"),
+                "entry_price": None,
+                "current_price": None,
+                "stop_loss": None,
+                "target": None,
+            }
+            with self._lock:
+                self._current_trade = trade
+            return
+
+        trade = {
+            "trade_id": str(uuid.uuid4())[:8],
+            "status": "open",
+            "trade_mode": self._trade_mode,
+            "position_side": position_side,
+            "option_type": "FUT",
+            "symbol": symbol,
+            "strike": None,
+            "expiry_date": expiry,
+            "quantity": qty,
+            "product_type": product_type.value,
+            "broker_order_id": result.order_id,
+            "signal_reasons": reasons,
+            "opened_at": datetime.now().isoformat(timespec="seconds"),
+        }
+        self._apply_trade_levels(trade, entry_price, position_side)
+
+        with self._lock:
+            self._current_trade = trade
+        if not self._user_broker:
+            record_id = insert_auto_trade(
+                trade, self.profile, self._underlying_ltp, self._last_signal,
+            )
+            if record_id:
+                trade["record_id"] = record_id
+            close_other_open_trades(self.profile.instrument_id, trade["trade_id"])
+        self._notify_trade_entry(trade)
+        side_label = "SHORT" if position_side == "short" else "LONG"
+        self._status_message = (
+            f"{self.profile.label} {side_label} FUT {symbol} @ {entry_price:.2f} "
+            f"(SL {trade['stop_loss']:.2f}, Target {trade['target']:.2f}) "
+            "(software-managed SL/target)"
+        )
+        logger.info(self._status_message)
+
+    def _pick_future_contract(
+        self, broker,
+    ) -> Optional[tuple[str, str, Optional[float]]]:
+        """Resolve nearest tradable futures symbol for MCX commodities."""
+        if hasattr(broker, "resolve_nearest_mcx_future"):
+            resolved = broker.resolve_nearest_mcx_future(self.profile.underlying)
+            if resolved:
+                return resolved
+
+        symbol = self._resolve_index_future_symbol(broker)
+        if not symbol:
+            return None
+        quote = broker.get_quote(
+            symbol, self.profile.option_exchange, self._quote_segment(),
+        )
+        ltp = quote.last_price if quote.success else None
+        expiry = ""
+        if len(symbol) >= 7:
+            expiry = symbol[-7:]
+        return symbol, expiry, ltp
+
+    def _fetch_future_price(
+        self,
+        broker,
+        symbol: str,
+        hint: Optional[float] = None,
+        retries: int = 5,
+        delay: float = 1.0,
+    ) -> Optional[float]:
+        if self._is_valid_futures_price(hint):
+            return float(hint)
+        for attempt in range(retries):
+            quote = broker.get_quote(
+                symbol, self.profile.option_exchange, self._quote_segment(),
+            )
+            if quote.success and self._is_valid_futures_price(quote.last_price):
+                return float(quote.last_price)
+            if attempt < retries - 1:
+                time.sleep(delay)
+        return None
+
+    @staticmethod
+    def _is_valid_futures_price(price: Optional[float]) -> bool:
+        if price is None:
+            return False
+        value = float(price)
+        return value > 0 and value <= MAX_FUTURES_PRICE
+
     def _place_oco_exit(
         self,
         symbol: str,
@@ -710,6 +928,8 @@ class AutoTradeService:
         target: float,
         position_side: str = "long",
     ) -> tuple[Optional[str], str]:
+        if self._is_futures_profile():
+            return None, "MCX futures use software-managed SL/target"
         ref_id = f"NB{int(time.time()) % 10**10}"[:12]
         close_txn = (
             TransactionType.BUY if position_side == "short" else TransactionType.SELL
@@ -964,16 +1184,17 @@ class AutoTradeService:
             logger.info(self._status_message)
 
     def _list_profile_fno_positions(self) -> list[Any]:
-        """Open FNO positions for this index only (excludes Bank Nifty, etc.)."""
+        """Open positions for this instrument (FNO or MCX commodity)."""
         result = self._get_positions()
         if not result.success:
             return []
 
         prefix = self.profile.futures_prefix.upper()
+        expected_segment = self._quote_segment().upper()
         positions: list[Any] = []
         for pos in result.positions:
-            segment = (pos.segment or "FNO").upper()
-            if segment != "FNO":
+            segment = (pos.segment or expected_segment).upper()
+            if segment != expected_segment:
                 continue
             if pos.quantity == 0:
                 continue
@@ -1023,12 +1244,15 @@ class AutoTradeService:
             return
 
         self._enrich_trade_levels(trade)
-        ltp = self._option_ltp(broker, trade["symbol"])
+        ltp = self._instrument_ltp(broker, trade["symbol"])
         if ltp is not None:
             entry = trade.get("entry_price")
-            if entry is None or not self._is_valid_option_premium(
-                float(entry), self._underlying_ltp,
-            ):
+            price_valid = (
+                self._is_valid_futures_price(float(entry))
+                if self._is_futures_profile()
+                else self._is_valid_option_premium(float(entry), self._underlying_ltp)
+            )
+            if entry is None or not price_valid:
                 return
             entry_f = float(entry)
             qty = int(trade["quantity"])
@@ -1395,20 +1619,38 @@ class AutoTradeService:
         return True
 
     def _fetch_index_ltp(self, broker) -> Optional[float]:
+        if self._is_futures_profile():
+            symbol = self._resolve_index_future_symbol(broker)
+            if symbol:
+                quote = broker.get_quote(
+                    symbol, self.profile.option_exchange, self._quote_segment(),
+                )
+                if quote.success and quote.last_price:
+                    return float(quote.last_price)
         quote = broker.get_quote(
             self.profile.underlying,
             self.profile.cash_exchange,
-            "CASH",
+            self._quote_segment() if self._is_futures_profile() else "CASH",
         )
         return quote.last_price if quote.success else None
 
+    def _instrument_ltp(self, broker, symbol: str) -> Optional[float]:
+        if self._is_futures_profile():
+            return self._fetch_future_price(broker, symbol)
+        return self._option_ltp(broker, symbol)
+
     def _option_ltp(self, broker, symbol: str) -> Optional[float]:
         quote = broker.get_quote(
-            symbol, self.profile.option_exchange, "FNO",
+            symbol, self.profile.option_exchange, self._quote_segment(),
         )
         return quote.last_price if quote.success else None
 
     def _resolve_index_future_symbol(self, broker) -> Optional[str]:
+        if self._is_futures_profile() and hasattr(broker, "resolve_nearest_mcx_future"):
+            resolved = broker.resolve_nearest_mcx_future(self.profile.underlying)
+            if resolved:
+                return resolved[0]
+
         today = datetime.now().date()
         prefix = self.profile.futures_prefix
         candidates: list[str] = []
@@ -1424,7 +1666,7 @@ class AutoTradeService:
 
         for symbol in candidates:
             quote = broker.get_quote(
-                symbol, self.profile.option_exchange, "FNO",
+                symbol, self.profile.option_exchange, self._quote_segment(),
             )
             if quote.success and quote.last_price:
                 return symbol

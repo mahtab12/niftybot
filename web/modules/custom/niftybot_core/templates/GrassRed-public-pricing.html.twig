@@ -1,0 +1,120 @@
+<section class="landing-section landing-section--hero landing-section--compact">
+  <div class="container">
+    <div class="landing-page-hero">
+      <div class="row justify-content-center">
+        <div class="col-lg-9 text-center">
+          <p class="landing-eyebrow landing-eyebrow--light">{{ 'GrassRed plans'|t }}</p>
+          <h1 class="landing-page-hero__title">{{ 'Pricing for every trading style'|t }}</h1>
+          <p class="landing-page-hero__lead">{{ 'Flexible subscriptions for automated algo trading. Upgrade anytime from your dashboard.'|t }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section landing-section--alt pb-5" id="plans">
+  <div class="container">
+    <div class="row justify-content-center g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-plan shade-primary">
+          <div class="pricing-header">
+            <h4 class="fw-lighter text-uppercase">{{ 'Starter'|t }}</h4>
+            <h1>₹4,999</h1>
+            <h5 class="fw-normal">{{ 'Per month'|t }}</h5>
+          </div>
+          <div class="pricing-body">
+            <ul class="pricing-features">
+              <li>{{ 'Nifty & Sensex auto-trade'|t }}</li>
+              <li>{{ 'Live signal dashboard'|t }}</li>
+              <li>{{ 'SL / target automation'|t }}</li>
+              <li>{{ '5 auto-trades per day'|t }}</li>
+            </ul>
+            <div class="pricing-footer">
+              <div class="d-grid">
+                <a href="{{ path('niftybot_user.register') }}" class="btn btn-light btn-lg">{{ 'Get Started'|t }}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-plan shade-green landing-pricing-plan--featured">
+          <div class="landing-pricing-badge">{{ 'Most popular'|t }}</div>
+          <div class="pricing-header">
+            <h4 class="fw-lighter text-uppercase">{{ 'Pro'|t }}</h4>
+            <h1>₹8,999</h1>
+            <h5 class="fw-normal">{{ 'Per month'|t }}</h5>
+          </div>
+          <div class="pricing-body">
+            <ul class="pricing-features">
+              <li>{{ '10 auto-trades per day'|t }}</li>
+              <li>{{ 'Everything in Starter'|t }}</li>
+              <li>{{ 'Custom trade quantity'|t }}</li>
+              <li>{{ 'Priority support'|t }}</li>
+            </ul>
+            <div class="pricing-footer">
+              <div class="d-grid">
+                <a href="{{ path('niftybot_user.register') }}" class="btn btn-light btn-lg">{{ 'Get Started'|t }}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-plan shade-blue">
+          <div class="pricing-header">
+            <h4 class="fw-lighter text-uppercase">{{ 'Elite'|t }}</h4>
+            <h1>₹14,999</h1>
+            <h5 class="fw-normal">{{ 'Per month'|t }}</h5>
+          </div>
+          <div class="pricing-body">
+            <ul class="pricing-features">
+              <li>{{ '25 auto-trades per day'|t }}</li>
+              <li>{{ 'Everything in Pro'|t }}</li>
+              <li>{{ 'Highest capital limits'|t }}</li>
+              <li>{{ 'Dedicated priority support'|t }}</li>
+            </ul>
+            <div class="pricing-footer">
+              <div class="d-grid">
+                <a href="{{ path('niftybot_user.register') }}" class="btn btn-light btn-lg">{{ 'Get Started'|t }}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="text-center text-secondary small mt-4 mb-0">
+      {{ 'Already have an account?'|t }}
+      <a href="{{ path('niftybot_subscription.plans') }}">{{ 'View plans in dashboard'|t }}</a>
+    </p>
+  </div>
+</section>
+
+<section class="landing-section">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 class="landing-section__title">{{ 'GrassRed AI investment'|t }}</h2>
+      <p class="landing-section__subtitle">{{ 'Managed algo capital tiers with weekly profit payouts and full trade transparency.'|t }}</p>
+    </div>
+    <div class="row g-3 justify-content-center">
+      <div class="col-md-4">
+        <div class="landing-stat-box box-bdr-green text-center">
+          <h3 class="text-green">₹20K+</h3>
+          <p>{{ 'Entry investment tiers'|t }}</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="landing-stat-box box-bdr-blue text-center">
+          <h3 class="text-blue">4–5%</h3>
+          <p>{{ 'Target weekly AI algo profit'|t }}</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="landing-stat-box box-bdr-yellow text-center">
+          <h3 class="text-yellow">100%</h3>
+          <p>{{ 'Platform trade transparency'|t }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

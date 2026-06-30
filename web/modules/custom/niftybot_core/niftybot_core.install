@@ -261,7 +261,7 @@ function niftybot_core_schema() {
         'length' => 32,
         'not null' => TRUE,
         'default' => 'disconnected',
-        'description' => 'connected, disconnected, or error.',
+        'description' => 'connected, pending_approval, error, or disconnected.',
       ],
       'status_message' => [
         'type' => 'varchar',
@@ -435,6 +435,18 @@ function niftybot_core_user_auto_trade_settings_schema(): array {
         'not null' => TRUE,
         'default' => 20,
       ],
+      'crude_oil_quantity' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 100,
+      ],
+      'gold_quantity' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 100,
+      ],
       'updated' => [
         'type' => 'int',
         'not null' => TRUE,
@@ -541,5 +553,31 @@ function niftybot_core_update_9004() {
     if (!$db_schema->tableExists($table)) {
       $db_schema->createTable($table, $schema[$table]);
     }
+  }
+}
+
+/**
+ * Add MCX crude oil and gold quantity columns for auto-trade.
+ */
+function niftybot_core_update_9005() {
+  $schema = niftybot_core_user_auto_trade_settings_schema();
+  $db_schema = \Drupal::database()->schema();
+  foreach (['crude_oil_quantity', 'gold_quantity'] as $column) {
+    if (!$db_schema->fieldExists('niftybot_user_auto_trade_settings', $column)) {
+      $db_schema->addField('niftybot_user_auto_trade_settings', $column, $schema['fields'][$column]);
+    }
+  }
+}
+
+/**
+ * Set crude oil default quantity to 100 (1 MCX mini lot).
+ */
+function niftybot_core_update_9006() {
+  $database = \Drupal::database();
+  if ($database->schema()->fieldExists('niftybot_user_auto_trade_settings', 'crude_oil_quantity')) {
+    $database->update('niftybot_user_auto_trade_settings')
+      ->expression('crude_oil_quantity', '100')
+      ->condition('crude_oil_quantity', 10)
+      ->execute();
   }
 }

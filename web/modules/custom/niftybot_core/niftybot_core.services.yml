@@ -1,4 +1,8 @@
 services:
+  niftybot_core.faq_content:
+    class: Drupal\niftybot_core\Service\FaqContentService
+    arguments: ['@string_translation']
+
   niftybot_core.broker_manager:
     class: Drupal\niftybot_core\Service\BrokerManager
     arguments: ['@config.factory', '@logger.factory', '@http_client']

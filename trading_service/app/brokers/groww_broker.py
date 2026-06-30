@@ -6,6 +6,11 @@ from typing import Optional
 
 import pyotp
 from growwapi import GrowwAPI
+from growwapi.groww.exceptions import (
+    GrowwAPIAuthenticationException,
+    GrowwAPIAuthorisationException,
+    GrowwAPIException,
+)
 
 from app.config import settings
 from app.market_watchlist import WATCHLIST
@@ -168,23 +173,147 @@ class GrowwBroker(BaseBroker):
     @classmethod
     def verify_credentials(cls, api_key: str, api_secret: str) -> tuple[UserProfileResponse, AvailableMarginResponse]:
         """Connect with supplied credentials and fetch profile + margin."""
+        api_key = cls._normalize_secret(api_key)
+        api_secret = cls._normalize_secret(api_secret)
+
+        if cls._looks_like_access_token(api_key):
+            return cls._verify_with_access_token(api_key)
+
+        if not api_key or not api_secret:
+            return (
+                UserProfileResponse(success=False, message="API key and secret are required."),
+                AvailableMarginResponse(success=False, message="API key and secret are required."),
+            )
+
+        try:
+            access_token = GrowwAPI.get_access_token(api_key=api_key, secret=api_secret)
+        except GrowwAPIAuthenticationException:
+            message = (
+                "Groww rejected the API key or secret. Use the API Key from "
+                "Groww Cloud → Generate API Key (not a daily access token). "
+                "Confirm the secret matches that key, then approve the key for today."
+            )
+            return (
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
+            )
+        except GrowwAPIAuthorisationException:
+            message = (
+                "Your Groww account needs an active Trading API subscription "
+                "before connecting via API."
+            )
+            return (
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
+            )
+        except GrowwAPIException as exc:
+            message = cls._format_auth_error(getattr(exc, "msg", str(exc)))
+            return (
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
+            )
+        except Exception as exc:
+            message = cls._format_auth_error(exc)
+            logger.exception("Groww credential verification failed")
+            return (
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
+            )
+
+        return cls._verify_with_access_token(access_token)
+
+    @classmethod
+    def _verify_with_access_token(cls, access_token: str) -> tuple[UserProfileResponse, AvailableMarginResponse]:
+        """Validate an access token by loading profile and margin."""
+        if not access_token:
+            message = (
+                "Groww did not return an access token. Approve your API key for today "
+                "on the Groww Cloud API Keys page, then try again."
+            )
+            return (
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
+            )
+
         broker = cls()
         try:
-            access_token = GrowwAPI.get_access_token(
-                api_key=api_key,
-                secret=api_secret,
-            )
             broker._client = GrowwAPI(access_token)
             broker._connected = True
             profile = broker.get_user_profile()
+            if not profile.success:
+                profile.message = cls._format_auth_error(profile.message)
+                return profile, AvailableMarginResponse(
+                    success=False,
+                    message=profile.message,
+                )
+
             margin = broker.get_available_margin()
+            if not margin.success:
+                margin.message = margin.message or "Connected, but margin details could not be loaded."
             return profile, margin
+        except GrowwAPIAuthenticationException:
+            message = (
+                "Groww access token is invalid or expired. If you pasted a daily token, "
+                "generate a fresh one on Groww Cloud, or use API Key + Secret instead."
+            )
+            return (
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
+            )
+        except GrowwAPIAuthorisationException:
+            message = (
+                "Your Groww account needs an active Trading API subscription "
+                "before connecting via API."
+            )
+            return (
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
+            )
         except Exception as exc:
+            message = cls._format_auth_error(exc)
             logger.exception("Groww credential verification failed")
             return (
-                UserProfileResponse(success=False, message=str(exc)),
-                AvailableMarginResponse(success=False, message=str(exc)),
+                UserProfileResponse(success=False, message=message),
+                AvailableMarginResponse(success=False, message=message),
             )
+
+    @staticmethod
+    def _looks_like_access_token(value: str) -> bool:
+        """Detect JWT-style Groww access tokens pasted into the API key field."""
+        token = (value or "").strip()
+        return token.startswith("eyJ") and token.count(".") >= 2
+
+    @staticmethod
+    def _normalize_secret(value: str) -> str:
+        value = (value or "").strip()
+        value = value.replace("\r", "").replace("\n", "").replace("\t", "")
+        return value.strip('"').strip("'")
+
+    @staticmethod
+    def _format_auth_error(exc: Exception | str) -> str:
+        text = str(exc).strip()
+        if hasattr(exc, "msg") and getattr(exc, "msg", ""):
+            text = str(getattr(exc, "msg")).strip()
+        lower = text.lower()
+        if not text:
+            return (
+                "Could not verify Groww credentials. Confirm your API key and secret, "
+                "then approve the key for today on the Groww Cloud API Keys page."
+            )
+        if "subscription" in lower or "authorisation" in lower or "authorization" in lower:
+            return "Your Groww account needs an active Trading API subscription before connecting."
+        if any(token in lower for token in ("authentication failed", "api token", "expired", "is invalid")):
+            return (
+                "Groww could not authenticate these credentials. Use the permanent API Key "
+                "from Groww Cloud → Generate API Key (not a one-day access token). "
+                "Confirm the secret matches that key."
+            )
+        if any(token in lower for token in ("checksum", "approval", "unauthorized", "401", "403", "access token")):
+            return (
+                "Groww rejected these credentials. Confirm your API key and secret, "
+                "then approve the key for today on the Groww Cloud API Keys page."
+            )
+        return text
 
     @classmethod
     def get_order_book_for_credentials(cls, api_key: str, api_secret: str) -> list[dict]:
@@ -1129,7 +1258,6 @@ class GrowwBroker(BaseBroker):
 
     def _mcx_future_quote(self, underlying: str) -> MarketWatchItem:
         """Best-effort quote for nearest MCX futures contract."""
-        groww = self._client
         item = MarketWatchItem(
             id=underlying.lower(),
             label=underlying,
@@ -1137,6 +1265,24 @@ class GrowwBroker(BaseBroker):
             exchange="MCX",
             segment="COMMODITY",
         )
+
+        resolved = self.resolve_nearest_mcx_future(underlying)
+        if resolved is None:
+            item.message = "Price unavailable (MCX market hours or symbol)"
+            return item
+
+        symbol, expiry, ltp = resolved
+        item.symbol = symbol
+        item.last_price = ltp
+        item.message = f"Nearest future ({expiry})" if expiry else "Nearest future"
+        return item
+
+    def resolve_nearest_mcx_future(
+        self, underlying: str,
+    ) -> tuple[str, str, float | None] | None:
+        """Return (trading_symbol, expiry_date, ltp) for the nearest MCX future."""
+        self._ensure_connected()
+        groww = self._client
 
         try:
             for expiry in self._future_expiries("MCX", underlying)[:3]:
@@ -1168,16 +1314,16 @@ class GrowwBroker(BaseBroker):
                             )
                             price = next(iter(ltp_data.values()), None) if ltp_data else None
                             if price is not None:
-                                item.last_price = float(price)
-                                item.message = f"Nearest future ({expiry})"
-                                return item
+                                return ts, expiry, float(price)
                         except Exception:
-                            continue
+                            pass
+                        quote = self.get_quote(ts, "MCX", "COMMODITY")
+                        if quote.success and quote.last_price:
+                            return ts, expiry, float(quote.last_price)
         except Exception as e:
-            logger.warning("MCX quote failed for %s: %s", underlying, e)
+            logger.warning("MCX future resolve failed for %s: %s", underlying, e)
 
-        item.message = "Price unavailable (MCX market hours or symbol)"
-        return item
+        return None
 
     def get_market_dashboard(self) -> MarketDashboardResponse:
         """Fetch live quotes for the configured market watchlist."""

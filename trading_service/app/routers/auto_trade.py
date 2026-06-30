@@ -1,9 +1,11 @@
 """Auto-trade REST API for Nifty and Sensex."""
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.auto_trade_profiles import VALID_INSTRUMENTS
 from app.middleware.auth import verify_api_key
 from app.models.schemas import (
     AutoTradeActionResponse,
@@ -23,15 +25,13 @@ router = APIRouter(
     dependencies=[Depends(verify_api_key)],
 )
 
-VALID_INSTRUMENTS = frozenset({"nifty", "sensex"})
-
 
 def _service(instrument: str):
     key = instrument.strip().lower()
     if key not in VALID_INSTRUMENTS:
         raise HTTPException(
             status_code=400,
-            detail="instrument must be nifty or sensex",
+            detail=f"instrument must be one of: {', '.join(sorted(VALID_INSTRUMENTS))}",
         )
     return get_auto_trade_service(key)
 
@@ -39,7 +39,40 @@ def _service(instrument: str):
 @router.get("/{instrument}/status", response_model=AutoTradeStatusResponse)
 async def get_auto_trade_status(instrument: str):
     """Current auto-trade state for Nifty or Sensex."""
-    return _service(instrument).get_status()
+    return await asyncio.to_thread(_service(instrument).get_status)
+
+
+@router.get("/{instrument}/suggestions")
+async def get_auto_trade_suggestions(instrument: str):
+    """Live AI-style market suggestion without activating auto-trade."""
+    from app.auto_trade_profiles import get_profile
+    from app.services.signal_suggestions import build_ai_suggestion, signal_is_stale
+
+    service = _service(instrument)
+    if signal_is_stale(service._last_check_at) or not service._last_signal:
+        await asyncio.to_thread(service.refresh_market_signal)
+    profile = get_profile(instrument)
+    signal = service._last_signal or {
+        "action": "HOLD",
+        "confidence": 0.0,
+        "reasons": [],
+        "indicators": {},
+    }
+    suggestion = build_ai_suggestion(signal, profile)
+    signal_info = None
+    if service._last_signal:
+        from app.models.schemas import AutoTradeSignalInfo
+        signal_info = AutoTradeSignalInfo(**service._last_signal).model_dump()
+    return {
+        "success": True,
+        "instrument": profile.instrument_id,
+        "instrument_label": profile.label,
+        "underlying_ltp": service._underlying_ltp,
+        "last_check_at": service._last_check_at,
+        "last_signal": signal_info,
+        "suggestion": suggestion,
+        "ai_suggestion": suggestion,
+    }
 
 
 @router.get("/{instrument}/history", response_model=AutoTradeHistoryResponse)
@@ -49,7 +82,7 @@ async def get_auto_trade_history(instrument: str, limit: int = 50):
     if key not in VALID_INSTRUMENTS:
         raise HTTPException(
             status_code=400,
-            detail="instrument must be nifty or sensex",
+            detail=f"instrument must be one of: {', '.join(sorted(VALID_INSTRUMENTS))}",
         )
     rows = get_recent_closed_trades(key, limit=limit)
     trades = [

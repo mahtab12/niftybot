@@ -53,15 +53,45 @@
   </div>
 
   {% if not broker_connected %}
-    <div class="alert alert-warning niftybot-auto-trade-user__alert" role="alert">
-      <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
-      {{ 'Connect your Groww broker account before activating auto-trade.'|t }}
-      <a href="{{ path('niftybot_core.user_broker') }}" class="alert-link">{{ 'Broker connection'|t }}</a>
-    </div>
+    {% if broker_summary.pending_approval|default(false) %}
+      <div class="alert alert-warning niftybot-auto-trade-user__alert" role="alert">
+        <i class="bi bi-hourglass-split me-2" aria-hidden="true"></i>
+        {{ 'Your Groww API credentials are saved. Activate your API key on Groww for today — auto-trade will be available once connected.'|t }}
+        <a href="{{ broker_summary.groww_api_keys_url }}" class="alert-link" target="_blank" rel="noopener noreferrer">{{ 'Open Groww API Keys'|t }}</a>
+        · <a href="{{ path('niftybot_core.user_broker') }}" class="alert-link">{{ 'Broker connection'|t }}</a>
+      </div>
+    {% else %}
+      <div class="alert alert-warning niftybot-auto-trade-user__alert" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+        {{ 'Connect your Groww broker account before activating auto-trade.'|t }}
+        <a href="{{ path('niftybot_core.user_broker') }}" class="alert-link">{{ 'Broker connection'|t }}</a>
+      </div>
+    {% endif %}
   {% else %}
     <div class="alert alert-info niftybot-auto-trade-user__alert" role="status">
       <i class="bi bi-bell me-2" aria-hidden="true"></i>
       {{ 'Buy/sell setup alerts appear in the header bell. You can place trades manually on Groww when you receive a notification.'|t }}
+    </div>
+
+    <div class="card niftybot-auto-trade-user__ai-suggestions mb-4" id="niftybot-auto-trade-ai-panel" hidden>
+      <div class="card-body">
+        <div class="niftybot-auto-trade-user__ai-head">
+          <div class="niftybot-auto-trade-user__ai-badge">
+            <i class="bi bi-stars" aria-hidden="true"></i>
+            {{ 'AI suggestion'|t }}
+          </div>
+          <span class="niftybot-auto-trade-user__ai-updated" id="niftybot-auto-trade-ai-updated"></span>
+        </div>
+        <h3 class="niftybot-auto-trade-user__ai-title" id="niftybot-auto-trade-ai-headline">{{ 'Scanning market…'|t }}</h3>
+        <p class="niftybot-auto-trade-user__ai-summary" id="niftybot-auto-trade-ai-summary"></p>
+        <div class="niftybot-auto-trade-user__ai-meta">
+          <span class="niftybot-auto-trade-user__ai-confidence" id="niftybot-auto-trade-ai-confidence"></span>
+          <span class="niftybot-auto-trade-user__ai-bias" id="niftybot-auto-trade-ai-bias"></span>
+        </div>
+        <p class="niftybot-auto-trade-user__ai-hint" id="niftybot-auto-trade-ai-hint"></p>
+        <ul class="niftybot-auto-trade-user__ai-factors" id="niftybot-auto-trade-ai-factors"></ul>
+        <p class="niftybot-auto-trade-user__ai-disclaimer" id="niftybot-auto-trade-ai-disclaimer"></p>
+      </div>
     </div>
   {% endif %}
 
@@ -135,22 +165,36 @@
             <label class="niftybot-auto-trade-user__mode-option">
               <input type="radio" name="niftybot-auto-trade-mode" value="buy"{% if status.trade_mode|default('buy') == 'buy' %} checked{% endif %}{% if status.active %} disabled{% endif %}>
               <span>
-                <strong>{{ 'Option buying'|t }}</strong>
-                <small>{{ 'ATM CE / PE entry'|t }}</small>
+                {% if instrument in ['crude_oil', 'gold'] %}
+                  <strong>{{ 'Long futures'|t }}</strong>
+                  <small>{{ 'Buy MCX mini futures on bullish signal'|t }}</small>
+                {% else %}
+                  <strong>{{ 'Option buying'|t }}</strong>
+                  <small>{{ 'ATM CE / PE entry'|t }}</small>
+                {% endif %}
               </span>
             </label>
             <label class="niftybot-auto-trade-user__mode-option">
               <input type="radio" name="niftybot-auto-trade-mode" value="sell"{% if status.trade_mode|default('buy') == 'sell' %} checked{% endif %}{% if status.active %} disabled{% endif %}>
               <span>
-                <strong>{{ 'Option selling'|t }}</strong>
-                <small>{{ 'OTM ±3 strikes'|t }}</small>
+                {% if instrument in ['crude_oil', 'gold'] %}
+                  <strong>{{ 'Short futures'|t }}</strong>
+                  <small>{{ 'Sell MCX mini futures on bearish signal'|t }}</small>
+                {% else %}
+                  <strong>{{ 'Option selling'|t }}</strong>
+                  <small>{{ 'OTM ±3 strikes'|t }}</small>
+                {% endif %}
               </span>
             </label>
           </div>
         </fieldset>
 
         <p class="niftybot-auto-trade-user__mode-help">
-          {{ 'One trade per activation. Stop-loss and target are placed as OCO smart orders on Groww.'|t }}
+          {% if instrument in ['crude_oil', 'gold'] %}
+            {{ 'One trade per activation. Stop-loss and target are monitored automatically on MCX futures (no OCO on commodities).'|t }}
+          {% else %}
+            {{ 'One trade per activation. Stop-loss and target are placed as OCO smart orders on Groww.'|t }}
+          {% endif %}
         </p>
 
         <div class="niftybot-auto-trade-user__actions">

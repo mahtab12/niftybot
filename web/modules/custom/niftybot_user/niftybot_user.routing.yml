@@ -104,3 +104,12 @@ niftybot_user.wallet_withdrawal_review:
   requirements:
     _permission: 'administer wallets'
     transaction_id: \d+
+
+niftybot_user.api_avatar_save:
+  path: '/niftybot/api/user/avatar'
+  defaults:
+    _controller: '\Drupal\niftybot_user\Controller\UserAvatarApiController::save'
+  requirements:
+    _permission: 'access niftybot platform'
+    _csrf_request_header_token: 'TRUE'
+  methods: [POST]

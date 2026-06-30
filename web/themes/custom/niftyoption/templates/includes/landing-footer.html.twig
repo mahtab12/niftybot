@@ -1,0 +1,52 @@
+{#
+/**
+ * @file
+ * Public site footer.
+ */
+#}
+{% set brand_name = niftyoption_brand_name|default(site_name|default('GrassRed')) %}
+<footer class="landing-footer py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        {% include directory ~ '/templates/includes/brand-logo.html.twig' with {
+          modifier: 'mb-3',
+          logo_size: 'footer',
+          link_url: front_page,
+        } %}
+        <p class="text-secondary small mb-3">{{ 'GrassRed is an automated algorithmic trading portal for Indian index options — Nifty, Sensex, and AI-managed investment strategies.'|t }}</p>
+        <p class="text-secondary small mb-0">
+          <a href="https://grassred.com" rel="noopener">grassred.com</a>
+        </p>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="mb-3">{{ 'Product'|t }}</h6>
+        <ul class="list-unstyled small mb-0 landing-footer__links">
+          <li class="mb-2"><a href="{{ path('niftybot_core.public_features') }}">{{ 'Features'|t }}</a></li>
+          <li class="mb-2"><a href="{{ path('niftybot_core.public_pricing') }}">{{ 'Pricing'|t }}</a></li>
+          <li class="mb-2"><a href="{{ path('niftybot_core.public_about') }}">{{ 'About'|t }}</a></li>
+          <li class="mb-2"><a href="{{ path('niftybot_core.public_faq') }}">{{ 'FAQ'|t }}</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="mb-3">{{ 'Platform'|t }}</h6>
+        <ul class="list-unstyled small mb-0 landing-footer__links">
+          {% if logged_in %}
+            <li class="mb-2"><a href="/niftybot/dashboard">{{ 'Dashboard'|t }}</a></li>
+          {% endif %}
+          <li class="mb-2"><a href="{{ path('niftybot_core.public_pricing') }}">{{ 'Plans'|t }}</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-4">
+        <h6 class="mb-3">{{ 'Get started'|t }}</h6>
+        <p class="text-secondary small">{{ 'Create your free account and explore automated algo trading on GrassRed.'|t }}</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{{ path('niftybot_user.register') }}" class="btn btn-primary btn-sm">{{ 'Create Account'|t }}</a>
+          <a href="{{ path('user.login') }}" class="btn btn-outline-primary btn-sm">{{ 'Login'|t }}</a>
+        </div>
+      </div>
+    </div>
+    <hr class="my-4" />
+    <p class="text-center text-secondary small mb-0">© {{ "now"|date("Y") }} {{ brand_name }}. {{ 'All rights reserved.'|t }}</p>
+  </div>
+</footer>

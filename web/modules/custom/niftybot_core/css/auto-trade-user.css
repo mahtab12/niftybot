@@ -754,6 +754,112 @@
   font-weight: 600;
 }
 
+.niftybot-auto-trade-user__ai-suggestions {
+  border: 1px solid #d7e3f5;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f8fbff 0%, #f3f8f4 100%);
+  box-shadow: 0 10px 28px rgba(21, 83, 163, 0.08);
+}
+
+.niftybot-auto-trade-user__ai-suggestions--bullish {
+  border-color: #b9e0c3;
+  background: linear-gradient(135deg, #f4fbf6 0%, #eef8ff 100%);
+}
+
+.niftybot-auto-trade-user__ai-suggestions--bearish {
+  border-color: #f0c4c4;
+  background: linear-gradient(135deg, #fff7f7 0%, #f7f8ff 100%);
+}
+
+.niftybot-auto-trade-user__ai-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-auto-trade-user__ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1553a3;
+  background: rgba(21, 83, 163, 0.08);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+}
+
+.niftybot-auto-trade-user__ai-updated {
+  font-size: 0.75rem;
+  color: #707f93;
+}
+
+.niftybot-auto-trade-user__ai-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #17181c;
+}
+
+.niftybot-auto-trade-user__ai-summary,
+.niftybot-auto-trade-user__ai-hint {
+  margin: 0 0 0.75rem;
+  color: #4a5568;
+  line-height: 1.55;
+}
+
+.niftybot-auto-trade-user__ai-hint {
+  font-weight: 500;
+  color: #1553a3;
+}
+
+.niftybot-auto-trade-user__ai-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.niftybot-auto-trade-user__ai-confidence,
+.niftybot-auto-trade-user__ai-bias {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  background: #fff;
+  border: 1px solid #d7e0eb;
+  color: #34424e;
+}
+
+.niftybot-auto-trade-user__ai-suggestions--high .niftybot-auto-trade-user__ai-confidence {
+  border-color: #9fd4ad;
+  color: #1e6b3a;
+  background: #f2fbf4;
+}
+
+.niftybot-auto-trade-user__ai-factors {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  color: #4a5568;
+  font-size: 0.875rem;
+}
+
+.niftybot-auto-trade-user__ai-factors li {
+  margin-bottom: 0.25rem;
+}
+
+.niftybot-auto-trade-user__ai-disclaimer {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #707f93;
+}
+
 @media (max-width: 767.98px) {
   .niftybot-auto-trade-overview__hero .card-body,
   .niftybot-auto-trade-overview__card .card-body,

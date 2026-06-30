@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.user.user.field_avatar_id
     - field.field.user.user.field_city
     - field.field.user.user.field_full_name
     - field.field.user.user.field_mobile_number
@@ -52,4 +53,5 @@ content:
       preview_image_style: thumbnail
     third_party_settings: {  }
 hidden:
+  field_avatar_id: true
   field_city: true

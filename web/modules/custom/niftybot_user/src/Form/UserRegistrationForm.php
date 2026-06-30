@@ -198,7 +198,7 @@ class UserRegistrationForm extends FormBase {
     _user_mail_notify('register_no_approval_required', $account);
     user_login_finalize($account);
 
-    $this->messenger()->addStatus($this->t('Welcome to NiftyBot! Your member ID is @id. Please complete KYC verification to start trading.', [
+    $this->messenger()->addStatus($this->t('Welcome to NiftyBot! Your member ID is @id. ₹2,500 trading credit has been added to your wallet. Please complete KYC verification to start trading.', [
       '@id' => $member_id,
     ]));
     $form_state->setRedirect('niftybot_user.kyc_submit');

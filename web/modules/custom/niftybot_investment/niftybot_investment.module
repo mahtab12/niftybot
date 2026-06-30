@@ -124,7 +124,7 @@ function template_preprocess_niftybot_platform_trades(array &$variables): void {
  */
 function niftybot_investment_help(string $route_name, RouteMatchInterface $route_match): ?string {
   if ($route_name === 'help.page.niftybot_investment') {
-    return '<p>' . t('StrikeFlow Investment plans with weekly AI algo profit and platform trade transparency.') . '</p>';
+    return '<p>' . t('GrassRed Investment plans with weekly AI algo profit and platform trade transparency.') . '</p>';
   }
   return NULL;
 }

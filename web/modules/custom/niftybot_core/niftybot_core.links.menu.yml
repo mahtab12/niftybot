@@ -136,3 +136,17 @@ niftybot_core.user_auto_trade_sensex_menu:
   parent: niftybot_core.user_auto_trade_menu
   menu_name: dashboard-menu
   weight: 1
+
+niftybot_core.user_auto_trade_crude_oil_menu:
+  title: 'Crude Oil'
+  route_name: niftybot_core.user_auto_trade_crude_oil
+  parent: niftybot_core.user_auto_trade_menu
+  menu_name: dashboard-menu
+  weight: 2
+
+niftybot_core.user_auto_trade_gold_menu:
+  title: 'Gold'
+  route_name: niftybot_core.user_auto_trade_gold
+  parent: niftybot_core.user_auto_trade_menu
+  menu_name: dashboard-menu
+  weight: 3

@@ -135,6 +135,43 @@ function niftybot_core_theme($existing, $type, $theme, $path) {
       ],
       'template' => 'niftybot-faq',
     ],
+    'niftybot_public_features' => [
+      'variables' => [],
+      'template' => 'niftybot-public-features',
+    ],
+    'niftybot_public_pricing' => [
+      'variables' => [],
+      'template' => 'niftybot-public-pricing',
+    ],
+    'niftybot_public_about' => [
+      'variables' => [],
+      'template' => 'niftybot-public-about',
+    ],
+    'niftybot_public_faq' => [
+      'variables' => [
+        'faq_sections' => [],
+      ],
+      'template' => 'niftybot-public-faq',
+    ],
+    // Legacy theme hook IDs — keep registry stable after rebrand refactors.
+    'grassred_public_features' => [
+      'variables' => [],
+      'template' => 'niftybot-public-features',
+    ],
+    'grassred_public_pricing' => [
+      'variables' => [],
+      'template' => 'niftybot-public-pricing',
+    ],
+    'grassred_public_about' => [
+      'variables' => [],
+      'template' => 'niftybot-public-about',
+    ],
+    'grassred_public_faq' => [
+      'variables' => [
+        'faq_sections' => [],
+      ],
+      'template' => 'niftybot-public-faq',
+    ],
   ];
 }
 
@@ -159,4 +196,33 @@ function niftybot_core_user_login_dashboard_redirect(array &$form, FormStateInte
   }
 
   $form_state->setRedirect('niftybot_dashboard.main');
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function niftybot_core_page_attachments_alter(array &$attachments): void {
+  if (!_niftybot_core_attach_google_analytics()) {
+    return;
+  }
+
+  $attachments['#attached']['library'][] = 'niftybot_core/google_analytics';
+  $attachments['#attached']['drupalSettings']['niftybotCore']['googleAnalyticsId'] = 'G-CQ6J9HS2E4';
+}
+
+/**
+ * Whether Google Analytics should load on the current request.
+ */
+function _niftybot_core_attach_google_analytics(): bool {
+  $path = \Drupal::service('path.current')->getPath();
+  if (str_starts_with($path, '/admin')) {
+    return FALSE;
+  }
+
+  $route = \Drupal::routeMatch()->getRouteObject();
+  if ($route && \Drupal::service('router.admin_context')->isAdminRoute($route)) {
+    return FALSE;
+  }
+
+  return TRUE;
 }

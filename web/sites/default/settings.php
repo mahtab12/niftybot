@@ -886,15 +886,15 @@ if (file_exists(__DIR__ . "/settings.niftybot.php")) {
 }
 
 
-$databases['default']['default'] = array (
-  'database' => 'niftybot',
-  'username' => 'niftyuser',
-  'password' => 'StrongPassword123!',
-  'prefix' => '',
-  'host' => 'localhost',
-  'port' => '3306',
-  'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
-  'driver' => 'mysql',
-);
+// $databases['default']['default'] = array (
+//   'database' => 'niftybot',
+//   'username' => 'niftyuser',
+//   'password' => 'StrongPassword123!',
+//   'prefix' => '',
+//   'host' => 'localhost',
+//   'port' => '3306',
+//   'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+//   'driver' => 'mysql',
+// );
 
-$settings['hash_salt'] = 'niftybot-super-secret-random-string-123456789';
+// $settings['hash_salt'] = 'niftybot-super-secret-random-string-123456789';

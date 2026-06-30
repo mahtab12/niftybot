@@ -1,7 +1,7 @@
 {#
 /**
  * @file
- * StrikeFlow Investment dashboard — AI algo profit summary.
+ * GrassRed Investment dashboard — AI algo profit summary.
  */
 #}
 <div class="niftybot-investment-page niftybot-dashboard">
@@ -15,7 +15,7 @@
               <i class="bi bi-graph-up-arrow"></i>
             </div>
             <div>
-              <p class="niftybot-investment-page__hero-label mb-2">{{ 'StrikeFlow Investment'|t }}</p>
+              <p class="niftybot-investment-page__hero-label mb-2">{{ 'GrassRed Investment'|t }}</p>
               {% if has_active %}
                 <h2 class="niftybot-investment-page__hero-title mb-1">{{ investment.name }}</h2>
                 <p class="niftybot-investment-page__hero-hint mb-0">
@@ -24,7 +24,7 @@
               {% else %}
                 <h2 class="niftybot-investment-page__hero-title mb-1">{{ 'AI-powered capital growth'|t }}</h2>
                 <p class="niftybot-investment-page__hero-hint mb-0">
-                  {{ 'Invest in StrikeFlow — institutional-grade algo trading on Nifty with weekly AI profit payouts and full trade transparency.'|t }}
+                  {{ 'Invest in GrassRed — institutional-grade algo trading on Nifty with weekly AI profit payouts and full trade transparency.'|t }}
                 </p>
               {% endif %}
             </div>
@@ -69,7 +69,7 @@
     <div class="card-body">
       <h3 class="niftybot-investment-page__algo-title">
         <i class="bi bi-cpu" aria-hidden="true"></i>
-        {{ 'How StrikeFlow algo trading works'|t }}
+        {{ 'How GrassRed algo trading works'|t }}
       </h3>
       <div class="niftybot-investment-page__algo-grid">
         <div class="niftybot-investment-page__algo-item">
@@ -99,7 +99,7 @@
         </div>
         <h3 class="h5 mb-2">{{ 'No active investment yet'|t }}</h3>
         <p class="text-secondary mb-3">
-          {{ 'Choose a StrikeFlow plan, fund your wallet, and let our AI algo strategies work for you — target 4–5% weekly profit.'|t }}
+          {{ 'Choose a GrassRed plan, fund your wallet, and let our AI algo strategies work for you — target 4–5% weekly profit.'|t }}
         </p>
         <a href="{{ path('niftybot_investment.plans') }}" class="btn btn-primary">
           {{ 'Choose a plan'|t }}

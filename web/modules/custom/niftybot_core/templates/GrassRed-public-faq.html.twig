@@ -1,0 +1,44 @@
+<section class="landing-section landing-section--hero landing-section--compact">
+  <div class="container">
+    <div class="landing-page-hero">
+      <div class="row justify-content-center">
+        <div class="col-lg-9 text-center">
+          <p class="landing-eyebrow landing-eyebrow--light">{{ 'Help centre'|t }}</p>
+          <h1 class="landing-page-hero__title">{{ 'Frequently asked questions'|t }}</h1>
+          <p class="landing-page-hero__lead">{{ 'Everything you need to know about GrassRed — the automated algo trading portal at grassred.com.'|t }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section landing-section--alt pb-5">
+  <div class="container container--narrow">
+    {% for section in faq_sections %}
+      <div class="landing-faq-section mb-4">
+        <h2 class="landing-faq-section__title">{{ section.title }}</h2>
+        <div class="accordion landing-faq-accordion" id="faq-accordion-{{ section.id }}">
+          {% for item in section.items %}
+            {% set item_id = section.id ~ '-' ~ loop.index %}
+            <div class="accordion-item">
+              <h3 class="accordion-header" id="faq-heading-{{ item_id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-collapse-{{ item_id }}" aria-expanded="false" aria-controls="faq-collapse-{{ item_id }}">
+                  {{ item.question }}
+                </button>
+              </h3>
+              <div id="faq-collapse-{{ item_id }}" class="accordion-collapse collapse" aria-labelledby="faq-heading-{{ item_id }}" data-bs-parent="#faq-accordion-{{ section.id }}">
+                <div class="accordion-body">{{ item.answer }}</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="landing-cta mt-5">
+      <h2>{{ 'Still have questions?'|t }}</h2>
+      <p>{{ 'Create a free GrassRed account and reach our support team from your dashboard.'|t }}</p>
+      <a href="{{ path('niftybot_user.register') }}" class="btn btn-success btn-lg px-4">{{ 'Get Started'|t }}</a>
+    </div>
+  </div>
+</section>

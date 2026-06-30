@@ -5,3 +5,6 @@ services:
   niftybot_user.member_id_service:
     class: Drupal\niftybot_user\Service\MemberIdService
     arguments: ['@database', '@state', '@lock', '@config.factory']
+  niftybot_user.avatar_service:
+    class: Drupal\niftybot_user\Service\AvatarService
+    arguments: ['@extension.list.theme']

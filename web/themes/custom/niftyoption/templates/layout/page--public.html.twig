@@ -1,0 +1,15 @@
+{#
+/**
+ * @file
+ * Public marketing pages — shared header, content, footer.
+ */
+#}
+<div class="landing-page">
+  {% include directory ~ '/templates/includes/landing-header.html.twig' %}
+
+  <main id="main-content">
+    {{ page.content }}
+  </main>
+
+  {% include directory ~ '/templates/includes/landing-footer.html.twig' %}
+</div>

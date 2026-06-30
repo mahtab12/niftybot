@@ -33,8 +33,31 @@ function _niftyoption_auth_routes(): array {
  * Whether the current request is the public landing / front page.
  */
 function _niftyoption_is_landing_page(?string $route = NULL): bool {
+  return _niftyoption_is_public_marketing_page($route);
+}
+
+/**
+ * Public marketing routes (landing layout, anonymous nav, SEO).
+ *
+ * @return string[]
+ */
+function _niftyoption_public_marketing_routes(): array {
+  return [
+    '<front>',
+    'niftybot_core.landing',
+    'niftybot_core.public_features',
+    'niftybot_core.public_pricing',
+    'niftybot_core.public_about',
+    'niftybot_core.public_faq',
+  ];
+}
+
+/**
+ * Whether the current request uses the public marketing shell.
+ */
+function _niftyoption_is_public_marketing_page(?string $route = NULL): bool {
   $route ??= \Drupal::routeMatch()->getRouteName();
-  if ($route === '<front>' || $route === 'niftybot_core.landing') {
+  if (in_array($route, _niftyoption_public_marketing_routes(), TRUE)) {
     return TRUE;
   }
   try {
@@ -43,6 +66,156 @@ function _niftyoption_is_landing_page(?string $route = NULL): bool {
   catch (\Exception) {
     return FALSE;
   }
+}
+
+/**
+ * Anonymous-only top navigation links for public pages.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function _niftyoption_build_public_nav(?string $route = NULL): array {
+  $route ??= \Drupal::routeMatch()->getRouteName();
+  $links = [
+    ['route' => 'niftybot_core.landing', 'title' => t('Home')],
+    ['route' => 'niftybot_core.public_features', 'title' => t('Features')],
+    ['route' => 'niftybot_core.public_pricing', 'title' => t('Pricing')],
+    ['route' => 'niftybot_core.public_about', 'title' => t('About')],
+    ['route' => 'niftybot_core.public_faq', 'title' => t('FAQ')],
+  ];
+
+  $items = [];
+  foreach ($links as $link) {
+    $route_name = $link['route'];
+    $active = $route === $route_name || ($route === '<front>' && $route_name === 'niftybot_core.landing');
+    $items[] = [
+      'title' => $link['title'],
+      'url' => Url::fromRoute($route_name)->toString(),
+      'active' => $active,
+    ];
+  }
+  return $items;
+}
+
+/**
+ * SEO meta tags for public marketing pages.
+ *
+ * @return array<string, string>
+ */
+function _niftyoption_seo_meta(?string $route = NULL): array {
+  $route ??= \Drupal::routeMatch()->getRouteName();
+  $brand = [];
+  _niftyoption_apply_brand_variables($brand);
+  $site_name = $brand['niftyoption_brand_name'] ?? 'GrassRed';
+  $base = 'https://grassred.com';
+
+  $pages = [
+    'niftybot_core.landing' => [
+      'title' => 'GrassRed — Automated Algo Trading Portal | Nifty & Sensex',
+      'description' => 'GrassRed is an automated algorithmic trading portal for Indian index options. AI-driven Nifty & Sensex auto-trade, investment plans, and full transparency at grassred.com.',
+      'keywords' => 'GrassRed, grassred, grassred.com, algo trading, algorithmic trading, automated trading, nifty options, sensex trading, AI trading India',
+    ],
+    '<front>' => [
+      'title' => 'GrassRed — Automated Algo Trading Portal | Nifty & Sensex',
+      'description' => 'GrassRed is an automated algorithmic trading portal for Indian index options. AI-driven Nifty & Sensex auto-trade, investment plans, and full transparency at grassred.com.',
+      'keywords' => 'GrassRed, grassred, grassred.com, algo trading, algorithmic trading, automated trading, nifty options, sensex trading, AI trading India',
+    ],
+    'niftybot_core.public_features' => [
+      'title' => 'Algo Trading Features | GrassRed',
+      'description' => 'Explore GrassRed algo trading features — AI engine, multi-layer signals, auto-trade execution, broker integration, and secure wallet on grassred.com.',
+      'keywords' => 'GrassRed features, grassred features, algo trading features, automated nifty trading, AI trading signals',
+    ],
+    'niftybot_core.public_pricing' => [
+      'title' => 'Pricing & Plans | GrassRed Algo Trading',
+      'description' => 'GrassRed subscription plans for automated algo trading. Starter, Pro, and Elite tiers plus AI investment options at grassred.com.',
+      'keywords' => 'GrassRed pricing, grassred pricing, algo trading plans, nifty auto trade subscription',
+    ],
+    'niftybot_core.public_about' => [
+      'title' => 'About GrassRed — Automated Algo Trading Portal',
+      'description' => 'Learn about GrassRed — an automated algorithmic trading portal built for Indian F&O traders. Mission, technology, and transparency at grassred.com.',
+      'keywords' => 'about GrassRed, about grassred, grassred company, algorithmic trading portal India',
+    ],
+    'niftybot_core.public_faq' => [
+      'title' => 'FAQ | GrassRed Algo Trading Portal',
+      'description' => 'Frequently asked questions about GrassRed automated algo trading, subscriptions, KYC, wallet, and AI investment at grassred.com.',
+      'keywords' => 'GrassRed FAQ, grassred FAQ, algo trading help, GrassRed support',
+    ],
+  ];
+
+  $meta = $pages[$route] ?? [
+    'title' => $site_name,
+    'description' => 'GrassRed — automated algorithmic trading portal at grassred.com',
+    'keywords' => 'GrassRed, grassred, algo trading, grassred.com',
+  ];
+
+  $path = match ($route) {
+    'niftybot_core.public_features' => '/features',
+    'niftybot_core.public_pricing' => '/pricing',
+    'niftybot_core.public_about' => '/about',
+    'niftybot_core.public_faq' => '/faq',
+    default => '/home',
+  };
+
+  $meta['canonical'] = $base . $path;
+  $meta['og_image'] = ($brand['theme_assets_base'] ?? '') . '/assets/images/logo.png';
+  return $meta;
+}
+
+/**
+ * Attaches SEO meta tags to the page head.
+ */
+function _niftyoption_attach_seo(array &$attachments, ?string $route = NULL): void {
+  $meta = _niftyoption_seo_meta($route);
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'meta', '#attributes' => ['name' => 'description', 'content' => $meta['description']]],
+    'grassred_description',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'meta', '#attributes' => ['name' => 'keywords', 'content' => $meta['keywords']]],
+    'grassred_keywords',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'link', '#attributes' => ['rel' => 'canonical', 'href' => $meta['canonical']]],
+    'grassred_canonical',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'meta', '#attributes' => ['property' => 'og:title', 'content' => $meta['title']]],
+    'grassred_og_title',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'meta', '#attributes' => ['property' => 'og:description', 'content' => $meta['description']]],
+    'grassred_og_description',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'meta', '#attributes' => ['property' => 'og:url', 'content' => $meta['canonical']]],
+    'grassred_og_url',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'meta', '#attributes' => ['property' => 'og:site_name', 'content' => 'GrassRed']],
+    'grassred_og_site',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    ['#tag' => 'meta', '#attributes' => ['property' => 'og:type', 'content' => 'website']],
+    'grassred_og_type',
+  ];
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => ['type' => 'application/ld+json'],
+      '#value' => json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => 'GrassRed',
+        'url' => 'https://grassred.com',
+        'description' => $meta['description'],
+        'potentialAction' => [
+          '@type' => 'SearchAction',
+          'target' => 'https://grassred.com/faq?q={search_term_string}',
+          'query-input' => 'required name=search_term_string',
+        ],
+      ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+    ],
+    'grassred_jsonld',
+  ];
 }
 
 /**
@@ -60,7 +233,7 @@ function _niftyoption_apply_brand_variables(array &$variables): void {
 
   $site_name = $variables['site_name'];
   if ($site_name === '' || $site_name === 'Drush Site-Install') {
-    $variables['niftyoption_brand_name'] = 'StrikeFlow';
+    $variables['niftyoption_brand_name'] = 'GrassRed';
   }
   else {
     $variables['niftyoption_brand_name'] = $site_name;
@@ -69,9 +242,10 @@ function _niftyoption_apply_brand_variables(array &$variables): void {
   $asset_version = _niftyoption_asset_version();
   $variables['niftyoption_logo_version'] = $asset_version;
   $base = $variables['theme_assets_base'];
-  $variables['niftyoption_logo_icon_url'] = $base . '/assets/images/logo-sm.svg?v=' . $asset_version;
+  $variables['niftyoption_logo_url'] = $base . '/assets/images/logo.png?v=' . $asset_version;
+  $variables['niftyoption_logo_icon_url'] = $variables['niftyoption_logo_url'];
   $variables['niftyoption_favicon_url'] = $base . '/favicon.ico?v=' . $asset_version;
-  $variables['niftyoption_favicon_svg_url'] = $base . '/assets/images/favicon.svg?v=' . $asset_version;
+  $variables['niftyoption_favicon_svg_url'] = $base . '/assets/images/favicon-32x32.png?v=' . $asset_version;
   $variables['niftyoption_favicon_ico_url'] = $base . '/favicon.ico?v=' . $asset_version;
   $variables['niftyoption_favicon_png_32_url'] = $base . '/assets/images/favicon-32x32.png?v=' . $asset_version;
   $variables['niftyoption_apple_touch_icon_url'] = $base . '/assets/images/apple-touch-icon.png?v=' . $asset_version;
@@ -88,9 +262,9 @@ function _niftyoption_asset_version(): string {
 
   $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
   $candidates = [
-    $theme_path . '/assets/images/logo-sm.svg',
+    $theme_path . '/assets/images/logo.png',
     $theme_path . '/favicon.ico',
-    $theme_path . '/assets/images/favicon.svg',
+    $theme_path . '/assets/images/favicon-32x32.png',
   ];
 
   $mtime = 0;
@@ -113,7 +287,7 @@ function _niftyoption_logo_version(): string {
 }
 
 /**
- * Attaches StrikeFlow favicon link tags and removes the default Drupal icon.
+ * Attaches GrassRed favicon link tags and removes the default Drupal icon.
  */
 function _niftyoption_attach_favicon(array &$variables): void {
   if (!empty($variables['#attached']['html_head_link'])) {
@@ -129,23 +303,8 @@ function _niftyoption_attach_favicon(array &$variables): void {
   $variables['#attached']['html_head_link'][] = [
     [
       'rel' => 'icon',
-      'href' => $variables['niftyoption_favicon_svg_url'],
-      'type' => 'image/svg+xml',
-    ],
-  ];
-  $variables['#attached']['html_head_link'][] = [
-    [
-      'rel' => 'icon',
       'href' => $variables['niftyoption_favicon_ico_url'],
       'sizes' => 'any',
-    ],
-  ];
-  $variables['#attached']['html_head_link'][] = [
-    [
-      'rel' => 'icon',
-      'type' => 'image/png',
-      'sizes' => '32x32',
-      'href' => $variables['niftyoption_favicon_png_32_url'],
     ],
   ];
   $variables['#attached']['html_head_link'][] = [
@@ -207,6 +366,11 @@ function niftyoption_page_attachments_alter(array &$attachments): void {
     $attachments['#attached']['html_head_link'] ?? [],
     $brand['#attached']['html_head_link'] ?? []
   );
+
+  $route = \Drupal::routeMatch()->getRouteName();
+  if (_niftyoption_is_public_marketing_page($route)) {
+    _niftyoption_attach_seo($attachments, $route);
+  }
 }
 
 /**
@@ -217,9 +381,11 @@ function niftyoption_preprocess_page(array &$variables): void {
   if ($account->isAuthenticated()) {
     $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
     $variables['niftyoption_user_name'] = $user ? niftybot_user_display_name($user) : $account->getDisplayName();
+    $variables['niftyoption_user_avatar_url'] = niftybot_user_avatar_url($user);
   }
   else {
     $variables['niftyoption_user_name'] = '';
+    $variables['niftyoption_user_avatar_url'] = niftybot_user_avatar_url();
   }
 
   _niftyoption_apply_brand_variables($variables);
@@ -264,6 +430,8 @@ function niftyoption_preprocess_page(array &$variables): void {
     'niftybot_core.user_auto_trade',
     'niftybot_core.user_auto_trade_nifty',
     'niftybot_core.user_auto_trade_sensex',
+    'niftybot_core.user_auto_trade_crude_oil',
+    'niftybot_core.user_auto_trade_gold',
     'niftybot_subscription.subscribe',
   ];
   if (in_array($route, $hide_title_routes, TRUE)) {
@@ -281,6 +449,21 @@ function niftyoption_preprocess_page(array &$variables): void {
   }
   else {
     $variables['niftyoption_dashboard_menu'] = [];
+  }
+
+  $variables['niftyoption_public_nav'] = [];
+  if (!$account->isAuthenticated() && $is_landing) {
+    $variables['niftyoption_public_nav'] = _niftyoption_build_public_nav($route);
+  }
+
+  $public_marketing_routes = [
+    'niftybot_core.public_features',
+    'niftybot_core.public_pricing',
+    'niftybot_core.public_about',
+    'niftybot_core.public_faq',
+  ];
+  if (in_array($route, $public_marketing_routes, TRUE)) {
+    $variables['title'] = '';
   }
 }
 
@@ -366,6 +549,8 @@ function _niftyoption_menu_icon_map(): array {
     'niftybot_core.user_auto_trade' => 'bi-robot',
     'niftybot_core.user_auto_trade_nifty' => 'bi-graph-up',
     'niftybot_core.user_auto_trade_sensex' => 'bi-bar-chart-line',
+    'niftybot_core.user_auto_trade_crude_oil' => 'bi-droplet-half',
+    'niftybot_core.user_auto_trade_gold' => 'bi-gem',
     'niftybot_core.user_broker' => 'bi-plug',
     'niftybot_core.market' => 'bi-graph-up',
     'niftybot_core.portfolio' => 'bi-briefcase',
@@ -815,8 +1000,16 @@ function niftyoption_form_user_register_form_alter(array &$form, FormStateInterf
  */
 function niftyoption_theme_suggestions_page_alter(array &$suggestions, array $variables): void {
   $route = \Drupal::routeMatch()->getRouteName();
-  if (_niftyoption_is_landing_page($route)) {
+  if ($route === 'niftybot_core.landing' || $route === '<front>') {
     $suggestions[] = 'page__front';
+  }
+  elseif (in_array($route, [
+    'niftybot_core.public_features',
+    'niftybot_core.public_pricing',
+    'niftybot_core.public_about',
+    'niftybot_core.public_faq',
+  ], TRUE)) {
+    $suggestions[] = 'page__public';
   }
 
   if ($route === 'user.login') {
@@ -870,6 +1063,11 @@ function _niftyoption_route_requires_login(?string $route): bool {
     'user.pass',
     'niftybot_user.register',
     'niftybot_core.landing',
+    'niftybot_core.public_features',
+    'niftybot_core.public_pricing',
+    'niftybot_core.public_about',
+    'niftybot_core.public_faq',
+    'niftybot_core.sitemap',
     '<front>',
     'system.404',
   ];
@@ -898,6 +1096,11 @@ function _niftyoption_path_requires_login(string $path): bool {
   $public_paths = [
     '/niftybot/register',
     '/home',
+    '/features',
+    '/pricing',
+    '/about',
+    '/faq',
+    '/sitemap.xml',
     '/user/login',
     '/user/register',
     '/user/password',

@@ -1,0 +1,21 @@
+uuid: 3b1172d6-4ec9-428a-9572-1968930dab7f
+langcode: en
+status: true
+dependencies:
+  module:
+    - user
+id: user.field_avatar_id
+field_name: field_avatar_id
+entity_type: user
+type: string
+settings:
+  max_length: 2
+  case_sensitive: false
+  is_ascii: true
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

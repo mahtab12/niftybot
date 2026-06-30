@@ -17,6 +17,16 @@ class WalletService {
   public const DEMO_UPI_ID = 'mahtab.afridi@ybl';
 
   /**
+   * Trading credit granted to new accounts on signup.
+   */
+  public const SIGNUP_BONUS_AMOUNT = 2500.0;
+
+  /**
+   * Payment method key for signup bonus ledger entries.
+   */
+  public const SIGNUP_BONUS_PAYMENT_METHOD = 'signup_bonus';
+
+  /**
    * Cache tag for the admin deposit verification list.
    */
   public const DEPOSITS_LIST_CACHE_TAG = 'niftybot_wallet_deposits';
@@ -139,6 +149,41 @@ class WalletService {
    */
   public function getAvailableBalance(int $uid): float {
     return max(0, $this->getWalletBalance($uid) - $this->getPendingWithdrawalTotal($uid));
+  }
+
+  /**
+   * Whether the signup trading credit has already been granted.
+   */
+  public function hasSignupBonus(int $uid): bool {
+    if ($uid <= 0) {
+      return FALSE;
+    }
+
+    return (bool) $this->database->select('niftybot_wallet_transactions', 'wt')
+      ->fields('wt', ['transaction_id'])
+      ->condition('uid', $uid)
+      ->condition('payment_method', self::SIGNUP_BONUS_PAYMENT_METHOD)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+  }
+
+  /**
+   * Grants the one-time signup trading credit to a new account.
+   */
+  public function grantSignupBonus(int $uid): bool {
+    if ($uid <= 0 || $this->hasSignupBonus($uid)) {
+      return FALSE;
+    }
+
+    $this->creditBalance(
+      $uid,
+      self::SIGNUP_BONUS_AMOUNT,
+      self::SIGNUP_BONUS_PAYMENT_METHOD,
+      'Welcome bonus — ₹2,500 trading credit on signup',
+    );
+
+    return TRUE;
   }
 
   /**
@@ -436,7 +481,7 @@ class WalletService {
         $query->condition('type', 'withdrawal');
         $or = $query->orConditionGroup()
           ->condition('payment_method', ['fxc_investment', 'subscription'], 'IN')
-          ->condition('notes', '%StrikeFlow Investment%', 'LIKE')
+          ->condition('notes', '%GrassRed Investment%', 'LIKE')
           ->condition('notes', '%FXC Global investment%', 'LIKE');
         $subscription_wallet = $query->andConditionGroup()
           ->condition('payment_method', 'wallet')
@@ -448,12 +493,14 @@ class WalletService {
       case 'withdrawal':
         $query->condition('type', 'withdrawal');
         $query->condition('payment_method', ['fxc_investment', 'subscription', 'algo_trade'], 'NOT IN');
-        $query->condition('notes', '%StrikeFlow Investment%', 'NOT LIKE');
+        $query->condition('notes', '%GrassRed Investment%', 'NOT LIKE');
         $query->condition('notes', '%FXC Global investment%', 'NOT LIKE');
-        $subscription_wallet = $query->andConditionGroup()
-          ->condition('payment_method', 'wallet')
-          ->condition('notes', 'Subscription:%', 'LIKE');
-        $query->condition($subscription_wallet, NULL, 'NOT');
+        // NOT (wallet + subscription note) — Drupal cannot negate an AND group directly.
+        $exclude_subscription_wallet = $query->orConditionGroup()
+          ->condition('payment_method', 'wallet', '<>')
+          ->condition('notes', 'Subscription:%', 'NOT LIKE')
+          ->isNull('notes');
+        $query->condition($exclude_subscription_wallet);
         break;
     }
   }
@@ -484,7 +531,7 @@ class WalletService {
       return TRUE;
     }
 
-    return str_contains($notes, 'StrikeFlow Investment')
+    return str_contains($notes, 'GrassRed Investment')
       || str_contains($notes, 'FXC Global investment');
   }
 
@@ -541,6 +588,7 @@ class WalletService {
       'algo_trade' => (string) t('Algo trade fee'),
       'subscription' => (string) t('Subscription'),
       'fxc_investment' => (string) t('Investment'),
+      'signup_bonus' => (string) t('Signup bonus'),
       default => ucwords(str_replace('_', ' ', $payment_method)),
     };
   }

@@ -68,6 +68,30 @@ class UserAutoTradeController extends AutoTradeController {
   }
 
   /**
+   * Crude oil MCX auto-trade for traders.
+   */
+  public function crudeOilAutoTrade() {
+    return $this->buildUserPage(
+      'crude_oil',
+      $this->t('Crude Oil Auto Trade'),
+      $this->t('Crude Oil Mini LTP'),
+      $this->t('Automated MCX crude oil mini futures via our AI algo engine. Set your quantity (multiples of 100). Subscribe monthly or pay ₹100 per executed trade from your wallet.'),
+    );
+  }
+
+  /**
+   * Gold MCX auto-trade for traders.
+   */
+  public function goldAutoTrade() {
+    return $this->buildUserPage(
+      'gold',
+      $this->t('Gold Auto Trade'),
+      $this->t('Gold Mini LTP'),
+      $this->t('Automated MCX gold mini futures via our AI algo engine. Set your quantity (multiples of 100). Subscribe monthly or pay ₹100 per executed trade from your wallet.'),
+    );
+  }
+
+  /**
    * Builds a user auto-trade page with broker gate messaging.
    */
   protected function buildUserPage(
@@ -80,11 +104,9 @@ class UserAutoTradeController extends AutoTradeController {
     $lot_step = $this->autoTradeUser->lotStep($instrument);
     $settings = $this->autoTradeUser->getSettings($uid);
     $access = $this->autoTradeUser->getAccessInfo($uid);
-    $quantity = $instrument === 'sensex'
-      ? $settings['sensex_quantity']
-      : $settings['nifty_quantity'];
+    $quantity = $this->autoTradeUser->getQuantityForInstrument($uid, $instrument);
 
-    $build = parent::buildPage($instrument, $page_title, $index_label, $intro);
+    $build = parent::buildPage($instrument, $page_title, $index_label, $intro, FALSE);
     $build['#theme'] = 'niftybot_auto_trade_user';
     $build['#lot_size'] = $lot_step;
     $build['#lot_step'] = $lot_step;
@@ -101,19 +123,14 @@ class UserAutoTradeController extends AutoTradeController {
     $build['#broker_connected'] = !empty($summary['connected']);
     $build['#broker_summary'] = $summary;
     $build['#is_user'] = TRUE;
-    $build['#user_trade_history'] = $broker_connection->getUserTradeHistory($uid, $instrument, 15);
+    // Loaded asynchronously by the browser — avoids blocking page render on Groww.
+    $build['#user_trade_history'] = [];
 
     if (is_array($build['#status'])) {
       $build['#status']['trade_history'] = [];
     }
 
-    if ($this->brokerManager->hasApiKey()) {
-      $user_status = $this->brokerManager->getUserAutoTradeStatus($uid, $instrument);
-      if (is_array($user_status)) {
-        $build['#status'] = $user_status;
-        $build['#status_success'] = !empty($user_status['success']);
-      }
-    }
+    // Live status and AI suggestions load via JS polling (/niftybot/api/auto-trade/.../status).
 
     if (isset($build['#attached']['library'])) {
       $build['#attached']['library'] = array_values(array_diff(
@@ -127,12 +144,12 @@ class UserAutoTradeController extends AutoTradeController {
       'instrument' => $instrument,
       'isUser' => TRUE,
       'useDrupalApi' => TRUE,
+      'brokerConnected' => !empty($summary['connected']),
       'apiBase' => '/niftybot/api/auto-trade',
       'csrfToken' => \Drupal::csrfToken()->get('rest'),
       'lotStep' => $lot_step,
       'quantity' => $quantity,
-      'niftyQuantity' => $settings['nifty_quantity'],
-      'sensexQuantity' => $settings['sensex_quantity'],
+      'quantities' => $settings,
       'access' => $access,
     ];
 

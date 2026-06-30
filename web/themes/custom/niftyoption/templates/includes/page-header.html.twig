@@ -4,14 +4,13 @@
  * Top header bar for the dashboard.
  */
 #}
-{% set brand_name = niftyoption_brand_name|default(site_name|default('StrikeFlow')) %}
+{% set brand_name = niftyoption_brand_name|default(site_name|default('GrassRed')) %}
 {% set assets_base = theme_assets_base|default('/' ~ directory) %}
 <div class="page-header">
   <div class="brand">
     {% include directory ~ '/templates/includes/brand-logo.html.twig' with {
       modifier: 'logo',
-      icon_height: 32,
-      show_wordmark: true,
+      logo_size: 'header',
       link_url: path('niftybot_dashboard.main'),
     } %}
   </div>
@@ -60,7 +59,7 @@
         <a href="#" id="userSettings" class="user-settings" data-bs-toggle="dropdown" aria-expanded="false">
           <span class="user-name d-none d-md-block">{{ niftyoption_user_name|default('Account'|t) }}</span>
           <span class="avatar">
-            <img src="{{ assets_base }}/assets/images/user7.png" alt="{{ 'User avatar'|t }}" />
+            <img src="{{ niftyoption_user_avatar_url|default(assets_base ~ '/assets/images/user7.png') }}" alt="{{ 'User avatar'|t }}" />
             <span class="status online"></span>
           </span>
         </a>

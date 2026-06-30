@@ -46,7 +46,7 @@ class PlatformTradeForm extends FormBase {
     $defaults = [
       'trade_date' => date('Y-m-d'),
       'symbol' => 'NIFTY',
-      'strategy' => 'StrikeFlow Investment',
+      'strategy' => 'GrassRed Investment',
       'transaction_type' => 'BUY',
       'quantity' => 1,
       'entry_price' => '',

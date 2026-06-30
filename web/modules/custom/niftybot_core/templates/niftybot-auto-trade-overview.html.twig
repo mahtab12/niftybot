@@ -8,7 +8,7 @@
         <div>
           <h2 class="niftybot-auto-trade-overview__title">{{ 'Auto Trade'|t }}</h2>
           <p class="niftybot-auto-trade-overview__lead">
-            {{ 'Automated index options trading powered by OI buildup, EMA trend, RSI momentum, and option-chain analysis. Pick Nifty or Sensex and activate when signals align.'|t }}
+            {{ 'Automated trading powered by OI buildup, EMA trend, RSI momentum, and live market analysis. Trade Nifty & Sensex options or MCX crude oil & gold futures.'|t }}
           </p>
         </div>
       </div>
@@ -22,15 +22,15 @@
         <ol class="niftybot-auto-trade-overview__steps">
           <li>{{ 'Connect your personal Groww account (API key & secret).'|t }}</li>
           <li>{{ 'Subscribe monthly, or keep at least ₹100 in your wallet for pay-per-trade (₹100 per executed algo trade).'|t }}</li>
-          <li>{{ 'Set your trade quantity — Nifty in multiples of 65, Sensex in multiples of 20.'|t }}</li>
-          <li>{{ 'Open Nifty or Sensex auto-trade and choose buying or selling mode.'|t }}</li>
+          <li>{{ 'Set your trade quantity per instrument (see lot sizes on each page).'|t }}</li>
+          <li>{{ 'Open an auto-trade page and choose buying or selling mode.'|t }}</li>
           <li>{{ 'Activate — the engine monitors live signals and places one trade per session.'|t }}</li>
-          <li>{{ 'Stop-loss and target are managed via OCO smart orders on your broker.'|t }}</li>
+          <li>{{ 'Stop-loss and target are managed via OCO on index options, or software monitoring on MCX futures.'|t }}</li>
         </ol>
 
         <h4 class="mt-4 mb-2">{{ 'Before you start'|t }}</h4>
         <ul class="niftybot-auto-trade-overview__list">
-          <li>{{ 'Keep sufficient F&O margin in your Groww account.'|t }}</li>
+          <li>{{ 'Keep sufficient margin in your Groww account (F&O for indices, MCX for commodities).'|t }}</li>
           <li>{{ 'Auto-trade runs during market hours only.'|t }}</li>
           <li>{{ 'You can deactivate or exit an open position anytime.'|t }}</li>
         </ul>
@@ -45,8 +45,8 @@
 
     <div class="card niftybot-auto-trade-overview__card">
       <div class="card-body">
-        <h3>{{ 'Choose an index'|t }}</h3>
-        <p class="text-secondary small mb-0">{{ 'Each index has its own lot size, expiry calendar, and live dashboard.'|t }}</p>
+        <h3>{{ 'Index options (NSE / BSE)'|t }}</h3>
+        <p class="text-secondary small mb-3">{{ 'Weekly index options with OCO smart orders on Groww.'|t }}</p>
 
         <a href="{{ path('niftybot_core.user_auto_trade_nifty') }}" class="niftybot-auto-trade-overview__link-card">
           <span class="niftybot-auto-trade-overview__link-icon" aria-hidden="true"><i class="bi bi-graph-up"></i></span>
@@ -62,6 +62,27 @@
           <span>
             <strong>{{ 'Sensex Auto Trade'|t }}</strong>
             <small>{{ 'Sensex options · 1 lot (20 qty)'|t }}</small>
+          </span>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </a>
+
+        <h3 class="mt-4">{{ 'MCX commodities'|t }}</h3>
+        <p class="text-secondary small mb-3">{{ 'Crude oil and gold mini futures on MCX.'|t }}</p>
+
+        <a href="{{ path('niftybot_core.user_auto_trade_crude_oil') }}" class="niftybot-auto-trade-overview__link-card">
+          <span class="niftybot-auto-trade-overview__link-icon" aria-hidden="true"><i class="bi bi-droplet-half"></i></span>
+          <span>
+            <strong>{{ 'Crude Oil Auto Trade'|t }}</strong>
+            <small>{{ 'CRUDEOILM futures · 1 lot (100 qty)'|t }}</small>
+          </span>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </a>
+
+        <a href="{{ path('niftybot_core.user_auto_trade_gold') }}" class="niftybot-auto-trade-overview__link-card">
+          <span class="niftybot-auto-trade-overview__link-icon" aria-hidden="true"><i class="bi bi-gem"></i></span>
+          <span>
+            <strong>{{ 'Gold Auto Trade'|t }}</strong>
+            <small>{{ 'GOLDM futures · 1 lot (100 qty)'|t }}</small>
           </span>
           <i class="bi bi-chevron-right" aria-hidden="true"></i>
         </a>

@@ -1,12 +1,15 @@
 """Per-user auto-trade REST API."""
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
+from app.auto_trade_profiles import LOT_STEPS, VALID_INSTRUMENTS
 from app.middleware.auth import verify_api_key
 from app.models.schemas import AutoTradeActionResponse, AutoTradeStatusResponse
+from app.services.signal_suggestions import build_ai_suggestion
 from app.services.user_auto_trade_registry import (
     activate_user_session,
     deactivate_user_session,
@@ -22,7 +25,17 @@ router = APIRouter(
     dependencies=[Depends(verify_api_key)],
 )
 
-VALID_INSTRUMENTS = frozenset({"nifty", "sensex"})
+
+def _attach_ai_suggestion(payload: dict, service, instrument: str) -> dict:
+    if service._active or not service._last_signal:
+        return payload
+    from app.auto_trade_profiles import get_profile
+
+    payload["ai_suggestion"] = build_ai_suggestion(
+        service._last_signal,
+        get_profile(instrument),
+    )
+    return payload
 
 
 class UserAutoTradeActivateBody(BaseModel):
@@ -44,27 +57,51 @@ class UserAutoTradeActivateBody(BaseModel):
 
 
 def _lot_step(instrument: str) -> int:
-    return 20 if instrument == "sensex" else 65
+    return LOT_STEPS.get(instrument, LOT_STEPS["nifty"])
 
 
-@router.get("/{uid}/{instrument}/status", response_model=AutoTradeStatusResponse)
+def _user_auto_trade_status_sync(uid: int, key: str) -> dict:
+    service = get_user_service(uid, key)
+    if not service:
+        from app.auto_trade_profiles import get_profile
+        from app.services.auto_trade_service import get_auto_trade_service
+        from app.services.signal_suggestions import build_ai_suggestion
+
+        profile = get_profile(key)
+        scanner = get_auto_trade_service(key)
+        scan_status = scanner.get_status()
+        signal_info = scan_status.last_signal.model_dump() if scan_status.last_signal else None
+        suggestion = None
+        if scanner._last_signal:
+            suggestion = build_ai_suggestion(scanner._last_signal, profile)
+        return {
+            "success": True,
+            "instrument": key,
+            "instrument_label": profile.label,
+            "active": False,
+            "message": "User auto trade is inactive",
+            "underlying_ltp": scan_status.underlying_ltp,
+            "nifty_ltp": scan_status.underlying_ltp,
+            "last_check_at": scan_status.last_check_at,
+            "last_signal": signal_info,
+            "trade_mode": "buy",
+            "current_trade": None,
+            "trade_history": [],
+            "config": scan_status.config,
+            "ai_suggestion": suggestion,
+        }
+
+    status = service.get_status()
+    payload = status.model_dump()
+    return _attach_ai_suggestion(payload, service, key)
+
+
+@router.get("/{uid}/{instrument}/status")
 async def user_auto_trade_status(uid: int, instrument: str):
     key = instrument.strip().lower()
     if key not in VALID_INSTRUMENTS:
-        raise HTTPException(status_code=400, detail="instrument must be nifty or sensex")
-    service = get_user_service(uid, key)
-    if not service:
-        profile = __import__(
-            "app.auto_trade_profiles", fromlist=["get_profile"]
-        ).get_profile(key)
-        return AutoTradeStatusResponse(
-            success=True,
-            instrument=key,
-            instrument_label=profile.label,
-            active=False,
-            message="User auto trade is inactive",
-        )
-    return service.get_status()
+        raise HTTPException(status_code=400, detail=f"instrument must be one of: {', '.join(sorted(VALID_INSTRUMENTS))}")
+    return await asyncio.to_thread(_user_auto_trade_status_sync, uid, key)
 
 
 @router.post("/{uid}/{instrument}/activate", response_model=AutoTradeActionResponse)
@@ -75,7 +112,7 @@ async def user_auto_trade_activate(
 ):
     key = instrument.strip().lower()
     if key not in VALID_INSTRUMENTS:
-        raise HTTPException(status_code=400, detail="instrument must be nifty or sensex")
+        raise HTTPException(status_code=400, detail=f"instrument must be one of: {', '.join(sorted(VALID_INSTRUMENTS))}")
 
     step = _lot_step(key)
     if body.quantity < step or body.quantity % step != 0:

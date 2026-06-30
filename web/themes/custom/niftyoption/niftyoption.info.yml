@@ -1,6 +1,6 @@
 name: NiftyOption
 type: theme
-description: 'StrikeFlow frontend theme — landing, login, and dashboard layouts.'
+description: 'GrassRed frontend theme — landing, login, and dashboard layouts.'
 core_version_requirement: ^10.3 || ^11.0
 base theme: false
 

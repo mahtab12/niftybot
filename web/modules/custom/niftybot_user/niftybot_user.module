@@ -77,6 +77,8 @@ function niftybot_user_theme($existing, $type, $theme, $path) {
         'wallet_balance' => 0,
         'subscription' => NULL,
         'member_id' => NULL,
+        'avatar_url' => '',
+        'avatar_id' => '1',
       ],
       'template' => 'niftybot-user-profile',
     ],
@@ -173,6 +175,21 @@ function niftybot_user_profile_field_value(\Drupal\user\UserInterface $account, 
 
   $value = trim((string) $account->get($field_name)->value);
   return $value !== '' ? $value : NULL;
+}
+
+/**
+ * Returns the avatar image URL for a user account.
+ */
+function niftybot_user_avatar_url(?\Drupal\user\UserInterface $account = NULL): string {
+  /** @var \Drupal\niftybot_user\Service\AvatarService $avatar_service */
+  $avatar_service = \Drupal::service('niftybot_user.avatar_service');
+  if (!$account) {
+    $account = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
+  }
+  if (!$account) {
+    return $avatar_service->getAvatarUrl(NULL);
+  }
+  return $avatar_service->getUserAvatarUrl($account);
 }
 
 /**
@@ -325,6 +342,10 @@ function niftybot_user_user_insert($account) {
     ])
     ->execute();
 
+  /** @var \Drupal\niftybot_user\Service\WalletService $wallet_service */
+  $wallet_service = \Drupal::service('niftybot_user.wallet_service');
+  $wallet_service->grantSignupBonus((int) $account->id());
+
   /** @var \Drupal\niftybot_user\Service\MemberIdService $member_id_service */
   $member_id_service = \Drupal::service('niftybot_user.member_id_service');
   $member_id = $member_id_service->assignMemberId((int) $account->id());
@@ -333,7 +354,18 @@ function niftybot_user_user_insert($account) {
     $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
     if ($user) {
       $user->setUsername($member_id);
+      if ($user->hasField('field_avatar_id') && $user->get('field_avatar_id')->isEmpty()) {
+        /** @var \Drupal\niftybot_user\Service\AvatarService $avatar_service */
+        $avatar_service = \Drupal::service('niftybot_user.avatar_service');
+        $user->set('field_avatar_id', $avatar_service->randomAvatarId());
+      }
       $user->save();
     }
+  }
+  elseif ($account->hasField('field_avatar_id') && $account->get('field_avatar_id')->isEmpty()) {
+    /** @var \Drupal\niftybot_user\Service\AvatarService $avatar_service */
+    $avatar_service = \Drupal::service('niftybot_user.avatar_service');
+    $account->set('field_avatar_id', $avatar_service->randomAvatarId());
+    $account->save();
   }
 }

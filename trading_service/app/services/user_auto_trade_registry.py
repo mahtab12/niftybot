@@ -57,10 +57,18 @@ def _billing_callback(
 
 def _groww_from_credentials(api_key: str, api_secret: str) -> GrowwBroker | None:
     broker = GrowwBroker()
+    api_key = GrowwBroker._normalize_secret(api_key)
+    api_secret = GrowwBroker._normalize_secret(api_secret)
     try:
         from growwapi import GrowwAPI
 
-        access_token = GrowwAPI.get_access_token(api_key=api_key, secret=api_secret)
+        if GrowwBroker._looks_like_access_token(api_key):
+            access_token = api_key
+        else:
+            if not api_key or not api_secret:
+                return None
+            access_token = GrowwAPI.get_access_token(api_key=api_key, secret=api_secret)
+
         broker._client = GrowwAPI(access_token)
         broker._connected = True
         profile = broker.get_user_profile()

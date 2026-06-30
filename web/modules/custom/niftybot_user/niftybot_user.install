@@ -407,3 +407,54 @@ function niftybot_user_update_9007() {
     ->condition('notes', 'Subscription:%', 'LIKE')
     ->execute();
 }
+
+/**
+ * Add preset avatar field and assign random avatars to existing users.
+ */
+function niftybot_user_update_9008() {
+  $field_storage = \Drupal\field\Entity\FieldStorageConfig::loadByName('user', 'field_avatar_id');
+  if (!$field_storage) {
+    \Drupal\field\Entity\FieldStorageConfig::create([
+      'field_name' => 'field_avatar_id',
+      'entity_type' => 'user',
+      'type' => 'string',
+      'settings' => [
+        'max_length' => 2,
+        'case_sensitive' => FALSE,
+        'is_ascii' => TRUE,
+      ],
+      'cardinality' => 1,
+      'translatable' => FALSE,
+    ])->save();
+  }
+
+  $field = \Drupal\field\Entity\FieldConfig::loadByName('user', 'user', 'field_avatar_id');
+  if (!$field) {
+    \Drupal\field\Entity\FieldConfig::create([
+      'field_name' => 'field_avatar_id',
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'Avatar',
+      'description' => 'Preset profile avatar id (1-9).',
+      'required' => FALSE,
+    ])->save();
+  }
+
+  /** @var \Drupal\niftybot_user\Service\AvatarService $avatar_service */
+  $avatar_service = \Drupal::service('niftybot_user.avatar_service');
+  $storage = \Drupal::entityTypeManager()->getStorage('user');
+  $uids = \Drupal::database()->select('users_field_data', 'u')
+    ->fields('u', ['uid'])
+    ->condition('uid', 0, '>')
+    ->execute()
+    ->fetchCol();
+
+  foreach ($uids as $uid) {
+    $user = $storage->load((int) $uid);
+    if (!$user || !$user->hasField('field_avatar_id') || !$user->get('field_avatar_id')->isEmpty()) {
+      continue;
+    }
+    $user->set('field_avatar_id', $avatar_service->randomAvatarId());
+    $user->save();
+  }
+}

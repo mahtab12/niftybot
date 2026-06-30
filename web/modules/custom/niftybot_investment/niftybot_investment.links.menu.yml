@@ -1,5 +1,5 @@
 niftybot_investment.dashboard_menu:
-  title: 'StrikeFlow Investment'
+  title: 'GrassRed Investment'
   route_name: niftybot_investment.dashboard
   menu_name: dashboard-menu
   weight: 9

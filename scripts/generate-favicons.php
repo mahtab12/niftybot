@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 $theme = dirname(__DIR__) . '/web/themes/custom/niftyoption';
-$svg = $theme . '/assets/images/favicon.svg';
+$logo = $theme . '/assets/images/logo.png';
 
-if (!is_file($svg)) {
-  fwrite(STDERR, "Missing SVG: {$svg}\n");
+if (!is_file($logo)) {
+  fwrite(STDERR, "Missing logo: {$logo}\n");
   exit(1);
 }
 
@@ -17,7 +17,7 @@ if (!extension_loaded('imagick')) {
 
 $imagick = new Imagick();
 $imagick->setBackgroundColor(new ImagickPixel('transparent'));
-$imagick->readImage($svg);
+$imagick->readImage($logo);
 
 foreach ([16, 32, 180] as $size) {
   $frame = clone $imagick;
@@ -34,7 +34,7 @@ foreach ([16, 32, 180] as $size) {
 
 $ico = new Imagick();
 $ico->setBackgroundColor(new ImagickPixel('transparent'));
-$ico->readImage($svg);
+$ico->readImage($logo);
 $ico->resizeImage(32, 32, Imagick::FILTER_LANCZOS, 1);
 $ico->setImageFormat('ico');
 $ico->writeImage($theme . '/favicon.ico');
@@ -42,4 +42,4 @@ $ico->clear();
 
 copy($theme . '/favicon.ico', $theme . '/assets/images/favicon.ico');
 
-echo "Generated StrikeFlow favicon assets in {$theme}\n";
+echo "Generated GrassRed favicon assets in {$theme}\n";

@@ -9,6 +9,7 @@ module:
   breakpoint: 0
   ckeditor5: 0
   config: 0
+  consumers: 0
   contextual: 0
   datetime: 0
   dblog: 0
@@ -21,6 +22,10 @@ module:
   help: 0
   image: 0
   inline_form_errors: 0
+  jwt: 0
+  jwt_auth_consumer: 0
+  jwt_auth_issuer: 0
+  key: 0
   layout_builder: 0
   layout_discovery: 0
   link: 0
@@ -28,16 +33,10 @@ module:
   menu_ui: 0
   mysql: 0
   navigation: 0
-  consumers: 0
-  jwt: 0
-  jwt_auth_consumer: 0
-  jwt_auth_issuer: 0
-  key: 0
-  niftybot_mobile_api: 0
-  simple_oauth: 0
   niftybot_core: 0
   niftybot_dashboard: 0
   niftybot_investment: 0
+  niftybot_mobile_api: 0
   niftybot_reports: 0
   niftybot_subscription: 0
   niftybot_trading: 0
@@ -48,6 +47,7 @@ module:
   path: 0
   path_alias: 0
   serialization: 0
+  simple_oauth: 0
   system: 0
   taxonomy: 0
   text: 0

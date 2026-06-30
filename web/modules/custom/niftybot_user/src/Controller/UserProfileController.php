@@ -92,6 +92,8 @@ class UserProfileController extends ControllerBase {
       '#wallet_balance' => (float) ($wallet_balance ?? 0),
       '#subscription' => $subscription,
       '#member_id' => $this->memberIdService->getMemberId($uid),
+      '#avatar_url' => niftybot_user_avatar_url($user),
+      '#avatar_id' => \Drupal::service('niftybot_user.avatar_service')->getUserAvatarId($user),
     ] + WalletService::walletRenderCache($uid);
   }
 

@@ -1,7 +1,7 @@
 {#
 /**
  * @file
- * StrikeFlow platform Nifty trades — investor transparency.
+ * GrassRed platform Nifty trades — investor transparency.
  */
 #}
 <div class="niftybot-trading-page niftybot-platform-trades niftybot-dashboard">
@@ -15,12 +15,12 @@
               <i class="bi bi-robot"></i>
             </div>
             <div>
-              <p class="niftybot-trading-page__hero-label mb-2">{{ 'StrikeFlow Investment — algo P&L'|t }}</p>
+              <p class="niftybot-trading-page__hero-label mb-2">{{ 'GrassRed Investment — algo P&L'|t }}</p>
               <h2 class="niftybot-trading-page__hero-amount mb-0 {{ summary.total_pnl|default(0) >= 0 ? 'niftybot-trading-page__hero-amount--positive' : 'niftybot-trading-page__hero-amount--negative' }}">
                 {{ summary.total_pnl|default(0) >= 0 ? '+' : '' }}₹{{ summary.total_pnl|default(0)|number_format(2) }}
               </h2>
               <p class="niftybot-trading-page__hero-hint mb-0">
-                {{ 'Daily Nifty trades executed by StrikeFlow AI and algorithmic models. P&L is shown per trade and per session.'|t }}
+                {{ 'Daily Nifty trades executed by GrassRed AI and algorithmic models. P&L is shown per trade and per session.'|t }}
               </p>
             </div>
           </div>
@@ -64,7 +64,7 @@
           <i class="bi bi-graph-down niftybot-trading-page__empty-icon" aria-hidden="true"></i>
           <h3 class="niftybot-trading-page__empty-title">{{ 'No platform trades yet'|t }}</h3>
           <p class="niftybot-trading-page__empty-text">
-            {{ 'Recorded Nifty trades from StrikeFlow algo strategies will appear here for full transparency.'|t }}
+            {{ 'Recorded Nifty trades from GrassRed algo strategies will appear here for full transparency.'|t }}
           </p>
           <div class="niftybot-trading-page__empty-actions">
             <a href="{{ path('niftybot_investment.dashboard') }}" class="btn btn-primary">

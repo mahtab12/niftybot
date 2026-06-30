@@ -86,11 +86,12 @@ class AutoTradeController extends ControllerBase {
     $page_title,
     $index_label,
     $intro,
+    bool $fetch_remote_status = TRUE,
   ): array {
     $api_configured = $this->brokerManager->hasApiKey();
     $status = NULL;
 
-    if ($api_configured) {
+    if ($api_configured && $fetch_remote_status) {
       $status = $this->brokerManager->getAutoTradeStatus($instrument);
     }
 

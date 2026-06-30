@@ -1,0 +1,100 @@
+<section class="landing-section landing-section--hero landing-section--compact">
+  <div class="container">
+    <div class="landing-page-hero">
+      <div class="row justify-content-center">
+        <div class="col-lg-9 text-center">
+          <p class="landing-eyebrow landing-eyebrow--light">{{ 'GrassRed platform'|t }}</p>
+          <h1 class="landing-page-hero__title">{{ 'Institutional-grade algo trading features'|t }}</h1>
+          <p class="landing-page-hero__lead">{{ 'GrassRed combines multi-layer signal analysis, automated execution, and full trade transparency in one algorithmic trading portal.'|t }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="landing-feature-card h-100">
+          <div class="landing-feature-card__icon"><i class="bi bi-robot" aria-hidden="true"></i></div>
+          <h3>{{ 'AI algo engine'|t }}</h3>
+          <p>{{ 'Automated Nifty and Sensex strategies driven by machine-learning models and rules-based signal stacks — no emotional entries.'|t }}</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="landing-feature-card h-100">
+          <div class="landing-feature-card__icon"><i class="bi bi-layers" aria-hidden="true"></i></div>
+          <h3>{{ '6+ signal layers'|t }}</h3>
+          <p>{{ 'Futures OI buildup, EMA trend filter, RSI momentum, VWAP, volume confirmation, and option-chain OI before every trade.'|t }}</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="landing-feature-card h-100">
+          <div class="landing-feature-card__icon"><i class="bi bi-lightning-charge" aria-hidden="true"></i></div>
+          <h3>{{ 'Auto-trade execution'|t }}</h3>
+          <p>{{ 'Activate Nifty or Sensex auto-trade with automated stop-loss, targets, and daily trade limits tied to your subscription.'|t }}</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="landing-feature-card h-100">
+          <div class="landing-feature-card__icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
+          <h3>{{ 'AI investment plans'|t }}</h3>
+          <p>{{ 'Allocate capital to GrassRed managed algo strategies with weekly profit payouts and published platform trades.'|t }}</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="landing-feature-card h-100">
+          <div class="landing-feature-card__icon"><i class="bi bi-plug" aria-hidden="true"></i></div>
+          <h3>{{ 'Broker integration'|t }}</h3>
+          <p>{{ 'Connect your Groww account for live order placement, positions sync, and real-time portfolio visibility.'|t }}</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="landing-feature-card h-100">
+          <div class="landing-feature-card__icon"><i class="bi bi-shield-check" aria-hidden="true"></i></div>
+          <h3>{{ 'Secure wallet & KYC'|t }}</h3>
+          <p>{{ 'Verified identity, UPI/NEFT deposits, withdrawal controls, and a complete audit trail for every transaction.'|t }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section landing-section--alt">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <h2 class="landing-section__title">{{ 'How GrassRed algo signals work'|t }}</h2>
+        <p class="text-secondary">{{ 'Every automated trade passes through a disciplined checklist. GrassRed only acts when multiple independent indicators align — reducing noise and chasing.'|t }}</p>
+        <ul class="landing-trust-list">
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i><span>{{ 'Pullback and day-break entry timing'|t }}</span></li>
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i><span>{{ '75%+ minimum confidence threshold on entries'|t }}</span></li>
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i><span>{{ 'Full trade history saved for review and ML training'|t }}</span></li>
+        </ul>
+      </div>
+      <div class="col-lg-6">
+        <div class="landing-signal-grid">
+          {% for signal in ['OI', 'EMA', 'RSI', 'VWAP', 'Volume', 'Chain OI'] %}
+            <div class="landing-signal-grid__item">
+              <strong>{{ signal }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section pb-5">
+  <div class="container">
+    <div class="landing-cta">
+      <h2>{{ 'Ready to automate your trading?'|t }}</h2>
+      <p>{{ 'Join GrassRed — the automated algo trading portal trusted by active Indian F&amp;O traders.'|t }}</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{{ path('niftybot_user.register') }}" class="btn btn-success btn-lg px-4">{{ 'Start Free'|t }}</a>
+        <a href="{{ path('niftybot_core.public_pricing') }}" class="btn btn-outline-light btn-lg px-4">{{ 'View Pricing'|t }}</a>
+      </div>
+    </div>
+  </div>
+</section>
