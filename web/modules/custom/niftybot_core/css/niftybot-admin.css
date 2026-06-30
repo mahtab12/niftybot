@@ -686,3 +686,13 @@
   font-weight: 700;
   margin-left: 0.25rem;
 }
+
+.niftybot-settings-form__api-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 5.5rem;
+  width: 100%;
+  max-width: 42rem;
+}

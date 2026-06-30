@@ -108,10 +108,14 @@ class NiftybotSettingsForm extends ConfigFormBase {
     ];
 
     $form['trading_api']['trading_api_key'] = [
-      '#type' => 'password',
+      '#type' => 'textarea',
       '#title' => $this->t('Trading Service API Key'),
+      '#rows' => 3,
       '#description' => $this->t('Sent as the <code>X-API-Key</code> header on every request to the trading service. Copy the <code>API_KEY</code> value from <code>trading_service/.env</code>.'),
-      '#size' => 60,
+      '#attributes' => [
+        'autocomplete' => 'off',
+        'class' => ['niftybot-settings-form__api-key'],
+      ],
     ];
 
     if ($config->get('trading_api_key')) {
