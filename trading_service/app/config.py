@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 
     # Service
     log_level: str = "INFO"
-    debug: bool = False
+    debug: bool = True
 
     # Auto trade defaults
     auto_trade_lot_size: int = 75
