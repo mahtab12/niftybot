@@ -119,8 +119,9 @@ class BrokerConnectionForm extends FormBase {
     $has_stored = !empty($summary['credentials_saved']);
 
     $form['layout']['credentials']['body']['api_key'] = [
-      '#type' => 'textfield',
+      '#type' => 'textarea',
       '#title' => $this->t('API key'),
+      '#rows' => 3,
       '#required' => !$has_stored,
       '#description' => $has_stored
         ? $this->t('Leave blank to keep your existing API key.')
