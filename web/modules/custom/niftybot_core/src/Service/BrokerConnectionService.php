@@ -165,6 +165,44 @@ class BrokerConnectionService {
   }
 
   /**
+   * Re-verifies stored Groww credentials (e.g. before auto-trade activation).
+   *
+   * Unlike attemptAutoConnect(), this always calls Groww even when status is
+   * already "connected", so expired daily tokens are detected and cleared.
+   *
+   * @return array<string, mixed>
+   */
+  public function verifyStoredCredentials(int $uid, string $broker = 'groww'): array {
+    $connection = $this->getConnection($uid, $broker);
+    if (!$this->hasStoredCredentials($connection)) {
+      return [
+        'success' => FALSE,
+        'connected' => FALSE,
+        'message' => 'Connect your Groww broker account first.',
+      ];
+    }
+
+    $api_key = $this->vault->decrypt($connection->api_key_enc);
+    $api_secret = $this->vault->decrypt($connection->api_secret_enc ?? '');
+    if ($api_key === '') {
+      return [
+        'success' => FALSE,
+        'connected' => FALSE,
+        'message' => 'Stored broker credentials could not be loaded.',
+      ];
+    }
+    if ($api_secret === '' && !$this->looksLikeAccessToken($api_key)) {
+      return [
+        'success' => FALSE,
+        'connected' => FALSE,
+        'message' => 'Stored broker credentials could not be loaded.',
+      ];
+    }
+
+    return $this->saveAndVerify($uid, $broker, $api_key, $api_secret);
+  }
+
+  /**
    * Re-attempts Groww auth when credentials are saved but not connected.
    *
    * @return array<string, mixed>
@@ -280,7 +318,12 @@ class BrokerConnectionService {
     }
 
     $message = $this->resolveVerificationMessage($result, $profile);
-    $pending = $approval_required || $this->isApprovalPendingError($message, $result, $profile);
+    $raw_messages = $this->collectRawVerificationMessages($result, $profile);
+    $pending = $approval_required || $this->isApprovalPendingError($raw_messages, $result, $profile);
+    if ($this->looksLikeAccessToken($api_key) && $api_secret === '' && $this->isExpiredOrForbiddenTokenError($raw_messages)) {
+      $pending = FALSE;
+      $message = $this->expiredDailyTokenMessage();
+    }
 
     $this->upsertConnection($uid, $broker, [
       'status' => $pending ? self::STATUS_PENDING_APPROVAL : self::STATUS_ERROR,
@@ -299,6 +342,13 @@ class BrokerConnectionService {
   }
 
   /**
+   * User-facing message when a saved Groww daily JWT token has expired.
+   */
+  public function expiredDailyTokenMessage(): string {
+    return (string) t('Your saved Groww daily access token has expired. Approving the key on Groww Cloud does not refresh the token stored here — copy a new token from Groww Cloud → API Keys, paste it in the API key field, and save. Or use your permanent API Key + Secret instead of a daily token.');
+  }
+
+  /**
    * User-facing message when Groww daily API approval is still required.
    */
   public function pendingActivationMessage(): string {
@@ -306,27 +356,71 @@ class BrokerConnectionService {
   }
 
   /**
-   * Detects Groww auth failures resolved by daily API key approval.
+   * Collects raw verification messages before user-facing humanization.
    *
    * @param array<string, mixed>|null $result
    * @param array<string, mixed> $profile
+   *
+   * @return array<int, string>
    */
-  protected function isApprovalPendingError(string $message, ?array $result, array $profile): bool {
-    if (is_array($result) && !empty($result['approval_required'])) {
-      return TRUE;
-    }
-    $haystack = strtolower($message);
-    foreach (['approve', 'approval', 'checksum'] as $token) {
-      if (str_contains($haystack, $token)) {
-        return TRUE;
+  protected function collectRawVerificationMessages(?array $result, array $profile): array {
+    $messages = [];
+    if (is_array($result)) {
+      foreach (['message', 'detail'] as $key) {
+        if (!empty($result[$key]) && is_string($result[$key])) {
+          $messages[] = $result[$key];
+        }
       }
     }
     if (!empty($profile['message']) && is_string($profile['message'])) {
-      $profile_message = strtolower($profile['message']);
-      foreach (['approve', 'approval', 'checksum'] as $token) {
-        if (str_contains($profile_message, $token)) {
+      $messages[] = $profile['message'];
+    }
+    return $messages;
+  }
+
+  /**
+   * Detects Groww auth failures resolved by daily API key approval.
+   *
+   * Uses raw API responses only — not humanized copy that may contain words
+   * like "approve" in unrelated guidance.
+   *
+   * @param array<int, string> $raw_messages
+   * @param array<string, mixed>|null $result
+   * @param array<string, mixed> $profile
+   */
+  protected function isApprovalPendingError(array $raw_messages, ?array $result, array $profile): bool {
+    if (is_array($result) && !empty($result['approval_required'])) {
+      return TRUE;
+    }
+    foreach ($raw_messages as $raw_message) {
+      $haystack = strtolower($raw_message);
+      if ($this->isExpiredOrForbiddenTokenError([$raw_message])) {
+        continue;
+      }
+      foreach (['checksum', 'pending approval', 'needs approval', 'approve your key', 'approve the key'] as $token) {
+        if (str_contains($haystack, $token)) {
           return TRUE;
         }
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Whether Groww rejected a saved access token (expired or forbidden).
+   *
+   * @param array<int, string> $raw_messages
+   */
+  protected function isExpiredOrForbiddenTokenError(array $raw_messages): bool {
+    foreach ($raw_messages as $raw_message) {
+      $lower = strtolower($raw_message);
+      if (str_contains($lower, 'access forbidden')
+        || str_contains($lower, 'forbidden for this request')
+        || str_contains($lower, 'authentication failed')
+        || str_contains($lower, 'api token')
+        || str_contains($lower, 'expired')
+        || str_contains($lower, 'is invalid')) {
+        return TRUE;
       }
     }
     return FALSE;
@@ -385,10 +479,14 @@ class BrokerConnectionService {
     if (str_contains($lower, 'authentication failed')
       || str_contains($lower, 'api token')
       || str_contains($lower, 'expired')
-      || str_contains($lower, 'is invalid')
-      || str_contains($lower, 'daily access token')
-      || str_contains($lower, 'permanent api key')) {
-      return 'Groww could not authenticate. Use the permanent API Key from Groww Cloud → Generate API Key (not a one-day token). Confirm the API secret matches that key. If you only have a daily token, paste it in the API key field and leave the secret blank.';
+      || str_contains($lower, 'is invalid')) {
+      return 'Groww could not authenticate. Confirm your API Key and Secret match Groww Cloud → Generate API Key, approve the key for today, then save again.';
+    }
+    // Groww's own "access forbidden" business error (expired/revoked token),
+    // not the Drupal -> trading service auth layer.
+    if (str_contains($lower, 'access forbidden')
+      || str_contains($lower, 'forbidden for this request')) {
+      return 'Groww rejected the connection (access forbidden). Confirm your API key is approved for today on Groww Cloud → API Keys, then click Save on this page again with both API key and secret.';
     }
     if (str_contains($lower, 'checksum')
       || str_contains($lower, 'approval')
@@ -397,6 +495,9 @@ class BrokerConnectionService {
       || str_contains($lower, 'access token')) {
       return 'Groww rejected these credentials. Confirm your API key and secret, then open Groww Cloud → API Keys and approve your key for today before connecting again.';
     }
+    // Only the trading service auth layer returns the exact "invalid/missing
+    // api key" strings (handled above). A bare 403/forbidden here indicates a
+    // service-to-service key mismatch.
     if (str_contains($lower, 'forbidden') || str_contains($lower, '403')) {
       return 'Could not reach the trading verification service. If you are an administrator, confirm the Trading API key in NiftyBot settings matches the trading service API_KEY.';
     }

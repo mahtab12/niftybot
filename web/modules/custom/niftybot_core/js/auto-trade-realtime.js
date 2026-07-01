@@ -231,10 +231,20 @@
       options.body = JSON.stringify(body);
     }
     return fetch((settings.apiBase || '/niftybot/api/auto-trade') + path, options).then(function (response) {
-      if (!response.ok) {
-        throw new Error('HTTP ' + response.status);
-      }
-      return response.json();
+      return response.json().then(function (data) {
+        if (!response.ok) {
+          if (data && typeof data === 'object') {
+            return data;
+          }
+          throw new Error('HTTP ' + response.status);
+        }
+        return data;
+      }).catch(function (parseError) {
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        throw parseError;
+      });
     }).finally(function () {
       window.clearTimeout(timeoutId);
     });
@@ -308,10 +318,14 @@
 
   function setModeControls(active) {
     const activateBtn = document.getElementById('niftybot-auto-trade-activate');
+    const deactivateBtn = document.getElementById('niftybot-auto-trade-deactivate');
     const modeInputs = document.querySelectorAll('input[name="niftybot-auto-trade-mode"]');
     const accessBlocked = settings.access && settings.access.can_access === false;
     if (activateBtn) {
       activateBtn.disabled = !!active || !!accessBlocked;
+    }
+    if (deactivateBtn) {
+      deactivateBtn.classList.toggle('is-active-trade', !!active);
     }
     modeInputs.forEach(function (input) {
       input.disabled = !!active;
@@ -600,15 +614,13 @@
             ai_suggestion: data.ai_suggestion || data.suggestion,
             last_check_at: data.last_check_at,
           });
-          if (data.last_signal) {
-            updateState({
-              success: true,
-              active: false,
-              underlying_ltp: data.underlying_ltp,
-              last_signal: data.last_signal,
-              last_check_at: data.last_check_at,
-            });
-          }
+          updateState({
+            success: true,
+            active: false,
+            underlying_ltp: data.underlying_ltp,
+            last_signal: data.last_signal || undefined,
+            last_check_at: data.last_check_at,
+          });
         }
       }).catch(function () {
         // Suggestions are optional; status polling keeps the dashboard usable.
@@ -697,7 +709,7 @@
     const payload = {
       nifty_quantity: instrument === 'nifty' ? qty : (Number(quantitySettings.nifty_quantity) || 65),
       sensex_quantity: instrument === 'sensex' ? qty : (Number(quantitySettings.sensex_quantity) || 20),
-      crude_oil_quantity: instrument === 'crude_oil' ? qty : (Number(quantitySettings.crude_oil_quantity) || 100),
+      crude_oil_quantity: instrument === 'crude_oil' ? qty : (Number(quantitySettings.crude_oil_quantity) || 10),
       gold_quantity: instrument === 'gold' ? qty : (Number(quantitySettings.gold_quantity) || 100),
     };
 
@@ -730,6 +742,8 @@
     const exitBtn = document.getElementById('niftybot-auto-trade-exit');
     const qtyInput = document.getElementById('niftybot-auto-trade-quantity');
     const saveQtyBtn = document.getElementById('niftybot-auto-trade-save-qty');
+
+    setModeControls(!!document.querySelector('#niftybot-auto-trade-state .niftybot-auto-trade__state--on'));
 
     if (qtyInput) {
       qtyInput.addEventListener('input', function () {
@@ -797,6 +811,10 @@
               setModeControls(data.active);
             }
           }
+        }).catch(function (err) {
+          const message = err && err.message ? err.message : Drupal.t('Activation failed. Please try again.');
+          setText('niftybot-auto-trade-message', message);
+          setQuantityHint(message, 'error');
         }).finally(function () {
           const isActive = document.querySelector('#niftybot-auto-trade-state .niftybot-auto-trade__state--on');
           activateBtn.disabled = !!isActive;

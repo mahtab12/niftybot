@@ -62,21 +62,37 @@ def _groww_from_credentials(api_key: str, api_secret: str) -> GrowwBroker | None
     try:
         from growwapi import GrowwAPI
 
-        if GrowwBroker._looks_like_access_token(api_key):
+        if api_key and api_secret:
+            access_token = GrowwAPI.get_access_token(api_key=api_key, secret=api_secret)
+        elif GrowwBroker._looks_like_access_token(api_key):
             access_token = api_key
         else:
-            if not api_key or not api_secret:
-                return None
-            access_token = GrowwAPI.get_access_token(api_key=api_key, secret=api_secret)
+            return None
 
         broker._client = GrowwAPI(access_token)
         broker._connected = True
         profile = broker.get_user_profile()
         if not profile.success:
+            profile_msg = (profile.message or "").lower()
+            if "expired" in profile_msg or (
+                "invalid" in profile_msg and "token" in profile_msg
+            ):
+                raise ValueError(
+                    "Your Groww API token has expired or is invalid. "
+                    "Paste today's approved token or your permanent API key and secret on the broker page, then try again."
+                )
             return None
         return broker
-    except Exception:
+    except ValueError:
+        raise
+    except Exception as exc:
         logger.exception("Failed to connect user Groww broker")
+        msg = str(exc).lower()
+        if "expired" in msg or ("invalid" in msg and "token" in msg):
+            raise ValueError(
+                "Your Groww API token has expired or is invalid. "
+                "Paste today's approved token or your permanent API key and secret on the broker page, then try again."
+            ) from exc
         return None
 
 

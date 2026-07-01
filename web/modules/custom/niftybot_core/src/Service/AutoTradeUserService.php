@@ -16,7 +16,7 @@ class AutoTradeUserService {
 
   public const SENSEX_LOT_STEP = 20;
 
-  public const CRUDE_OIL_LOT_STEP = 100;
+  public const CRUDE_OIL_LOT_STEP = 10;
 
   public const GOLD_LOT_STEP = 100;
 
@@ -355,6 +355,15 @@ class AutoTradeUserService {
       ];
     }
 
+    $verify = $this->brokerConnection->verifyStoredCredentials($uid, 'groww');
+    if (empty($verify['connected'])) {
+      return [
+        'success' => FALSE,
+        'message' => (string) ($verify['message'] ?? 'Groww broker connection is no longer valid. Update your API credentials and try again.'),
+      ];
+    }
+
+    $connection = $this->brokerConnection->getConnection($uid, 'groww');
     $vault = \Drupal::service('niftybot_core.credential_vault');
     $api_key = $vault->decrypt($connection->api_key_enc);
     $api_secret = $vault->decrypt($connection->api_secret_enc ?? '');

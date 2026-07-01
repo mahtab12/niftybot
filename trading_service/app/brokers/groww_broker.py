@@ -176,6 +176,44 @@ class GrowwBroker(BaseBroker):
         api_key = cls._normalize_secret(api_key)
         api_secret = cls._normalize_secret(api_secret)
 
+        # Groww permanent API keys are JWT-shaped; key + secret always uses
+        # get_access_token(). Token-only mode is when secret is blank.
+        if api_key and api_secret:
+            try:
+                access_token = GrowwAPI.get_access_token(api_key=api_key, secret=api_secret)
+            except GrowwAPIAuthenticationException:
+                message = (
+                    "Groww rejected the API key or secret. Confirm both match the "
+                    "values from Groww Cloud → Generate API Key, then approve the key for today."
+                )
+                return (
+                    UserProfileResponse(success=False, message=message),
+                    AvailableMarginResponse(success=False, message=message),
+                )
+            except GrowwAPIAuthorisationException:
+                message = (
+                    "Your Groww account needs an active Trading API subscription "
+                    "before connecting via API."
+                )
+                return (
+                    UserProfileResponse(success=False, message=message),
+                    AvailableMarginResponse(success=False, message=message),
+                )
+            except GrowwAPIException as exc:
+                message = cls._format_auth_error(getattr(exc, "msg", str(exc)))
+                return (
+                    UserProfileResponse(success=False, message=message),
+                    AvailableMarginResponse(success=False, message=message),
+                )
+            except Exception as exc:
+                message = cls._format_auth_error(exc)
+                logger.exception("Groww credential verification failed")
+                return (
+                    UserProfileResponse(success=False, message=message),
+                    AvailableMarginResponse(success=False, message=message),
+                )
+            return cls._verify_with_access_token(access_token)
+
         if cls._looks_like_access_token(api_key):
             return cls._verify_with_access_token(api_key)
 
@@ -1217,7 +1255,7 @@ class GrowwBroker(BaseBroker):
         expiries = data.get("expiries", []) if isinstance(data, dict) else []
         today = date.today().isoformat()
         future = [e for e in expiries if e >= today]
-        return future or expiries
+        return future
 
     def get_expiries(
         self,
@@ -1277,12 +1315,59 @@ class GrowwBroker(BaseBroker):
         item.message = f"Nearest future ({expiry})" if expiry else "Nearest future"
         return item
 
+    def _trading_symbol_from_groww_contract(self, groww_contract: str) -> str | None:
+        """Convert MCX-GOLDM-05Jan26-FUT to GOLDM05JAN26FUT."""
+        parts = groww_contract.strip().split("-")
+        if len(parts) < 4 or parts[-1].upper() != "FUT":
+            return None
+        und, exp = parts[1], parts[2]
+        if len(exp) < 7:
+            return None
+        return f"{und}{exp[:2]}{exp[2:5].upper()}{exp[5:]}FUT"
+
+    def _resolve_mcx_future_from_instruments(
+        self, underlying: str,
+    ) -> tuple[str, str, float | None] | None:
+        """Pick the nearest non-expired MCX future from Groww instrument master."""
+        groww = self._client
+        today = date.today().isoformat()
+        df = groww.get_all_instruments()
+        if df is None or df.empty:
+            return None
+
+        mask = (
+            (df["exchange"] == "MCX")
+            & (df["segment"] == "COMMODITY")
+            & (df["trading_symbol"].astype(str).str.startswith(underlying))
+            & (df["trading_symbol"].astype(str).str.endswith("FUT"))
+            & (df["expiry_date"].astype(str) >= today)
+        )
+        rows = df.loc[mask].sort_values("expiry_date")
+        if rows.empty:
+            return None
+
+        row = rows.iloc[0]
+        trading_symbol = str(row["trading_symbol"])
+        expiry = str(row["expiry_date"])
+        quote = self.get_quote(trading_symbol, "MCX", "COMMODITY")
+        ltp = float(quote.last_price) if quote.success and quote.last_price else None
+        return trading_symbol, expiry, ltp
+
     def resolve_nearest_mcx_future(
         self, underlying: str,
     ) -> tuple[str, str, float | None] | None:
         """Return (trading_symbol, expiry_date, ltp) for the nearest MCX future."""
         self._ensure_connected()
         groww = self._client
+
+        try:
+            resolved = self._resolve_mcx_future_from_instruments(underlying)
+            if resolved is not None:
+                return resolved
+        except Exception as e:
+            logger.warning(
+                "MCX instrument lookup failed for %s: %s", underlying, e,
+            )
 
         try:
             for expiry in self._future_expiries("MCX", underlying)[:3]:
@@ -1297,29 +1382,22 @@ class GrowwBroker(BaseBroker):
                     if isinstance(c, str) and c.endswith("-FUT")
                 ]
                 for fut_gs in futs[:1]:
-                    parts = fut_gs.split("-")
-                    if len(parts) < 4:
+                    ts = self._trading_symbol_from_groww_contract(fut_gs)
+                    if not ts:
                         continue
-                    und, exp = parts[1], parts[2]
-                    mon = exp[2:5].upper()
-                    candidates = [
-                        f"{und}{exp[:2]}{mon}{exp[5:]}FUT",
-                        f"{und}{exp[5:]}{mon}{exp[:2]}FUT",
-                    ]
-                    for ts in candidates:
-                        try:
-                            ltp_data = groww.get_ltp(
-                                segment=groww.SEGMENT_COMMODITY,
-                                exchange_trading_symbols=f"MCX_{ts}",
-                            )
-                            price = next(iter(ltp_data.values()), None) if ltp_data else None
-                            if price is not None:
-                                return ts, expiry, float(price)
-                        except Exception:
-                            pass
-                        quote = self.get_quote(ts, "MCX", "COMMODITY")
-                        if quote.success and quote.last_price:
-                            return ts, expiry, float(quote.last_price)
+                    try:
+                        ltp_data = groww.get_ltp(
+                            segment=groww.SEGMENT_COMMODITY,
+                            exchange_trading_symbols=f"MCX_{ts}",
+                        )
+                        price = next(iter(ltp_data.values()), None) if ltp_data else None
+                        if price is not None:
+                            return ts, expiry, float(price)
+                    except Exception:
+                        pass
+                    quote = self.get_quote(ts, "MCX", "COMMODITY")
+                    if quote.success and quote.last_price:
+                        return ts, expiry, float(quote.last_price)
         except Exception as e:
             logger.warning("MCX future resolve failed for %s: %s", underlying, e)
 

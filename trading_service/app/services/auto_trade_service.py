@@ -328,6 +328,15 @@ class AutoTradeService:
                         )
             except Exception:
                 logger.exception("Live status refresh failed")
+        elif live_refresh and self._underlying_ltp is None:
+            try:
+                broker = self._groww_broker()
+                self._underlying_ltp = self._fetch_index_ltp(broker)
+            except Exception:
+                logger.exception(
+                    "Inactive LTP refresh failed for %s",
+                    self.profile.instrument_id,
+                )
 
         trade = self._serialize_trade(self._current_trade)
         db_history = get_recent_closed_trades(

@@ -49,9 +49,9 @@ class InAppNotificationService {
        LEFT JOIN {niftybot_user_notification_reads} r
          ON r.alert_id = a.alert_id AND r.uid = :uid
        ORDER BY a.created DESC, a.alert_id DESC',
-      [':uid' => $uid],
       0,
-      $limit
+      $limit,
+      [':uid' => $uid]
     );
 
     $alerts = [];

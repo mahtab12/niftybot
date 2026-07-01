@@ -125,9 +125,9 @@ class BrokerConnectionForm extends FormBase {
       '#required' => !$has_stored,
       '#description' => $has_stored
         ? $this->t('Leave blank to keep your existing API key.')
-        : $this->t('From Groww Cloud → API Keys, click Generate API Key and paste the API Key here — not the one-day access token. Approve the key for today on the same page.'),
+        : $this->t('From Groww Cloud → Generate API Key, paste the API Key and Secret shown in the popup. Groww API keys are long JWT strings starting with eyJ. Approve the key for today on the same page.'),
       '#attributes' => [
-        'placeholder' => 'groww_xxxxxxxx',
+        'placeholder' => 'eyJraWQiOiJaTUtj…',
         'autocomplete' => 'off',
         'class' => ['niftybot-broker-form__api-key'],
       ],

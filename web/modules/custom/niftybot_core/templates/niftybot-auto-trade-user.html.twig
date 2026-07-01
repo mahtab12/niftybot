@@ -201,7 +201,7 @@
           <button type="button" class="btn btn-primary btn-lg" id="niftybot-auto-trade-activate"{% if status.active or (auto_trade_access is defined and not auto_trade_access.can_access) %} disabled{% endif %}>
             <i class="bi bi-play-fill me-1" aria-hidden="true"></i>{{ 'Activate'|t }}
           </button>
-          <button type="button" class="btn btn-outline-secondary btn-lg" id="niftybot-auto-trade-deactivate">
+          <button type="button" class="btn btn-outline-secondary btn-lg{% if status.active %} is-active-trade{% endif %}" id="niftybot-auto-trade-deactivate">
             <i class="bi bi-pause-fill me-1" aria-hidden="true"></i>{{ 'Deactivate'|t }}
           </button>
         </div>

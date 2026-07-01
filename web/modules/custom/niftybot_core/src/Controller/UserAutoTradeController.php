@@ -75,7 +75,7 @@ class UserAutoTradeController extends AutoTradeController {
       'crude_oil',
       $this->t('Crude Oil Auto Trade'),
       $this->t('Crude Oil Mini LTP'),
-      $this->t('Automated MCX crude oil mini futures via our AI algo engine. Set your quantity (multiples of 100). Subscribe monthly or pay ₹100 per executed trade from your wallet.'),
+      $this->t('Automated MCX crude oil mini futures via our AI algo engine. Set your quantity (multiples of 10). Subscribe monthly or pay ₹100 per executed trade from your wallet.'),
     );
   }
 

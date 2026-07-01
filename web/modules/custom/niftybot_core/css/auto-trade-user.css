@@ -453,6 +453,19 @@
   gap: 0.65rem;
 }
 
+#niftybot-auto-trade-deactivate.is-active-trade {
+  background-color: var(--at-danger);
+  border-color: var(--at-danger);
+  color: #fff;
+}
+
+#niftybot-auto-trade-deactivate.is-active-trade:hover:not(:disabled),
+#niftybot-auto-trade-deactivate.is-active-trade:focus-visible:not(:disabled) {
+  background-color: #c62836;
+  border-color: #c62836;
+  color: #fff;
+}
+
 .niftybot-auto-trade-user__message {
   margin: 1rem 0 0;
   font-size: 0.875rem;
