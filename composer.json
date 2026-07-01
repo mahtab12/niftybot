@@ -24,6 +24,7 @@
         "drupal/jwt": "^2.0",
         "drupal/key": "^1.20",
         "drupal/simple_oauth": "^6.1",
+        "drupal/smtp": "^1.4",
         "drush/drush": "^13.7"
     },
     "conflict": {

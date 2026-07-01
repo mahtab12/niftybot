@@ -2,9 +2,7 @@
   <div class="upi-qr-scanner" aria-hidden="true">
     <div class="upi-qr-scanner__frame">
       <div class="upi-qr-scanner__pattern">
-        {% for i in 1..49 %}
-          <span class="upi-qr-scanner__cell upi-qr-scanner__cell--{{ loop.index0 is even ? 'dark' : 'light' }}"></span>
-        {% endfor %}
+        <img src="/{{ directory }}/assets/images/upi-qr.png" alt="UPI QR Code" class="upi-qr-image">
       </div>
       <div class="upi-qr-scanner__scan-line"></div>
     </div>

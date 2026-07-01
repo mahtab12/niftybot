@@ -559,3 +559,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+.upi-qr-scanner__pattern img.upi-qr-image {
+  height: 185px;
+  width: 185px;
+}
