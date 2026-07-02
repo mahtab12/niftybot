@@ -98,6 +98,7 @@ class PlaceOrderResponse(BaseModel):
     broker_order_id: Optional[str] = None
     status: OrderStatus
     message: str
+    error_code: Optional[str] = None
 
 
 class ModifyOrderRequest(BaseModel):
@@ -724,6 +725,15 @@ class AutoTradeSignalInfo(BaseModel):
     indicators: dict = {}
 
 
+class AutoTradeUserAlert(BaseModel):
+    """One-shot alert for the auto-trade UI (e.g. Groww order rejection)."""
+    id: str
+    type: str
+    severity: str = "error"
+    title: str
+    message: str
+
+
 class AutoTradeStatusResponse(BaseModel):
     success: bool
     instrument: str = "nifty"
@@ -738,6 +748,7 @@ class AutoTradeStatusResponse(BaseModel):
     current_trade: Optional[AutoTradePosition] = None
     trade_history: list[AutoTradePosition] = []
     config: dict = {}
+    user_alert: Optional[AutoTradeUserAlert] = None
 
 
 class AutoTradeHistoryResponse(BaseModel):

@@ -14,11 +14,18 @@ services:
     arguments:
       - '@user.auth'
       - '@entity_type.manager'
+      - '@database'
       - '@jwt.authentication.jwt'
       - '@http_kernel'
       - '@request_stack'
       - '@config.factory'
       - '@state'
+
+  niftybot_mobile_api.registration:
+    class: Drupal\niftybot_mobile_api\Service\MobileRegistrationService
+    arguments:
+      - '@entity_type.manager'
+      - '@niftybot_mobile_api.auth'
 
   niftybot_mobile_api.account:
     class: Drupal\niftybot_mobile_api\Service\MobileAccountService

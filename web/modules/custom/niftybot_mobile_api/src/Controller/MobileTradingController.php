@@ -20,7 +20,8 @@ class MobileTradingController extends ControllerBase {
     protected AutoTradeUserService $autoTradeUser,
     protected BrokerManager $brokerManager,
     protected InAppNotificationService $notifications,
-  ) {}
+  ) {
+  }
 
   /**
    * {@inheritdoc}
@@ -77,7 +78,28 @@ class MobileTradingController extends ControllerBase {
     if ($status === NULL) {
       return new JsonResponse(['success' => FALSE, 'message' => 'Could not load auto-trade status.'], 502);
     }
+
+    if ($this->autoTradeUser->isIndexInstrument($instrument)) {
+      $market = $this->autoTradeUser->getIndexMarketStatus();
+      $status['market_open'] = $market['market_open'];
+      $status['market_status'] = $market['market_status'];
+      $status['market_message'] = $market['market_message'];
+    }
+
     return new JsonResponse($status);
+  }
+
+  public function autoTradeSuggestions(string $instrument): JsonResponse {
+    $result = $this->brokerManager->getAutoTradeSuggestions($instrument);
+    if ($result === NULL) {
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => 'Could not load AI suggestions.',
+      ], 502);
+    }
+
+    $code = !empty($result['success']) ? 200 : 400;
+    return new JsonResponse($result, $code);
   }
 
   public function activateAutoTrade(string $instrument, Request $request): JsonResponse {

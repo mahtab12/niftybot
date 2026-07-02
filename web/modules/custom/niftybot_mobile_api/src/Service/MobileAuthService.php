@@ -3,6 +3,7 @@
 namespace Drupal\niftybot_mobile_api\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\jwt\Authentication\Provider\JwtAuth;
@@ -21,6 +22,7 @@ class MobileAuthService {
   public function __construct(
     protected UserAuthInterface $userAuth,
     protected EntityTypeManagerInterface $entityTypeManager,
+    protected Connection $database,
     protected JwtAuth $jwtAuth,
     protected HttpKernelInterface $httpKernel,
     protected RequestStack $requestStack,
@@ -32,7 +34,7 @@ class MobileAuthService {
    * Authenticates credentials and returns a JWT access token.
    */
   public function login(string $username, string $password): JsonResponse {
-    $username = trim($username);
+    $username = $this->resolveLoginIdentifier(trim($username));
     if ($username === '' || $password === '') {
       return $this->error('Username and password are required.', 400);
     }
@@ -51,6 +53,13 @@ class MobileAuthService {
       return $this->error('This account cannot use the mobile API.', 403);
     }
 
+    return $this->issueTokenForAccount($account, includeOAuth: TRUE);
+  }
+
+  /**
+   * Issues a JWT for an authenticated Drupal user account.
+   */
+  public function issueTokenForAccount($account, bool $includeOAuth = FALSE): JsonResponse {
     user_login_finalize($account);
 
     try {
@@ -61,15 +70,18 @@ class MobileAuthService {
     }
 
     $ttl = (int) $this->configFactory->get('niftybot_mobile_api.settings')->get('token_ttl_seconds');
-
-    return new JsonResponse([
+    $payload = [
       'success' => TRUE,
       'token_type' => 'Bearer',
       'access_token' => $access_token,
       'expires_in' => $ttl > 0 ? $ttl : 3600,
       'auth_method' => 'jwt',
-      'oauth' => $this->oauthClientInfo(),
-    ]);
+    ];
+    if ($includeOAuth) {
+      $payload['oauth'] = $this->oauthClientInfo();
+    }
+
+    return new JsonResponse($payload);
   }
 
   /**
@@ -152,6 +164,7 @@ class MobileAuthService {
       'version' => '1.0.0',
       'auth' => [
         'jwt_login' => $base . '/auth/login',
+        'jwt_register' => $base . '/auth/register',
         'jwt_refresh' => $base . '/auth/refresh',
         'oauth_token' => '/oauth/token',
         'header' => 'Authorization: Bearer {access_token}',
@@ -171,12 +184,19 @@ class MobileAuthService {
         'plan_checkout' => $base . '/plans/{plan_id}/checkout',
         'plan_subscribe' => $base . '/plans/{plan_id}/subscribe',
         'broker' => $base . '/broker',
+        'broker_connect' => $base . '/broker',
+        'broker_refresh' => $base . '/broker/refresh',
         'auto_trade_settings' => $base . '/auto-trade/settings',
         'auto_trade_status' => $base . '/auto-trade/{instrument}/status',
+        'auto_trade_suggestions' => $base . '/auto-trade/{instrument}/suggestions',
         'auto_trade_activate' => $base . '/auto-trade/{instrument}/activate',
         'auto_trade_deactivate' => $base . '/auto-trade/{instrument}/deactivate',
         'auto_trade_exit' => $base . '/auto-trade/{instrument}/exit',
         'notifications' => $base . '/notifications',
+        'investment' => $base . '/investment',
+        'investment_plans' => $base . '/investment/plans',
+        'investment_invest' => $base . '/investment/invest/{plan_id}',
+        'investment_trades' => $base . '/investment/trades',
       ],
     ];
   }
@@ -186,6 +206,35 @@ class MobileAuthService {
       'success' => FALSE,
       'message' => $message,
     ], $status);
+  }
+
+  /**
+   * Maps email or member ID to the Drupal account name (same as web login).
+   */
+  protected function resolveLoginIdentifier(string $identifier): string {
+    if ($identifier === '') {
+      return '';
+    }
+
+    if (str_contains($identifier, '@')) {
+      $account = user_load_by_mail($identifier);
+      return $account ? $account->getAccountName() : $identifier;
+    }
+
+    $member_uid = $this->database->select('niftybot_user_member_ids', 'm')
+      ->fields('m', ['uid'])
+      ->condition('member_id', strtoupper($identifier))
+      ->execute()
+      ->fetchField();
+
+    if ($member_uid) {
+      $account = $this->entityTypeManager->getStorage('user')->load((int) $member_uid);
+      if ($account) {
+        return $account->getAccountName();
+      }
+    }
+
+    return $identifier;
   }
 
 }

@@ -1299,3 +1299,11 @@
   outline: none !important;
   background: transparent !important;
 }
+
+.niftybot-groww-alert-modal .modal-header {
+  border-bottom-color: rgba(220, 53, 69, 0.25);
+}
+
+.niftybot-groww-alert-modal .modal-title {
+  color: #dc3545;
+}

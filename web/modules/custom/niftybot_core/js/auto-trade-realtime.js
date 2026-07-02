@@ -63,6 +63,60 @@
     }
   }
 
+  function showGrowwAlert(alert) {
+    if (!alert || !alert.id) {
+      return;
+    }
+    const storageKey = 'niftybot-groww-alert-' + alert.id;
+    if (window.sessionStorage.getItem(storageKey) === '1') {
+      return;
+    }
+
+    let modalEl = document.getElementById('niftybot-groww-alert-modal');
+    if (!modalEl) {
+      modalEl = document.createElement('div');
+      modalEl.className = 'modal fade';
+      modalEl.id = 'niftybot-groww-alert-modal';
+      modalEl.setAttribute('tabindex', '-1');
+      modalEl.setAttribute('aria-labelledby', 'niftybot-groww-alert-title');
+      modalEl.setAttribute('aria-hidden', 'true');
+      modalEl.innerHTML = ''
+        + '<div class="modal-dialog modal-dialog-centered">'
+        + '<div class="modal-content niftybot-groww-alert-modal">'
+        + '<div class="modal-header">'
+        + '<h5 class="modal-title" id="niftybot-groww-alert-title"></h5>'
+        + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="' + Drupal.t('Close') + '"></button>'
+        + '</div>'
+        + '<div class="modal-body">'
+        + '<p class="mb-0" id="niftybot-groww-alert-message"></p>'
+        + '</div>'
+        + '<div class="modal-footer">'
+        + '<button type="button" class="btn btn-primary" data-bs-dismiss="modal">' + Drupal.t('OK') + '</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+      document.body.appendChild(modalEl);
+    }
+
+    const titleEl = document.getElementById('niftybot-groww-alert-title');
+    const messageEl = document.getElementById('niftybot-groww-alert-message');
+    if (titleEl) {
+      titleEl.textContent = alert.title || Drupal.t('Groww order failed');
+    }
+    if (messageEl) {
+      messageEl.textContent = alert.message || '';
+    }
+
+    window.sessionStorage.setItem(storageKey, '1');
+    if (window.bootstrap && window.bootstrap.Modal) {
+      const instance = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+      instance.show();
+    }
+    else {
+      window.alert((alert.title ? alert.title + '\n\n' : '') + (alert.message || ''));
+    }
+  }
+
   function formatPoints(value) {
     if (value === null || value === undefined || value === '') {
       return '';
@@ -700,6 +754,9 @@
         ? Number(payload.nifty_ltp).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : '—'));
     setText('niftybot-auto-trade-message', payload.message || '');
+    if (payload.user_alert) {
+      showGrowwAlert(payload.user_alert);
+    }
     setText('niftybot-auto-trade-updated', new Date().toLocaleTimeString());
     setText('niftybot-auto-trade-trade-mode', (payload.trade_mode || 'buy').toUpperCase());
     setModeControls(!!payload.active);

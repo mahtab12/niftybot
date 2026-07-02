@@ -10,6 +10,11 @@ use Drupal\Core\Session\AccountProxyInterface;
  */
 class InAppNotificationService {
 
+  /**
+   * SQL fragment: alerts visible to a user (global + their own).
+   */
+  private const VISIBILITY_WHERE = '(a.uid IS NULL OR a.uid = :uid)';
+
   public function __construct(
     protected Connection $database,
     protected AccountProxyInterface $currentUser,
@@ -26,7 +31,7 @@ class InAppNotificationService {
       'SELECT COUNT(a.alert_id) FROM {niftybot_trade_alerts} a
        LEFT JOIN {niftybot_user_notification_reads} r
          ON r.alert_id = a.alert_id AND r.uid = :uid
-       WHERE r.id IS NULL',
+       WHERE ' . self::VISIBILITY_WHERE . ' AND r.id IS NULL',
       [':uid' => $uid]
     )->fetchField();
   }
@@ -48,6 +53,7 @@ class InAppNotificationService {
        FROM {niftybot_trade_alerts} a
        LEFT JOIN {niftybot_user_notification_reads} r
          ON r.alert_id = a.alert_id AND r.uid = :uid
+       WHERE ' . self::VISIBILITY_WHERE . '
        ORDER BY a.created DESC, a.alert_id DESC',
       0,
       $limit,
@@ -76,6 +82,14 @@ class InAppNotificationService {
    */
   public function markRead(int $uid, int $alert_id): void {
     if ($uid <= 0 || $alert_id <= 0) {
+      return;
+    }
+    $visible = $this->database->query(
+      'SELECT alert_id FROM {niftybot_trade_alerts} a
+       WHERE a.alert_id = :alert_id AND ' . self::VISIBILITY_WHERE,
+      [':alert_id' => $alert_id, ':uid' => $uid]
+    )->fetchField();
+    if (!$visible) {
       return;
     }
     $exists = $this->database->select('niftybot_user_notification_reads', 'r')
@@ -107,7 +121,7 @@ class InAppNotificationService {
       'SELECT a.alert_id FROM {niftybot_trade_alerts} a
        LEFT JOIN {niftybot_user_notification_reads} r
          ON r.alert_id = a.alert_id AND r.uid = :uid
-       WHERE r.id IS NULL',
+       WHERE ' . self::VISIBILITY_WHERE . ' AND r.id IS NULL',
       [':uid' => $uid]
     )->fetchCol();
     if ($unread === []) {

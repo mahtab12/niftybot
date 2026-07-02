@@ -16,6 +16,56 @@ niftybot_mobile_api.auth_login:
     _user_is_logged_in: 'FALSE'
   methods: [POST]
 
+niftybot_mobile_api.auth_register:
+  path: '/api/mobile/v1/auth/register'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileAuthController::register'
+  requirements:
+    _access: 'TRUE'
+    _user_is_logged_in: 'FALSE'
+  methods: [POST]
+
+niftybot_mobile_api.investment_dashboard:
+  path: '/api/mobile/v1/investment'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileInvestmentController::dashboard'
+  requirements:
+    _permission: 'access fxc investment+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.investment_plans:
+  path: '/api/mobile/v1/investment/plans'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileInvestmentController::plans'
+  requirements:
+    _permission: 'access fxc investment+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.investment_invest:
+  path: '/api/mobile/v1/investment/invest/{plan_id}'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileInvestmentController::invest'
+  requirements:
+    _permission: 'access fxc investment+use niftybot mobile api'
+    plan_id: \d+
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.investment_trades:
+  path: '/api/mobile/v1/investment/trades'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileInvestmentController::trades'
+  requirements:
+    _permission: 'access fxc investment+use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
 niftybot_mobile_api.auth_refresh:
   path: '/api/mobile/v1/auth/refresh'
   defaults:
@@ -176,6 +226,26 @@ niftybot_mobile_api.broker:
     _auth: ['jwt_auth', 'oauth2', 'cookie']
   methods: [GET]
 
+niftybot_mobile_api.broker_connect:
+  path: '/api/mobile/v1/broker'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileBrokerController::connect'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
+niftybot_mobile_api.broker_refresh:
+  path: '/api/mobile/v1/broker/refresh'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileBrokerController::refresh'
+  requirements:
+    _permission: 'use niftybot mobile api'
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [POST]
+
 niftybot_mobile_api.auto_trade_settings_get:
   path: '/api/mobile/v1/auto-trade/settings'
   defaults:
@@ -200,6 +270,17 @@ niftybot_mobile_api.auto_trade_status:
   path: '/api/mobile/v1/auto-trade/{instrument}/status'
   defaults:
     _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::autoTradeStatus'
+  requirements:
+    _permission: 'access niftybot auto trade'
+    instrument: nifty|sensex|crude_oil|gold
+  options:
+    _auth: ['jwt_auth', 'oauth2', 'cookie']
+  methods: [GET]
+
+niftybot_mobile_api.auto_trade_suggestions:
+  path: '/api/mobile/v1/auto-trade/{instrument}/suggestions'
+  defaults:
+    _controller: '\Drupal\niftybot_mobile_api\Controller\MobileTradingController::autoTradeSuggestions'
   requirements:
     _permission: 'access niftybot auto trade'
     instrument: nifty|sensex|crude_oil|gold

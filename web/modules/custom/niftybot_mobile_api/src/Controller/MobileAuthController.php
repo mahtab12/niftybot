@@ -4,6 +4,7 @@ namespace Drupal\niftybot_mobile_api\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\niftybot_mobile_api\Service\MobileAuthService;
+use Drupal\niftybot_mobile_api\Service\MobileRegistrationService;
 use Drupal\niftybot_mobile_api\Service\MobileUserPayloadService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +19,7 @@ class MobileAuthController extends ControllerBase {
 
   public function __construct(
     protected MobileAuthService $authService,
+    protected MobileRegistrationService $registrationService,
     protected MobileUserPayloadService $payloadService,
   ) {}
 
@@ -27,6 +29,7 @@ class MobileAuthController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('niftybot_mobile_api.auth'),
+      $container->get('niftybot_mobile_api.registration'),
       $container->get('niftybot_mobile_api.user_payload'),
     );
   }
@@ -50,6 +53,14 @@ class MobileAuthController extends ControllerBase {
       (string) ($data['username'] ?? $data['name'] ?? ''),
       (string) ($data['password'] ?? $data['pass'] ?? ''),
     );
+  }
+
+  /**
+   * POST register → JWT access token.
+   */
+  public function register(Request $request): JsonResponse {
+    $data = $this->decodeJson($request);
+    return $this->registrationService->register($data);
   }
 
   /**

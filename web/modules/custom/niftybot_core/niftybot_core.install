@@ -316,12 +316,18 @@ function niftybot_core_schema() {
   ];
 
   $schema['niftybot_trade_alerts'] = [
-    'description' => 'Platform trade-setup alerts broadcast to all traders.',
+    'description' => 'Trade alerts: global setup signals (uid NULL) or per-user order events.',
     'fields' => [
       'alert_id' => [
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'Drupal user ID; NULL = broadcast to all users.',
       ],
       'instrument' => [
         'type' => 'varchar',
@@ -369,6 +375,7 @@ function niftybot_core_schema() {
     'indexes' => [
       'instrument_created' => ['instrument', 'created'],
       'signal_action' => ['signal_action'],
+      'uid_created' => ['uid', 'created'],
     ],
   ];
 
@@ -579,5 +586,20 @@ function niftybot_core_update_9006() {
       ->expression('crude_oil_quantity', '100')
       ->condition('crude_oil_quantity', 10)
       ->execute();
+  }
+}
+
+/**
+ * Scope order-failure trade alerts to individual users.
+ */
+function niftybot_core_update_9007() {
+  $schema = niftybot_core_schema();
+  $db_schema = \Drupal::database()->schema();
+  if ($db_schema->tableExists('niftybot_trade_alerts')
+    && !$db_schema->fieldExists('niftybot_trade_alerts', 'uid')) {
+    $db_schema->addField('niftybot_trade_alerts', 'uid', $schema['niftybot_trade_alerts']['fields']['uid']);
+    if (!$db_schema->indexExists('niftybot_trade_alerts', 'uid_created')) {
+      $db_schema->addIndex('niftybot_trade_alerts', 'uid_created', ['uid', 'created'], $schema['niftybot_trade_alerts']);
+    }
   }
 }

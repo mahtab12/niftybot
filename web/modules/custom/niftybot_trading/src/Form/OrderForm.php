@@ -448,6 +448,21 @@ class OrderForm extends FormBase {
         '@id' => $api_response['broker_order_id'],
       ]));
     }
+    elseif ($api_response
+      && ($api_response['success'] ?? TRUE) === FALSE
+      && ($api_response['error_code'] ?? '') === 'INSUFFICIENT_BALANCE') {
+      $failure_message = $api_response['message'] ?? 'Insufficient balance in your Groww account.';
+      $this->database->update('niftybot_orders')
+        ->fields([
+          'status' => 'failed',
+          'status_message' => $failure_message,
+          'updated' => $now,
+        ])
+        ->condition('order_id', $order_id)
+        ->execute();
+
+      $this->messenger()->addError($this->t('Buy order rejected — insufficient balance in your Groww account. Add funds on Groww and try again.'));
+    }
     else {
       $this->database->update('niftybot_orders')
         ->fields([

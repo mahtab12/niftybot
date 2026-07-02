@@ -22,6 +22,15 @@ niftybot_user.kyc_submit:
   requirements:
     _permission: 'submit kyc'
 
+# Backward-compatible alias (used by older templates/caches).
+niftybot_user.kyc:
+  path: '/niftybot/kyc'
+  defaults:
+    _form: '\Drupal\niftybot_user\Form\KycSubmissionForm'
+    _title: 'KYC Verification'
+  requirements:
+    _permission: 'submit kyc'
+
 niftybot_user.kyc_status:
   path: '/niftybot/kyc/status'
   defaults:

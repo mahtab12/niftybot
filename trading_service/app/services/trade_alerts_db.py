@@ -62,7 +62,8 @@ def maybe_insert_trade_alert(
             text(
                 "SELECT alert_id FROM niftybot_trade_alerts "
                 "WHERE instrument = :instrument AND signal_action = :action "
-                "AND created > :since ORDER BY alert_id DESC LIMIT 1"
+                "AND uid IS NULL AND created > :since "
+                "ORDER BY alert_id DESC LIMIT 1"
             ),
             {
                 "instrument": instrument_key,
@@ -107,6 +108,88 @@ def maybe_insert_trade_alert(
     except Exception:
         db.rollback()
         logger.exception("Failed to insert trade alert for %s", instrument_key)
+        return None
+    finally:
+        db.close()
+
+
+def maybe_insert_order_failure_alert(
+    instrument: str,
+    failure_type: str,
+    message: str,
+    underlying_ltp: Optional[float] = None,
+    uid: int = 0,
+) -> Optional[int]:
+    """Insert a deduped per-user order-failure alert for the notification bell."""
+    if uid <= 0:
+        return None
+
+    instrument_key = instrument.strip().lower()
+    failure_key = (failure_type or "ORDER_FAILED").strip().upper()
+    now = int(time.time())
+    dedupe_seconds = 300
+
+    title = "Groww order failed"
+    if failure_key == "INSUFFICIENT_BALANCE":
+        title = "Insufficient Groww balance"
+
+    db = SessionLocal()
+    try:
+        recent = db.execute(
+            text(
+                "SELECT alert_id FROM niftybot_trade_alerts "
+                "WHERE uid = :uid AND instrument = :instrument "
+                "AND signal_action = :action AND created > :since "
+                "ORDER BY alert_id DESC LIMIT 1"
+            ),
+            {
+                "uid": uid,
+                "instrument": instrument_key,
+                "action": failure_key,
+                "since": now - dedupe_seconds,
+            },
+        ).first()
+        if recent:
+            return None
+
+        result = db.execute(
+            text(
+                "INSERT INTO niftybot_trade_alerts ("
+                "uid, instrument, signal_action, confidence, title, message, "
+                "underlying_ltp, payload, created"
+                ") VALUES ("
+                ":uid, :instrument, :signal_action, :confidence, :title, :message, "
+                ":underlying_ltp, :payload, :created"
+                ")"
+            ),
+            {
+                "uid": uid,
+                "instrument": instrument_key,
+                "signal_action": failure_key,
+                "confidence": 0.0,
+                "title": title,
+                "message": message,
+                "underlying_ltp": underlying_ltp,
+                "payload": json.dumps(
+                    {"failure_type": failure_key, "uid": uid},
+                    default=str,
+                ),
+                "created": now,
+            },
+        )
+        db.commit()
+        alert_id = result.lastrowid
+        logger.info(
+            "Order failure alert created id=%s uid=%s instrument=%s type=%s",
+            alert_id,
+            uid,
+            instrument_key,
+            failure_key,
+        )
+        return int(alert_id) if alert_id else None
+    except Exception:
+        db.rollback()
+        logger.exception("Failed to insert order failure alert for %s", instrument_key)
         return None
     finally:
         db.close()

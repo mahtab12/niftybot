@@ -16,3 +16,4 @@ dependencies:
   - niftybot_user:niftybot_user
   - niftybot_subscription:niftybot_subscription
   - niftybot_dashboard:niftybot_dashboard
+  - niftybot_investment:niftybot_investment

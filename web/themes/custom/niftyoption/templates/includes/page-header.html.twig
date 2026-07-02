@@ -73,7 +73,7 @@
         <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userSettings">
           <div class="header-profile-actions">
             <a href="/niftybot/profile">{{ 'Profile'|t }}</a>
-            <a href="/niftybot/kyc">{{ 'KYC'|t }}</a>
+            <a href="{{ path('niftybot_user.kyc_submit') }}">{{ 'KYC'|t }}</a>
             <a href="{{ path('user.logout') }}">{{ 'Logout'|t }}</a>
           </div>
         </div>

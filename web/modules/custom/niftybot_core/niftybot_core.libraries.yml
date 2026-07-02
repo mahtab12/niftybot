@@ -36,7 +36,7 @@ market_realtime:
     - core/once
 
 auto_trade_realtime:
-  version: 2.1
+  version: 2.2
   js:
     js/auto-trade-realtime.js: {}
   dependencies:
@@ -45,7 +45,7 @@ auto_trade_realtime:
     - core/once
 
 auto_trade_user:
-  version: 1.6
+  version: 1.7
   css:
     theme:
       css/auto-trade-user.css: {}

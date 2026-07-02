@@ -20,6 +20,7 @@ from app.models.schemas import (
     AutoTradePosition,
     AutoTradeSignalInfo,
     AutoTradeStatusResponse,
+    AutoTradeUserAlert,
     BrokerType,
     CancelSmartOrderRequest,
     CreateSmartOrderRequest,
@@ -28,6 +29,7 @@ from app.models.schemas import (
     OptionChainResponse,
     OrderType,
     PlaceOrderRequest,
+    PlaceOrderResponse,
     ProductType,
     Segment,
     SmartOrderResponse,
@@ -44,7 +46,10 @@ from app.services.auto_trade_db import (
     update_auto_trade,
     void_untracked_open_trades,
 )
-from app.services.trade_alerts_db import maybe_insert_trade_alert
+from app.services.trade_alerts_db import (
+    maybe_insert_order_failure_alert,
+    maybe_insert_trade_alert,
+)
 from app.services.broker_service import broker_service
 from app.strategies.nifty_option_strategy import (
     MIN_ENTRY_BARS,
@@ -145,6 +150,37 @@ class AutoTradeService:
         self._trade_mode = "buy"
         self._last_signal_bars: list[dict[str, float]] = []
         self._last_option_chain: Optional[OptionChainResponse] = None
+        self._user_alert: Optional[AutoTradeUserAlert] = None
+
+    def _handle_entry_order_failure(self, result: PlaceOrderResponse) -> None:
+        if result.error_code == "INSUFFICIENT_BALANCE":
+            msg = (
+                "Buy order rejected — insufficient balance in your Groww account. "
+                "Add funds on Groww to continue auto-trading."
+            )
+            self._status_message = msg
+            alert_id = (
+                f"{self.profile.instrument_id}-insufficient-"
+                f"{int(time.time()) // 300}"
+            )
+            self._user_alert = AutoTradeUserAlert(
+                id=alert_id,
+                type="insufficient_balance",
+                severity="error",
+                title="Insufficient Groww balance",
+                message=msg,
+            )
+            maybe_insert_order_failure_alert(
+                self.profile.instrument_id,
+                "INSUFFICIENT_BALANCE",
+                msg,
+                self._underlying_ltp,
+                uid=self.user_id,
+            )
+            return
+
+        self._user_alert = None
+        self._status_message = f"Entry order failed: {result.message}"
 
     def _groww_broker(self):
         if self._user_broker is not None:
@@ -396,6 +432,7 @@ class AutoTradeService:
                 "poll_seconds": settings.auto_trade_poll_seconds,
                 "min_entry_confidence": MIN_ENTRY_CONFIDENCE,
             },
+            user_alert=self._user_alert,
         )
 
     def _run_loop(self) -> None:
@@ -689,7 +726,7 @@ class AutoTradeService:
         )
         result = self._place_order(request)
         if not result.success:
-            self._status_message = f"Entry order failed: {result.message}"
+            self._handle_entry_order_failure(result)
             return
 
         entry_price = self._fetch_option_price(broker, symbol, hint=chain_ltp)
@@ -849,7 +886,7 @@ class AutoTradeService:
         )
         result = self._place_order(request)
         if not result.success:
-            self._status_message = f"Entry order failed: {result.message}"
+            self._handle_entry_order_failure(result)
             return
 
         entry_price = self._fetch_future_price(broker, symbol, hint=chain_ltp)

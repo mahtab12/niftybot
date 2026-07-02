@@ -16,6 +16,7 @@ from app.config import settings
 from app.market_watchlist import WATCHLIST
 from app.option_expiries import weekly_expiries
 from app.brokers.base import BaseBroker
+from app.brokers.groww_order_errors import classify_groww_order_error
 from app.models.schemas import (
     AvailableMarginResponse,
     CancelOrderResponse,
@@ -429,12 +430,14 @@ class GrowwBroker(BaseBroker):
             logger.exception(
                 "Failed to place order: symbol=%s", request.symbol
             )
+            message, error_code = classify_groww_order_error(str(e))
             return PlaceOrderResponse(
                 success=False,
                 order_id=request.order_id,
                 broker_order_id=None,
                 status=OrderStatus.FAILED,
-                message=f"Order placement failed: {e}",
+                message=message,
+                error_code=error_code,
             )
 
     def cancel_order(self, broker_order_id: str) -> CancelOrderResponse:
