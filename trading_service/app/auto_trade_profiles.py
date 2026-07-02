@@ -30,6 +30,14 @@ class AutoTradeProfile:
     market_segment: str = "FNO"
     candle_segment: str = "CASH"
     trade_kind: str = "options"  # options | futures
+    entry_cutoff_245pm: bool = True  # Block new entries after 2:45 PM IST
+    groww_trading_supported: bool = True  # Groww API: CASH + FNO only (no MCX orders)
+
+
+GROWW_MCX_UNSUPPORTED_MESSAGE = (
+    "Groww Trading APIs support equity (CASH) and derivatives (FNO) only. "
+    "MCX commodity trading is not available at this time."
+)
 
 
 NIFTY_PROFILE = AutoTradeProfile(
@@ -90,6 +98,8 @@ CRUDE_OIL_PROFILE = AutoTradeProfile(
     market_segment="COMMODITY",
     candle_segment="COMMODITY",
     trade_kind="futures",
+    entry_cutoff_245pm=False,
+    groww_trading_supported=False,
 )
 
 GOLD_PROFILE = AutoTradeProfile(
@@ -112,6 +122,8 @@ GOLD_PROFILE = AutoTradeProfile(
     market_segment="COMMODITY",
     candle_segment="COMMODITY",
     trade_kind="futures",
+    entry_cutoff_245pm=False,
+    groww_trading_supported=False,
 )
 
 PROFILES: dict[str, AutoTradeProfile] = {
@@ -133,3 +145,10 @@ def get_profile(instrument_id: str) -> AutoTradeProfile:
     if key not in PROFILES:
         raise ValueError(f"Unknown auto-trade instrument: {instrument_id}")
     return PROFILES[key]
+
+
+def assert_groww_trading_supported(instrument_id: str) -> None:
+    """Raise when Groww cannot place orders for this instrument (e.g. MCX)."""
+    profile = get_profile(instrument_id)
+    if not profile.groww_trading_supported:
+        raise ValueError(GROWW_MCX_UNSUPPORTED_MESSAGE)

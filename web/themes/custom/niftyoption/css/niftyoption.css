@@ -40,6 +40,21 @@ body.layout-dashboard .page-wrapper {
 body.layout-dashboard .page-header {
   flex: 0 0 auto;
   z-index: 200;
+  overflow: visible;
+}
+
+body.layout-dashboard .page-header .niftybot-notifications__toggle {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+body.layout-dashboard .page-header .niftybot-notifications__toggle:hover,
+body.layout-dashboard .page-header .niftybot-notifications__toggle:focus,
+body.layout-dashboard .page-header .niftybot-notifications__toggle.is-open {
+  border: 0 !important;
+  outline: none !important;
 }
 
 body.layout-dashboard .main-container {

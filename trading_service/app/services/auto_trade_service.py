@@ -9,7 +9,12 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Callable, Optional
 
-from app.auto_trade_profiles import AutoTradeProfile, PROFILES, get_profile
+from app.auto_trade_profiles import (
+    AutoTradeProfile,
+    GROWW_MCX_UNSUPPORTED_MESSAGE,
+    PROFILES,
+    get_profile,
+)
 from app.config import settings
 from app.models.schemas import (
     AutoTradePosition,
@@ -41,13 +46,20 @@ from app.services.auto_trade_db import (
 )
 from app.services.trade_alerts_db import maybe_insert_trade_alert
 from app.services.broker_service import broker_service
-from app.strategies.nifty_option_strategy import evaluate_option_buying_signal, parse_candles
+from app.strategies.nifty_option_strategy import (
+    MIN_ENTRY_BARS,
+    evaluate_option_buying_signal,
+    parse_candles,
+)
 from app.strategies.option_selling_strategy import evaluate_option_selling_signal
 from app.strategies.indicators import volatility_adjusted_sl_points
 
 logger = logging.getLogger("niftybot.auto_trade")
 
 MIN_ENTRY_CONFIDENCE = 0.75
+# ~26 fifteen-minute session bars per Indian trading day; EMA 200 needs MIN_ENTRY_BARS.
+CANDLES_PER_TRADING_DAY = 26
+CANDLE_HISTORY_BUFFER_DAYS = 5
 
 MONTH_CODES = (
     "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
@@ -132,6 +144,7 @@ class AutoTradeService:
         self._entry_in_progress = False
         self._trade_mode = "buy"
         self._last_signal_bars: list[dict[str, float]] = []
+        self._last_option_chain: Optional[OptionChainResponse] = None
 
     def _groww_broker(self):
         if self._user_broker is not None:
@@ -196,6 +209,9 @@ class AutoTradeService:
             )
 
     def activate(self, mode: str = "buy") -> AutoTradeStatusResponse:
+        if not self.profile.groww_trading_supported:
+            return self.get_status(GROWW_MCX_UNSUPPORTED_MESSAGE)
+
         trade_mode = mode.strip().lower()
         if trade_mode not in ("buy", "sell"):
             return self.get_status("Invalid trade mode — use buy or sell")
@@ -401,6 +417,13 @@ class AutoTradeService:
         attr = f"SEGMENT_{segment}"
         return getattr(groww, attr, groww.SEGMENT_CASH)
 
+    def _candle_history_days(self) -> int:
+        """Calendar days of 15m history to satisfy EMA 200 and other indicators."""
+        trading_days_needed = (
+            MIN_ENTRY_BARS // CANDLES_PER_TRADING_DAY
+        ) + CANDLE_HISTORY_BUFFER_DAYS
+        return max(30, trading_days_needed * 2)
+
     def _tick(self) -> None:
         broker = self._groww_broker()
         self._underlying_ltp = self._fetch_index_ltp(broker)
@@ -486,7 +509,8 @@ class AutoTradeService:
     def _evaluate_signal(self, broker) -> Any:
         groww = broker._client
         end = datetime.now()
-        start = end - timedelta(days=5)
+        history_days = self._candle_history_days()
+        start = end - timedelta(days=history_days)
         candles: list = []
         try:
             data = groww.get_historical_candles(
@@ -498,7 +522,7 @@ class AutoTradeService:
                 start_time=start.strftime("%Y-%m-%d %H:%M:%S"),
                 end_time=end.strftime("%Y-%m-%d %H:%M:%S"),
                 candle_interval=groww.CANDLE_INTERVAL_MIN_15,
-                timeout=15,
+                timeout=25,
             )
             candles = data.get("candles", []) if isinstance(data, dict) else []
         except Exception:
@@ -507,6 +531,14 @@ class AutoTradeService:
             )
 
         self._last_signal_bars = parse_candles(candles)
+        if len(self._last_signal_bars) < MIN_ENTRY_BARS:
+            logger.info(
+                "%s candle history short: %s bars (need %s, requested %s days)",
+                self.profile.instrument_id,
+                len(self._last_signal_bars),
+                MIN_ENTRY_BARS,
+                history_days,
+            )
 
         fut_symbol = self._resolve_index_future_symbol(broker)
         price_change: Optional[float] = None
@@ -524,12 +556,15 @@ class AutoTradeService:
                 candles, price_change, oi_change,
             )
         chain = None if self._is_futures_profile() else self._fetch_weekly_option_chain(broker)
+        self._last_option_chain = chain
         return evaluate_option_buying_signal(
             candles,
             price_change,
             oi_change,
             option_chain=chain,
             strike_step=self.profile.strike_step,
+            apply_entry_cutoff=self.profile.entry_cutoff_245pm,
+            live_ltp=self._underlying_ltp,
         )
 
     def _fetch_weekly_option_chain(self, broker) -> Optional[OptionChainResponse]:

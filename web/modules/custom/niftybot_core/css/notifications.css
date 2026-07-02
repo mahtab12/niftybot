@@ -1,9 +1,21 @@
 /* Dashboard header — trade setup notifications */
 
-.niftybot-notifications {
-  position: relative;
+.header-actions-container {
+  gap: 0.35rem;
 }
 
+.page-header .header-actions-container {
+  overflow: visible;
+}
+
+.niftybot-notifications {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.niftybot-header-icon-link,
 .niftybot-notifications__toggle {
   position: relative;
   display: inline-flex;
@@ -11,21 +23,35 @@
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border: 0;
+  padding: 0;
+  margin: 0;
+  border: 0 !important;
   border-radius: 8px;
-  background: transparent;
+  background: transparent !important;
+  box-shadow: none !important;
   color: #1553a3;
   text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none !important;
 }
 
+.niftybot-header-icon-link:hover,
+.niftybot-header-icon-link:focus,
 .niftybot-notifications__toggle:hover,
-.niftybot-notifications__toggle:focus {
-  background: #eaf2ff;
+.niftybot-notifications__toggle:focus,
+.niftybot-notifications__toggle.is-open {
+  background: #eaf2ff !important;
   color: #0f3d7a;
+  box-shadow: none !important;
+  border: 0 !important;
+  outline: none !important;
 }
 
-.niftybot-notifications__toggle i {
-  font-size: 1.2rem;
+.niftybot-notifications__toggle:focus-visible {
+  box-shadow: 0 0 0 2px rgba(21, 83, 163, 0.28) !important;
 }
 
 .niftybot-notifications__badge {
@@ -42,15 +68,27 @@
   font-weight: 700;
   line-height: 1.1rem;
   text-align: center;
+  pointer-events: none;
 }
 
 .niftybot-notifications__menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  left: auto;
   width: min(22rem, calc(100vw - 2rem));
   padding: 0;
+  margin: 0;
   border: 1px solid #d7e0eb;
   border-radius: 12px;
+  background: #fff;
   box-shadow: 0 12px 32px rgba(23, 24, 28, 0.12);
   overflow: hidden;
+  z-index: 1200;
+}
+
+.niftybot-notifications__menu[hidden] {
+  display: none !important;
 }
 
 .niftybot-notifications__head {
@@ -71,12 +109,21 @@
 }
 
 .niftybot-notifications__mark-all {
-  border: 0;
-  background: transparent;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   color: #1553a3;
   font-size: 0.78rem;
   font-weight: 600;
   padding: 0;
+  cursor: pointer;
+  outline: none !important;
+}
+
+.niftybot-notifications__mark-all:hover,
+.niftybot-notifications__mark-all:focus {
+  color: #0f3d7a;
+  text-decoration: underline;
 }
 
 .niftybot-notifications__list {
@@ -138,18 +185,13 @@
   font-size: 0.85rem;
 }
 
-.niftybot-header-icon-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 8px;
-  color: #1553a3;
-  text-decoration: none;
-}
+@media (max-width: 767.98px) {
+  .niftybot-notifications {
+    margin-right: 0.15rem;
+  }
 
-.niftybot-header-icon-link:hover {
-  background: #eaf2ff;
-  color: #0f3d7a;
+  .header-profile {
+    padding-left: 0.5rem;
+    padding-right: 0.75rem;
+  }
 }

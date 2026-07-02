@@ -1,4 +1,4 @@
-"""Professional Nifty/Sensex option buying — OI, EMA, RSI, VWAP, volume, chain OI."""
+"""Professional Nifty/Sensex/MCX option buying — layered indicator confluence."""
 
 from __future__ import annotations
 
@@ -8,23 +8,47 @@ from typing import Any, Optional
 from app.models.schemas import OptionChainResponse
 from app.strategies.chain_signals import analyze_strike_oi, chain_oi_factor
 from app.strategies.indicators import (
+    adx_above_threshold,
     atr_percent,
+    confirmation_candle_formed,
+    confirmation_candle_high_break,
+    confirmation_candle_low_break,
+    compute_setup_levels,
     day_high_break,
     day_low_break,
     ema_bias,
     ema_pullback_bounce,
+    ema_stack_bearish,
+    ema_stack_bullish,
+    ema_triple_stack_bearish,
+    ema_triple_stack_bullish,
     ema_trend_signal,
     ema_trend_strength,
+    is_late_session,
     last_candle_confirms,
+    latest_adx,
+    latest_atr,
+    latest_ema_value,
     latest_rsi,
+    market_structure_hh_hl,
+    market_structure_lh_ll,
     near_swing_extreme,
+    price_above_session_vwap,
+    price_below_ema,
+    price_below_session_vwap,
+    price_ranging_around_vwap,
     pullback_retracement_percent,
+    pullback_to_ema_or_vwap,
     rejection_candle,
     rsi_divergence_signal,
     rsi_in_entry_zone,
+    rsi_in_range,
     rsi_momentum_filter,
     session_first_candle_levels,
     session_vwap,
+    volume_above_average,
+    volume_above_ma,
+    volume_moving_average,
     volume_spike_factor,
     vwap_factor,
 )
@@ -33,6 +57,21 @@ from app.strategies.oi_signals import classify_oi_buildup, oi_buildup_bias
 MIN_SIGNAL_CONFIDENCE = 0.75
 MIN_PULLBACK_RETRACEMENT_PCT = 25.0
 MIN_ADVANCED_SIGNALS = 2  # of VWAP, volume spike, chain OI
+
+ENTRY_EMA_FAST = 20
+ENTRY_EMA_MID = 50
+ENTRY_EMA_SLOW = 200
+VOLUME_MA_PERIOD = 20
+RSI_PERIOD = 14
+ADX_PERIOD = 14
+ATR_PERIOD = 14
+ADX_MIN = 25.0
+ADX_REJECT = 20.0
+CE_RSI_MIN = 55.0
+CE_RSI_MAX = 75.0
+PE_RSI_MIN = 25.0
+PE_RSI_MAX = 45.0
+MIN_ENTRY_BARS = 210
 
 
 @dataclass
@@ -70,15 +109,59 @@ def parse_candles(raw: list) -> list[dict[str, Any]]:
 
 
 def _entry_confidence(factors: list[str], ema_signal: str) -> float:
-    """More factors (incl. VWAP, volume, chain OI) → higher confidence."""
-    score = len(factors) / 8.0
+    """Legacy factor-count score for option selling (fewer aligned signals)."""
+    score = len(factors) / 12.0
     if ema_signal in ("bullish_cross", "bearish_cross"):
-        score += 0.08
+        score += 0.06
     return min(1.0, round(score, 4))
 
 
-def _meets_confidence_threshold(factors: list[str], ema_signal: str) -> bool:
-    return _entry_confidence(factors, ema_signal) >= MIN_SIGNAL_CONFIDENCE
+def _setup_confidence(
+    user_passed: list[str],
+    user_total: int,
+    oi_factor: Optional[str],
+    rsi_factor: Optional[str],
+    chain_f: Optional[str],
+    ema_signal: str,
+    bars: list[dict[str, Any]],
+    direction: str,
+) -> float:
+    """
+    Option-buying setup strength: 70% entry-rule pass rate + 30% OI/RSI/chain layers.
+
+    Prevents inflated 100% readings when many individual rule names align but not all
+    10 entry rules (and chain OI) required for a trade are satisfied.
+    """
+    if user_total <= 0:
+        return 0.0
+
+    rule_score = len(user_passed) / user_total
+    candle_confirm = (
+        direction == "bullish" and last_candle_confirms(bars, "bullish")
+    ) or (
+        direction == "bearish" and last_candle_confirms(bars, "bearish")
+    )
+    extras = sum([
+        oi_factor is not None,
+        rsi_factor is not None,
+        chain_f is not None,
+        ema_signal not in ("neutral",),
+        candle_confirm,
+    ])
+    extra_score = extras / 5.0
+    score = rule_score * 0.70 + extra_score * 0.30
+    if ema_signal in ("bullish_cross", "bearish_cross"):
+        score += 0.05
+    return min(1.0, round(score, 4))
+
+
+def _meets_confidence_threshold(
+    factors_or_confidence: list[str] | float,
+    ema_signal: str = "neutral",
+) -> bool:
+    if isinstance(factors_or_confidence, list):
+        return _entry_confidence(factors_or_confidence, ema_signal) >= MIN_SIGNAL_CONFIDENCE
+    return float(factors_or_confidence) >= MIN_SIGNAL_CONFIDENCE
 
 
 def _has_strong_setup(factors: list[str], ema_signal: str) -> bool:
@@ -277,140 +360,317 @@ def _hold_reason(
     return "waiting_for_setup"
 
 
+def _global_rejects(
+    bars: list[dict[str, Any]],
+    *,
+    apply_entry_cutoff: bool = True,
+) -> list[str]:
+    """Hard rejects applied to both CALL and PUT setups."""
+    rejects: list[str] = []
+    adx_value = latest_adx(bars, ADX_PERIOD)
+    if adx_value is not None and adx_value < ADX_REJECT:
+        rejects.append("adx_below_20")
+    if price_ranging_around_vwap(bars):
+        rejects.append("ranging_around_vwap")
+    if not volume_above_ma(bars, VOLUME_MA_PERIOD):
+        rejects.append("volume_below_average")
+    if apply_entry_cutoff and is_late_session(bars):
+        rejects.append("after_245pm_cutoff")
+    return rejects
+
+
+def _evaluate_ce_rules(
+    bars: list[dict[str, Any]],
+    closes: list[float],
+) -> tuple[dict[str, bool], list[str]]:
+    """CALL (CE) entry — all conditions must pass."""
+    rules = {
+        "price_above_vwap": price_above_session_vwap(bars),
+        "ema20_above_ema50": ema_stack_bullish(
+            closes, ENTRY_EMA_FAST, ENTRY_EMA_MID,
+        ),
+        "ema50_above_ema200": ema_triple_stack_bullish(
+            closes, ENTRY_EMA_FAST, ENTRY_EMA_MID, ENTRY_EMA_SLOW,
+        ),
+        "adx_above_25": adx_above_threshold(bars, ADX_MIN, ADX_PERIOD),
+        "rsi_55_75": rsi_in_range(
+            closes, CE_RSI_MIN, CE_RSI_MAX, RSI_PERIOD,
+        ),
+        "volume_above_20ma": volume_above_ma(bars, VOLUME_MA_PERIOD),
+        "market_structure_hh_hl": market_structure_hh_hl(bars),
+        "pullback_ema20_or_vwap": pullback_to_ema_or_vwap(
+            bars, closes, "bullish", ENTRY_EMA_FAST,
+        ),
+        "bullish_confirmation_candle": confirmation_candle_formed(
+            bars, "bullish",
+        ),
+        "confirmation_high_break": confirmation_candle_high_break(bars),
+    }
+    passed = [name for name, ok in rules.items() if ok]
+    return rules, passed
+
+
+def _evaluate_pe_rules(
+    bars: list[dict[str, Any]],
+    closes: list[float],
+) -> tuple[dict[str, bool], list[str]]:
+    """PUT (PE) entry — all conditions must pass."""
+    rules = {
+        "price_below_vwap": price_below_session_vwap(bars),
+        "ema20_below_ema50": ema_stack_bearish(
+            closes, ENTRY_EMA_FAST, ENTRY_EMA_MID,
+        ),
+        "ema50_below_ema200": ema_triple_stack_bearish(
+            closes, ENTRY_EMA_FAST, ENTRY_EMA_MID, ENTRY_EMA_SLOW,
+        ),
+        "adx_above_25": adx_above_threshold(bars, ADX_MIN, ADX_PERIOD),
+        "rsi_25_45": rsi_in_range(
+            closes, PE_RSI_MIN, PE_RSI_MAX, RSI_PERIOD,
+        ),
+        "volume_above_20ma": volume_above_ma(bars, VOLUME_MA_PERIOD),
+        "market_structure_lh_ll": market_structure_lh_ll(bars),
+        "pullback_ema20_or_vwap": pullback_to_ema_or_vwap(
+            bars, closes, "bearish", ENTRY_EMA_FAST,
+        ),
+        "bearish_confirmation_candle": confirmation_candle_formed(
+            bars, "bearish",
+        ),
+        "confirmation_low_break": confirmation_candle_low_break(bars),
+    }
+    passed = [name for name, ok in rules.items() if ok]
+    return rules, passed
+
+
+def _first_missing_rule(rules: dict[str, bool]) -> str:
+    for name, ok in rules.items():
+        if not ok:
+            return f"waiting_for_{name}"
+    return "waiting_for_setup"
+
+
+def _rule_confidence(passed_count: int, total: int) -> float:
+    if total <= 0:
+        return 0.0
+    return round(passed_count / total, 4)
+
+
+def _professional_hold_reason(
+    user_rules: dict[str, bool],
+    rejects: list[str],
+    oi_factor: Optional[str],
+    chain_f: Optional[str],
+    chain_available: bool,
+    at_extreme: bool,
+    volatility_block: bool,
+    confidence: float,
+) -> str:
+    if rejects:
+        return rejects[0]
+    missing = _first_missing_rule(user_rules)
+    if missing != "waiting_for_setup":
+        return missing
+    if volatility_block:
+        return "volatility_too_high_for_buying"
+    if at_extreme:
+        return "at_swing_extreme"
+    if oi_factor is None:
+        return "waiting_for_oi_alignment"
+    if chain_available and chain_f is None:
+        return "waiting_for_chain_oi"
+    if confidence < MIN_SIGNAL_CONFIDENCE:
+        return "confidence_below_75pct"
+    return "waiting_for_setup"
+
+
+def _build_professional_factors(
+    direction: str,
+    user_passed: list[str],
+    oi_factor: Optional[str],
+    rsi_factor: Optional[str],
+    chain_f: Optional[str],
+    ema_signal: str,
+    bars: list[dict[str, Any]],
+) -> list[str]:
+    factors = list(user_passed)
+    if oi_factor:
+        factors.append(oi_factor)
+    if rsi_factor:
+        factors.append(rsi_factor)
+    if chain_f:
+        factors.append(chain_f)
+    if ema_signal not in ("neutral",):
+        factors.append(ema_signal)
+    if direction == "bullish" and last_candle_confirms(bars, "bullish"):
+        factors.append("candle_confirm")
+    if direction == "bearish" and last_candle_confirms(bars, "bearish"):
+        factors.append("candle_confirm")
+    return factors
+
+
 def evaluate_option_buying_signal(
     candles: list,
     futures_price_change: Optional[float],
     futures_oi_change: Optional[float],
     option_chain: Optional[OptionChainResponse] = None,
     strike_step: int = 50,
+    apply_entry_cutoff: bool = True,
+    live_ltp: Optional[float] = None,
 ) -> StrategySignal:
     """
-    Buy ATM CE or PE when the full professional stack aligns:
+    Professional option buying with full indicator stack.
 
-    Core: futures OI + EMA + RSI
-    Advanced: VWAP + volume spike + strike-level chain OI (2 of 3)
-    Timing: pullback bounce OR first 15m candle high/low break
+    Indicators: EMA 20/50/200, VWAP, ADX(14), ATR(14), RSI(14), volume MA(20).
+
+    CALL/PUT rule sets (all must pass) plus futures OI and chain OI confirmation.
+
+    apply_entry_cutoff: when True (Nifty/Sensex), reject entries after 2:45 PM IST.
+    MCX crude/gold pass False so evening session entries remain allowed.
     """
     bars = parse_candles(candles)
-    if len(bars) < 30:
+    if len(bars) < MIN_ENTRY_BARS:
         return StrategySignal(
             action="HOLD",
-            reasons=["insufficient_candle_data"],
-            indicators={"candle_count": len(bars)},
+            reasons=[f"insufficient_candle_data ({len(bars)}/{MIN_ENTRY_BARS} bars)"],
+            indicators={
+                "candle_count": len(bars),
+                "min_bars_required": MIN_ENTRY_BARS,
+            },
         )
 
     closes = [b["close"] for b in bars]
+    rejects = _global_rejects(bars, apply_entry_cutoff=apply_entry_cutoff)
+    ce_rules, ce_passed = _evaluate_ce_rules(bars, closes)
+    pe_rules, pe_passed = _evaluate_pe_rules(bars, closes)
+    ce_total = len(ce_rules)
+    pe_total = len(pe_rules)
+    ce_user_ok = len(ce_passed) == ce_total
+    pe_user_ok = len(pe_passed) == pe_total
+
+    ema_20 = latest_ema_value(closes, ENTRY_EMA_FAST)
+    ema_50 = latest_ema_value(closes, ENTRY_EMA_MID)
+    ema_200 = latest_ema_value(closes, ENTRY_EMA_SLOW)
+    ema_signal = ema_trend_signal(
+        closes, fast=ENTRY_EMA_FAST, slow=ENTRY_EMA_MID,
+    )
+    ema_dir = ema_bias(ema_signal)
+    adx_value = latest_adx(bars, ADX_PERIOD)
+    atr_value = latest_atr(bars, ATR_PERIOD)
+    atr_pct = atr_percent(bars, ATR_PERIOD)
+    vwap = session_vwap(bars)
+    vol_ma = volume_moving_average(bars, VOLUME_MA_PERIOD)
+    rsi_value = latest_rsi(closes, RSI_PERIOD)
+    trend_strength = ema_trend_strength(
+        closes, fast=ENTRY_EMA_FAST, slow=ENTRY_EMA_MID,
+    )
+
     oi_type = classify_oi_buildup(futures_price_change, futures_oi_change)
     oi_bias = oi_buildup_bias(oi_type)
-    ema_signal = ema_trend_signal(closes)
-    ema_dir = ema_bias(ema_signal)
-    rsi_div = rsi_divergence_signal(closes)
-    rsi_bull = rsi_momentum_filter(closes, "bullish")
-    rsi_bear = rsi_momentum_filter(closes, "bearish")
-    rsi_value = latest_rsi(closes)
-    rsi_ce_zone = rsi_in_entry_zone(closes, "bullish")
-    rsi_pe_zone = rsi_in_entry_zone(closes, "bearish")
-    volatility = atr_percent(bars)
-    trend_strength = ema_trend_strength(closes)
-    bounce_up = ema_pullback_bounce(closes, "bullish")
-    bounce_down = ema_pullback_bounce(closes, "bearish")
-    pullback_up_pct = pullback_retracement_percent(closes, "bullish")
-    pullback_down_pct = pullback_retracement_percent(closes, "bearish")
-    at_high = near_swing_extreme(closes, "bullish")
-    at_low = near_swing_extreme(closes, "bearish")
-    day_levels = session_first_candle_levels(bars)
-    low_break = day_low_break(bars, closes)
-    high_break = day_high_break(bars, closes)
-
     oi_bull = _oi_factor(oi_type, oi_bias, closes, "bullish")
     oi_bear = _oi_factor(oi_type, oi_bias, closes, "bearish")
+
+    rsi_div = rsi_divergence_signal(closes, RSI_PERIOD)
+    rsi_bull = rsi_momentum_filter(closes, "bullish")
+    rsi_bear = rsi_momentum_filter(closes, "bearish")
     rsi_bull_factor = _rsi_factor("bullish", rsi_div, rsi_bull)
     rsi_bear_factor = _rsi_factor("bearish", rsi_div, rsi_bear)
-    core_bull = _core_setup_met("bullish", oi_bull, ema_dir, rsi_bull_factor)
-    core_bear = _core_setup_met("bearish", oi_bear, ema_dir, rsi_bear_factor)
 
     chain_analysis = analyze_strike_oi(option_chain, strike_step)
     chain_available = option_chain is not None and option_chain.success
-    vwap_bull = vwap_factor(bars, "bullish")
-    vwap_bear = vwap_factor(bars, "bearish")
-    vol_bull = volume_spike_factor(bars, "bullish")
-    vol_bear = volume_spike_factor(bars, "bearish")
     chain_bull = chain_oi_factor(chain_analysis, "bullish")
     chain_bear = chain_oi_factor(chain_analysis, "bearish")
-    bull_advanced = _advanced_confirmation_met(
-        "bullish", vwap_bull, vol_bull, chain_bull, chain_available,
+
+    at_high = near_swing_extreme(closes, "bullish")
+    at_low = near_swing_extreme(closes, "bearish")
+    volatility_block = atr_pct is not None and atr_pct > 0.9
+
+    bull_factors = _build_professional_factors(
+        "bullish", ce_passed, oi_bull, rsi_bull_factor, chain_bull, ema_signal, bars,
     )
-    bear_advanced = _advanced_confirmation_met(
-        "bearish", vwap_bear, vol_bear, chain_bear, chain_available,
+    bear_factors = _build_professional_factors(
+        "bearish", pe_passed, oi_bear, rsi_bear_factor, chain_bear, ema_signal, bars,
+    )
+    bull_confidence = _setup_confidence(
+        ce_passed, ce_total, oi_bull, rsi_bull_factor, chain_bull, ema_signal, bars, "bullish",
+    )
+    bear_confidence = _setup_confidence(
+        pe_passed, pe_total, oi_bear, rsi_bear_factor, chain_bear, ema_signal, bars, "bearish",
     )
 
-    bullish = _build_direction_factors(
-        "bullish", oi_bull, ema_signal, ema_dir, rsi_bull_factor,
-        vwap_bull, vol_bull, chain_bull,
-        bars, bounce_up, bounce_down, high_break, low_break,
-    )
-    bearish = _build_direction_factors(
-        "bearish", oi_bear, ema_signal, ema_dir, rsi_bear_factor,
-        vwap_bear, vol_bear, chain_bear,
-        bars, bounce_up, bounce_down, high_break, low_break,
-    )
-
-    bull_confidence = _entry_confidence(bullish, ema_signal)
-    bear_confidence = _entry_confidence(bearish, ema_signal)
-
-    day_low = day_levels[0] if day_levels else None
-    day_high = day_levels[1] if day_levels else None
+    pro_bull = oi_bull is not None and (chain_bull is not None if chain_available else True)
+    pro_bear = oi_bear is not None and (chain_bear is not None if chain_available else True)
 
     indicators = {
-        "oi_buildup": oi_type,
+        "ema_20": ema_20,
+        "ema_50": ema_50,
+        "ema_200": ema_200,
         "ema_signal": ema_signal,
-        "rsi_divergence": rsi_div,
+        "session_vwap": vwap,
+        "adx": adx_value,
+        "adx_min": ADX_MIN,
+        "adx_reject": ADX_REJECT,
+        "atr": atr_value,
+        "atr_percent": atr_pct,
         "rsi": rsi_value,
-        "rsi_bullish": rsi_bull,
-        "rsi_bearish": rsi_bear,
-        "rsi_ce_zone": rsi_ce_zone,
-        "rsi_pe_zone": rsi_pe_zone,
+        "rsi_divergence": rsi_div,
+        "volume_ma_20": vol_ma,
+        "volume_above_20ma": volume_above_ma(bars, VOLUME_MA_PERIOD),
+        "ce_rules": ce_rules,
+        "pe_rules": pe_rules,
+        "ce_rules_passed": ce_passed,
+        "pe_rules_passed": pe_passed,
+        "ce_rules_met": len(ce_passed),
+        "ce_rules_total": ce_total,
+        "pe_rules_met": len(pe_passed),
+        "pe_rules_total": pe_total,
+        "global_rejects": rejects,
+        "ranging_around_vwap": price_ranging_around_vwap(bars),
+        "late_session": apply_entry_cutoff and is_late_session(bars),
+        "entry_cutoff_245pm": apply_entry_cutoff,
+        "core_setup_bull": ce_user_ok and pro_bull,
+        "core_setup_bear": pe_user_ok and pro_bear,
+        "oi_buildup": oi_type,
         "oi_aligned_bull": oi_bull is not None,
         "oi_aligned_bear": oi_bear is not None,
-        "ema_aligned_bull": ema_dir == "bullish",
-        "ema_aligned_bear": ema_dir == "bearish",
+        "rsi_bullish": rsi_bull,
+        "rsi_bearish": rsi_bear,
         "rsi_aligned_bull": rsi_bull_factor is not None,
         "rsi_aligned_bear": rsi_bear_factor is not None,
-        "core_setup_bull": core_bull,
-        "core_setup_bear": core_bear,
-        "session_vwap": session_vwap(bars),
-        "vwap_bull": vwap_bull,
-        "vwap_bear": vwap_bear,
-        "volume_spike_bull": vol_bull,
-        "volume_spike_bear": vol_bear,
+        "vwap_bull": "above_vwap" if ce_rules["price_above_vwap"] else None,
+        "vwap_bear": "below_vwap" if pe_rules["price_below_vwap"] else None,
+        "market_structure_hh_hl": ce_rules["market_structure_hh_hl"],
+        "market_structure_lh_ll": pe_rules["market_structure_lh_ll"],
+        "pullback_ema20_or_vwap": (
+            ce_rules["pullback_ema20_or_vwap"] or pe_rules["pullback_ema20_or_vwap"]
+        ),
+        "confirmation_high_break": ce_rules["confirmation_high_break"],
+        "confirmation_low_break": pe_rules["confirmation_low_break"],
         "chain_oi_summary": chain_analysis.get("chain_oi_summary"),
         "chain_pcr": chain_analysis.get("pcr"),
-        "chain_atm_strike": chain_analysis.get("atm_strike"),
-        "chain_atm_ce_oi_change_pct": chain_analysis.get("atm_ce_oi_change_pct"),
-        "chain_atm_pe_oi_change_pct": chain_analysis.get("atm_pe_oi_change_pct"),
-        "advanced_bull": bull_advanced,
-        "advanced_bear": bear_advanced,
-        "atr_percent": volatility,
+        "chain_bias": chain_analysis.get("bias"),
+        "atm_strike": chain_analysis.get("atm_strike"),
+        "advanced_bull": pro_bull,
+        "advanced_bear": pro_bear,
         "trend_strength": trend_strength,
         "at_swing_high": at_high,
         "at_swing_low": at_low,
-        "day_first_candle_low": day_low,
-        "day_first_candle_high": day_high,
-        "day_low_break": low_break,
-        "day_high_break": high_break,
-        "ema_bounce_up": bounce_up,
-        "ema_bounce_down": bounce_down,
-        "pullback_retracement_up_pct": pullback_up_pct,
-        "pullback_retracement_down_pct": pullback_down_pct,
         "min_confidence_required": MIN_SIGNAL_CONFIDENCE,
         "bullish_confidence": bull_confidence,
         "bearish_confidence": bear_confidence,
+        "bullish_factors": bull_factors,
+        "bearish_factors": bear_factors,
         "last_close": closes[-1],
-        "bullish_factors": bullish,
-        "bearish_factors": bearish,
+        "setup_levels": compute_setup_levels(bars, closes, live_ltp=live_ltp),
     }
 
-    if volatility is not None and volatility > 0.9:
+    if rejects:
+        return StrategySignal(
+            action="HOLD",
+            confidence=max(bull_confidence, bear_confidence),
+            reasons=rejects,
+            indicators=indicators,
+        )
+
+    if volatility_block:
         return StrategySignal(
             action="HOLD",
             confidence=0.0,
@@ -418,77 +678,48 @@ def evaluate_option_buying_signal(
             indicators=indicators,
         )
 
-    pullback_up_ok = (
-        pullback_up_pct is not None
-        and pullback_up_pct >= MIN_PULLBACK_RETRACEMENT_PCT
-    )
-    pullback_down_ok = (
-        pullback_down_pct is not None
-        and pullback_down_pct >= MIN_PULLBACK_RETRACEMENT_PCT
-    )
-
-    bull_timing = (
-        (bounce_up and pullback_up_ok) or high_break
-    ) and (
-        last_candle_confirms(bars, "bullish")
-        or rejection_candle(bars, "bullish")
-    )
-    bear_timing = (
-        (bounce_down and pullback_down_ok) or low_break
-    ) and (
-        last_candle_confirms(bars, "bearish")
-        or rejection_candle(bars, "bearish")
-    )
-
     bullish_ok = (
-        core_bull
-        and bull_advanced
-        and len(bearish) == 0
+        ce_user_ok
+        and pro_bull
         and not at_high
-        and rsi_ce_zone in ("ok", "weak")
-        and rsi_bull != "overbought"
-        and bull_timing
+        and ema_dir in ("bullish", "bullish_cross")
         and (trend_strength is None or trend_strength >= 0.04)
-        and _has_strong_setup(bullish, ema_signal)
-        and _meets_confidence_threshold(bullish, ema_signal)
+        and _meets_confidence_threshold(bull_confidence)
     )
     if bullish_ok:
-        tag = "day_high_break" if high_break else "pullback_complete"
         return StrategySignal(
             action="BUY_CE",
             confidence=bull_confidence,
-            reasons=bullish + [tag],
+            reasons=bull_factors,
             indicators=indicators,
         )
 
     bearish_ok = (
-        core_bear
-        and bear_advanced
-        and len(bullish) == 0
+        pe_user_ok
+        and pro_bear
         and not at_low
-        and rsi_pe_zone in ("ok", "weak")
-        and rsi_bear != "oversold"
-        and bear_timing
+        and ema_dir in ("bearish", "bearish_cross")
         and (trend_strength is None or trend_strength >= 0.04)
-        and _has_strong_setup(bearish, ema_signal)
-        and _meets_confidence_threshold(bearish, ema_signal)
+        and _meets_confidence_threshold(bear_confidence)
     )
     if bearish_ok:
-        tag = "day_low_break" if low_break else "pullback_complete"
         return StrategySignal(
             action="BUY_PE",
             confidence=bear_confidence,
-            reasons=bearish + [tag],
+            reasons=bear_factors,
             indicators=indicators,
         )
 
-    hold_reason = _hold_reason(
-        core_bull, core_bear, oi_bull, oi_bear, ema_dir,
-        rsi_bull_factor, rsi_bear_factor,
-        bull_timing, bear_timing,
-        bull_advanced, bear_advanced,
-        bullish, bearish, ema_signal,
-    )
+    if len(ce_passed) >= len(pe_passed):
+        hold_reason = _professional_hold_reason(
+            ce_rules, rejects, oi_bull, chain_bull, chain_available,
+            at_high, False, bull_confidence,
+        )
+    else:
+        hold_reason = _professional_hold_reason(
+            pe_rules, rejects, oi_bear, chain_bear, chain_available,
+            at_low, False, bear_confidence,
+        )
 
     return StrategySignal(
         action="HOLD",

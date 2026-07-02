@@ -45,8 +45,18 @@ async def get_auto_trade_status(instrument: str):
 @router.get("/{instrument}/suggestions")
 async def get_auto_trade_suggestions(instrument: str):
     """Live AI-style market suggestion without activating auto-trade."""
-    from app.auto_trade_profiles import get_profile
+    from app.auto_trade_profiles import get_profile, GROWW_MCX_UNSUPPORTED_MESSAGE
     from app.services.signal_suggestions import build_ai_suggestion, signal_is_stale
+
+    profile = get_profile(instrument)
+    if not profile.groww_trading_supported:
+        return {
+            "success": False,
+            "message": GROWW_MCX_UNSUPPORTED_MESSAGE,
+            "groww_trading_supported": False,
+            "instrument": profile.instrument_id,
+            "instrument_label": profile.label,
+        }
 
     service = _service(instrument)
     if signal_is_stale(service._last_check_at) or not service._last_signal:
@@ -58,7 +68,12 @@ async def get_auto_trade_suggestions(instrument: str):
         "reasons": [],
         "indicators": {},
     }
-    suggestion = build_ai_suggestion(signal, profile)
+    suggestion = build_ai_suggestion(
+        signal,
+        profile,
+        underlying_ltp=service._underlying_ltp,
+        option_chain=getattr(service, "_last_option_chain", None),
+    )
     signal_info = None
     if service._last_signal:
         from app.models.schemas import AutoTradeSignalInfo

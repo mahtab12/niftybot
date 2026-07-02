@@ -116,9 +116,68 @@
       });
   }
 
+  function closePanel(root) {
+    const toggle = root.querySelector('[data-niftybot-notifications-toggle]');
+    const menu = root.querySelector('[data-niftybot-notifications-menu]');
+    if (!toggle || !menu) {
+      return;
+    }
+    menu.hidden = true;
+    toggle.classList.remove('is-open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function openPanel(root) {
+    const toggle = root.querySelector('[data-niftybot-notifications-toggle]');
+    const menu = root.querySelector('[data-niftybot-notifications-menu]');
+    if (!toggle || !menu) {
+      return;
+    }
+    menu.hidden = false;
+    toggle.classList.add('is-open');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function bindPanel(root) {
+    const toggle = root.querySelector('[data-niftybot-notifications-toggle]');
+    const menu = root.querySelector('[data-niftybot-notifications-menu]');
+    if (!toggle || !menu) {
+      return;
+    }
+
+    toggle.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (menu.hidden) {
+        openPanel(root);
+      }
+      else {
+        closePanel(root);
+      }
+    });
+
+    menu.addEventListener('click', function (event) {
+      event.stopPropagation();
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!root.contains(event.target)) {
+        closePanel(root);
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !menu.hidden) {
+        closePanel(root);
+        toggle.focus();
+      }
+    });
+  }
+
   Drupal.behaviors.niftybotNotifications = {
     attach: function (context) {
       once('niftybot-notifications', '[data-niftybot-notifications]', context).forEach(function (root) {
+        bindPanel(root);
         refresh(root);
         window.setInterval(function () {
           refresh(root);
@@ -152,7 +211,6 @@
             }
             fetchJson(readUrl, { method: 'POST' }).then(function () {
               item.classList.remove('niftybot-notifications__item--unread');
-              const badge = root.querySelector('[data-niftybot-notifications-badge]');
               fetchJson(root.getAttribute('data-unread-url')).then(function (data) {
                 if (data && data.success) {
                   setBadge(root, data.unread_count || 0);

@@ -6,8 +6,14 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
-from app.auto_trade_profiles import LOT_STEPS, VALID_INSTRUMENTS
+from app.auto_trade_profiles import (
+    GROWW_MCX_UNSUPPORTED_MESSAGE,
+    LOT_STEPS,
+    VALID_INSTRUMENTS,
+    get_profile,
+)
 from app.middleware.auth import verify_api_key
+from app.market_hours import index_market_status
 from app.models.schemas import AutoTradeActionResponse, AutoTradeStatusResponse
 from app.services.signal_suggestions import build_ai_suggestion
 from app.services.user_auto_trade_registry import (
@@ -34,6 +40,8 @@ def _attach_ai_suggestion(payload: dict, service, instrument: str) -> dict:
     payload["ai_suggestion"] = build_ai_suggestion(
         service._last_signal,
         get_profile(instrument),
+        underlying_ltp=payload.get("underlying_ltp") or getattr(service, "_underlying_ltp", None),
+        option_chain=getattr(service, "_last_option_chain", None),
     )
     return payload
 
@@ -60,26 +68,61 @@ def _lot_step(instrument: str) -> int:
     return LOT_STEPS.get(instrument, LOT_STEPS["nifty"])
 
 
+def _attach_index_market_status(payload: dict, instrument: str) -> dict:
+    if instrument in ("nifty", "sensex"):
+        payload.update(index_market_status())
+    return payload
+
+
+def _unsupported_groww_payload(key: str) -> dict:
+    profile = get_profile(key)
+    return {
+        "success": True,
+        "instrument": key,
+        "instrument_label": profile.label,
+        "active": False,
+        "message": GROWW_MCX_UNSUPPORTED_MESSAGE,
+        "groww_trading_supported": False,
+        "underlying_ltp": None,
+        "nifty_ltp": None,
+        "last_check_at": None,
+        "last_signal": None,
+        "trade_mode": "buy",
+        "current_trade": None,
+        "trade_history": [],
+        "config": {},
+        "ai_suggestion": None,
+    }
+
+
 def _user_auto_trade_status_sync(uid: int, key: str) -> dict:
+    profile = get_profile(key)
+    if not profile.groww_trading_supported:
+        return _unsupported_groww_payload(key)
+
     service = get_user_service(uid, key)
     if not service:
-        from app.auto_trade_profiles import get_profile
         from app.services.auto_trade_service import get_auto_trade_service
         from app.services.signal_suggestions import build_ai_suggestion
 
-        profile = get_profile(key)
         scanner = get_auto_trade_service(key)
         scan_status = scanner.get_status()
         signal_info = scan_status.last_signal.model_dump() if scan_status.last_signal else None
         suggestion = None
         if scanner._last_signal:
-            suggestion = build_ai_suggestion(scanner._last_signal, profile)
-        return {
+            suggestion = build_ai_suggestion(
+                scanner._last_signal,
+                profile,
+                underlying_ltp=scan_status.underlying_ltp,
+                option_chain=getattr(scanner, "_last_option_chain", None),
+            )
+        return _attach_index_market_status({
             "success": True,
             "instrument": key,
             "instrument_label": profile.label,
             "active": False,
             "message": "User auto trade is inactive",
+            "groww_trading_supported": True,
             "underlying_ltp": scan_status.underlying_ltp,
             "nifty_ltp": scan_status.underlying_ltp,
             "last_check_at": scan_status.last_check_at,
@@ -89,11 +132,13 @@ def _user_auto_trade_status_sync(uid: int, key: str) -> dict:
             "trade_history": [],
             "config": scan_status.config,
             "ai_suggestion": suggestion,
-        }
+        }, key)
 
     status = service.get_status()
     payload = status.model_dump()
-    return _attach_ai_suggestion(payload, service, key)
+    payload["groww_trading_supported"] = True
+    payload = _attach_ai_suggestion(payload, service, key)
+    return _attach_index_market_status(payload, key)
 
 
 @router.get("/{uid}/{instrument}/status")

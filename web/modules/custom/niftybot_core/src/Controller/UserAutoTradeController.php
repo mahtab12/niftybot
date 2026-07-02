@@ -123,6 +123,13 @@ class UserAutoTradeController extends AutoTradeController {
     $build['#broker_connected'] = !empty($summary['connected']);
     $build['#broker_summary'] = $summary;
     $build['#is_user'] = TRUE;
+    $build['#groww_trading_supported'] = $this->autoTradeUser->isGrowwTradingSupported($instrument);
+    $build['#groww_unsupported_message'] = AutoTradeUserService::GROWW_MCX_UNSUPPORTED_MESSAGE;
+    $market = $this->autoTradeUser->isIndexInstrument($instrument)
+      ? $this->autoTradeUser->getIndexMarketStatus()
+      : ['market_open' => TRUE, 'market_status' => 'open', 'market_message' => ''];
+    $build['#market_open'] = $market['market_open'];
+    $build['#market_closed_message'] = $market['market_message'];
     // Loaded asynchronously by the browser — avoids blocking page render on Groww.
     $build['#user_trade_history'] = [];
 
@@ -151,6 +158,11 @@ class UserAutoTradeController extends AutoTradeController {
       'quantity' => $quantity,
       'quantities' => $settings,
       'access' => $access,
+      'growwTradingSupported' => $this->autoTradeUser->isGrowwTradingSupported($instrument),
+      'growwUnsupportedMessage' => AutoTradeUserService::GROWW_MCX_UNSUPPORTED_MESSAGE,
+      'isIndexInstrument' => $this->autoTradeUser->isIndexInstrument($instrument),
+      'marketOpen' => $market['market_open'],
+      'marketClosedMessage' => $market['market_message'],
     ];
 
     unset($build['#attached']['drupalSettings']['niftybotAutoTrade']['wsUrl']);

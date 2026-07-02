@@ -21,6 +21,15 @@ class AutoTradeUserService {
   public const GOLD_LOT_STEP = 100;
 
   /**
+   * Groww Trading API supports CASH and FNO only — not MCX order placement.
+   *
+   * @var array<int, string>
+   */
+  public const GROWW_UNSUPPORTED_INSTRUMENTS = ['crude_oil', 'gold'];
+
+  public const GROWW_MCX_UNSUPPORTED_MESSAGE = 'Groww Trading APIs support equity (CASH) and derivatives (FNO) only. MCX commodity trading is not available at this time.';
+
+  /**
    * Supported auto-trade instruments and lot steps.
    *
    * @var array<string, int>
@@ -61,6 +70,67 @@ class AutoTradeUserService {
   public function lotStep(string $instrument): int {
     $key = strtolower($instrument);
     return self::LOT_STEPS[$key] ?? self::NIFTY_LOT_STEP;
+  }
+
+  /**
+   * Whether Groww API can place auto-trades for this instrument.
+   */
+  public function isGrowwTradingSupported(string $instrument): bool {
+    return !in_array(strtolower($instrument), self::GROWW_UNSUPPORTED_INSTRUMENTS, TRUE);
+  }
+
+  /**
+   * Nifty and Sensex use NSE/BSE cash/F&O session hours.
+   */
+  public function isIndexInstrument(string $instrument): bool {
+    return in_array(strtolower($instrument), ['nifty', 'sensex'], TRUE);
+  }
+
+  public const INDEX_MARKET_HOURS = '9:15 AM – 3:30 PM IST';
+
+  /**
+   * NSE/BSE regular session status (9:15 AM – 3:30 PM IST, Mon–Fri).
+   *
+   * @return array{market_open: bool, market_status: string, market_message: string}
+   */
+  public function getIndexMarketStatus(): array {
+    $tz = new \DateTimeZone('Asia/Kolkata');
+    $now = new \DateTime('now', $tz);
+    $weekday = (int) $now->format('N');
+
+    if ($weekday >= 6) {
+      return [
+        'market_open' => FALSE,
+        'market_status' => 'closed',
+        'market_message' => 'Market is closed — NSE/BSE are closed on weekends. Session hours: ' . self::INDEX_MARKET_HOURS . '.',
+      ];
+    }
+
+    $minutes = ((int) $now->format('G')) * 60 + (int) $now->format('i');
+    $open_minutes = 9 * 60 + 15;
+    $close_minutes = 15 * 60 + 30;
+
+    if ($minutes >= $open_minutes && $minutes <= $close_minutes) {
+      return [
+        'market_open' => TRUE,
+        'market_status' => 'open',
+        'market_message' => 'Market is open · Nifty & Sensex session ' . self::INDEX_MARKET_HOURS . '.',
+      ];
+    }
+
+    if ($minutes < $open_minutes) {
+      return [
+        'market_open' => FALSE,
+        'market_status' => 'closed',
+        'market_message' => 'Market is closed — Nifty & Sensex session opens at 9:15 AM IST (hours: ' . self::INDEX_MARKET_HOURS . ').',
+      ];
+    }
+
+    return [
+      'market_open' => FALSE,
+      'market_status' => 'closed',
+      'market_message' => 'Market is closed — Nifty & Sensex session ended at 3:30 PM IST (hours: ' . self::INDEX_MARKET_HOURS . ').',
+    ];
   }
 
   /**
@@ -347,6 +417,23 @@ class AutoTradeUserService {
    * @return array<string, mixed>|null
    */
   public function activateUserAutoTrade(int $uid, string $instrument, string $mode): ?array {
+    if (!$this->isGrowwTradingSupported($instrument)) {
+      return [
+        'success' => FALSE,
+        'message' => self::GROWW_MCX_UNSUPPORTED_MESSAGE,
+      ];
+    }
+
+    if ($this->isIndexInstrument($instrument)) {
+      $market = $this->getIndexMarketStatus();
+      if (!$market['market_open']) {
+        return [
+          'success' => FALSE,
+          'message' => $market['market_message'],
+        ];
+      }
+    }
+
     $connection = $this->brokerConnection->getConnection($uid, 'groww');
     if (!$connection || $connection->status !== BrokerConnectionService::STATUS_CONNECTED) {
       return [

@@ -52,6 +52,24 @@
     </div>
   </div>
 
+  {% if not groww_trading_supported|default(true) %}
+    <div class="alert alert-warning niftybot-auto-trade-user__alert" role="alert">
+      <i class="bi bi-info-circle-fill me-2" aria-hidden="true"></i>
+      {{ groww_unsupported_message|default('Groww Trading APIs support equity (CASH) and derivatives (FNO) only. MCX commodity trading is not available at this time.'|t) }}
+    </div>
+  {% elseif not market_open|default(true) and market_closed_message %}
+    <div class="niftybot-auto-trade-user__market-banner niftybot-auto-trade-user__market-banner--closed" role="status" id="niftybot-auto-trade-market-closed">
+      <i class="bi bi-moon-stars me-2" aria-hidden="true"></i>
+      {{ market_closed_message }}
+    </div>
+  {% elseif market_open|default(false) and market_closed_message %}
+    <div class="niftybot-auto-trade-user__market-banner niftybot-auto-trade-user__market-banner--open" role="status" id="niftybot-auto-trade-market-open">
+      <i class="bi bi-clock me-2" aria-hidden="true"></i>
+      <span class="niftybot-auto-trade-market-open__text">{{ market_closed_message }}</span>
+    </div>
+  {% endif %}
+
+  {% if groww_trading_supported|default(true) %}
   {% if not broker_connected %}
     {% if broker_summary.pending_approval|default(false) %}
       <div class="alert alert-warning niftybot-auto-trade-user__alert" role="alert">
@@ -68,7 +86,7 @@
       </div>
     {% endif %}
   {% else %}
-    <div class="alert alert-info niftybot-auto-trade-user__alert" role="status">
+    <div class="niftybot-auto-trade-user__notice niftybot-auto-trade-user__notice--info" role="status">
       <i class="bi bi-bell me-2" aria-hidden="true"></i>
       {{ 'Buy/sell setup alerts appear in the header bell. You can place trades manually on Groww when you receive a notification.'|t }}
     </div>
@@ -76,23 +94,97 @@
     <div class="card niftybot-auto-trade-user__ai-suggestions mb-4" id="niftybot-auto-trade-ai-panel" hidden>
       <div class="card-body">
         <div class="niftybot-auto-trade-user__ai-head">
-          <div class="niftybot-auto-trade-user__ai-badge">
-            <i class="bi bi-stars" aria-hidden="true"></i>
-            {{ 'AI suggestion'|t }}
+          <div>
+            <div class="niftybot-auto-trade-user__ai-badge">
+              <i class="bi bi-stars" aria-hidden="true"></i>
+              {{ 'AI trade planner'|t }}
+            </div>
+            <h3 class="niftybot-auto-trade-user__ai-title" id="niftybot-auto-trade-ai-headline">{{ 'Live trade setups'|t }}</h3>
           </div>
           <span class="niftybot-auto-trade-user__ai-updated" id="niftybot-auto-trade-ai-updated"></span>
         </div>
-        <h3 class="niftybot-auto-trade-user__ai-title" id="niftybot-auto-trade-ai-headline">{{ 'Scanning market…'|t }}</h3>
-        <p class="niftybot-auto-trade-user__ai-summary" id="niftybot-auto-trade-ai-summary"></p>
-        <div class="niftybot-auto-trade-user__ai-meta">
-          <span class="niftybot-auto-trade-user__ai-confidence" id="niftybot-auto-trade-ai-confidence"></span>
-          <span class="niftybot-auto-trade-user__ai-bias" id="niftybot-auto-trade-ai-bias"></span>
+
+        <div class="niftybot-auto-trade-user__ai-summary-strip">
+          <div class="niftybot-auto-trade-user__ai-pattern" id="niftybot-auto-trade-ai-pattern" hidden></div>
+          <div class="niftybot-auto-trade-user__ai-meta">
+            <span class="niftybot-auto-trade-user__ai-confidence" id="niftybot-auto-trade-ai-confidence"></span>
+            <span class="niftybot-auto-trade-user__ai-bias" id="niftybot-auto-trade-ai-bias"></span>
+          </div>
         </div>
-        <p class="niftybot-auto-trade-user__ai-hint" id="niftybot-auto-trade-ai-hint"></p>
-        <ul class="niftybot-auto-trade-user__ai-factors" id="niftybot-auto-trade-ai-factors"></ul>
+
+        <div class="niftybot-auto-trade-user__ai-tabs" role="tablist" aria-label="{{ 'AI suggestion sections'|t }}">
+          <button type="button" class="niftybot-auto-trade-user__ai-tab is-active" role="tab" id="niftybot-auto-trade-ai-tab-overview" data-ai-tab="overview" aria-selected="true" aria-controls="niftybot-auto-trade-ai-panel-overview">
+            <i class="bi bi-grid-1x2" aria-hidden="true"></i>{{ 'Overview'|t }}
+          </button>
+          <button type="button" class="niftybot-auto-trade-user__ai-tab" role="tab" id="niftybot-auto-trade-ai-tab-call" data-ai-tab="call" aria-selected="false" aria-controls="niftybot-auto-trade-ai-panel-call">
+            <i class="bi bi-arrow-up-right" aria-hidden="true"></i>{{ 'Call (CE)'|t }}
+          </button>
+          <button type="button" class="niftybot-auto-trade-user__ai-tab" role="tab" id="niftybot-auto-trade-ai-tab-put" data-ai-tab="put" aria-selected="false" aria-controls="niftybot-auto-trade-ai-panel-put">
+            <i class="bi bi-arrow-down-right" aria-hidden="true"></i>{{ 'Put (PE)'|t }}
+          </button>
+          <button type="button" class="niftybot-auto-trade-user__ai-tab" role="tab" id="niftybot-auto-trade-ai-tab-strikes" data-ai-tab="strikes" aria-selected="false" aria-controls="niftybot-auto-trade-ai-panel-strikes">
+            <i class="bi bi-bullseye" aria-hidden="true"></i>{{ 'Strikes'|t }}
+          </button>
+        </div>
+
+        <div class="niftybot-auto-trade-user__ai-tabpanels">
+          <div class="niftybot-auto-trade-user__ai-tabpanel is-active" role="tabpanel" id="niftybot-auto-trade-ai-panel-overview" data-ai-tabpanel="overview" aria-labelledby="niftybot-auto-trade-ai-tab-overview">
+            <p class="niftybot-auto-trade-user__ai-tabpanel-lead">{{ 'Quick read on pattern, triggers, and top strike ideas.'|t }}</p>
+            <div class="niftybot-auto-trade-user__ai-overview-grid" id="niftybot-auto-trade-ai-overview"></div>
+          </div>
+
+          <div class="niftybot-auto-trade-user__ai-tabpanel" role="tabpanel" id="niftybot-auto-trade-ai-panel-call" data-ai-tabpanel="call" aria-labelledby="niftybot-auto-trade-ai-tab-call" hidden>
+            <p class="niftybot-auto-trade-user__ai-tabpanel-lead">{{ 'Buy Call when index crosses the trigger — all CALL entry rules should align.'|t }}</p>
+            <div class="niftybot-auto-trade-user__ai-setup niftybot-auto-trade-user__ai-setup--call" id="niftybot-auto-trade-ai-call-setup">
+              <div class="niftybot-auto-trade-user__ai-setup-head">
+                <span class="niftybot-auto-trade-user__ai-setup-badge">{{ 'Call buy setup'|t }}</span>
+                <span class="niftybot-auto-trade-user__ai-setup-status" id="niftybot-auto-trade-ai-call-status"></span>
+              </div>
+              <p class="niftybot-auto-trade-user__ai-setup-message" id="niftybot-auto-trade-ai-call-message">{{ 'Calculating trigger…'|t }}</p>
+              <dl class="niftybot-auto-trade-user__ai-setup-facts">
+                <div><dt>{{ 'Trigger'|t }}</dt><dd id="niftybot-auto-trade-ai-call-trigger">—</dd></div>
+                <div><dt>{{ 'Distance'|t }}</dt><dd id="niftybot-auto-trade-ai-call-points">—</dd></div>
+                <div><dt>{{ 'Rules'|t }}</dt><dd id="niftybot-auto-trade-ai-call-rules">—</dd></div>
+                <div><dt>{{ 'Suggested strike'|t }}</dt><dd id="niftybot-auto-trade-ai-call-recommended">—</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="niftybot-auto-trade-user__ai-tabpanel" role="tabpanel" id="niftybot-auto-trade-ai-panel-put" data-ai-tabpanel="put" aria-labelledby="niftybot-auto-trade-ai-tab-put" hidden>
+            <p class="niftybot-auto-trade-user__ai-tabpanel-lead">{{ 'Buy Put when index falls to the trigger — all PUT entry rules should align.'|t }}</p>
+            <div class="niftybot-auto-trade-user__ai-setup niftybot-auto-trade-user__ai-setup--put" id="niftybot-auto-trade-ai-put-setup">
+              <div class="niftybot-auto-trade-user__ai-setup-head">
+                <span class="niftybot-auto-trade-user__ai-setup-badge">{{ 'Put buy setup'|t }}</span>
+                <span class="niftybot-auto-trade-user__ai-setup-status" id="niftybot-auto-trade-ai-put-status"></span>
+              </div>
+              <p class="niftybot-auto-trade-user__ai-setup-message" id="niftybot-auto-trade-ai-put-message">{{ 'Calculating trigger…'|t }}</p>
+              <dl class="niftybot-auto-trade-user__ai-setup-facts">
+                <div><dt>{{ 'Trigger'|t }}</dt><dd id="niftybot-auto-trade-ai-put-trigger">—</dd></div>
+                <div><dt>{{ 'Distance'|t }}</dt><dd id="niftybot-auto-trade-ai-put-points">—</dd></div>
+                <div><dt>{{ 'Rules'|t }}</dt><dd id="niftybot-auto-trade-ai-put-rules">—</dd></div>
+                <div><dt>{{ 'Suggested strike'|t }}</dt><dd id="niftybot-auto-trade-ai-put-recommended">—</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="niftybot-auto-trade-user__ai-tabpanel" role="tabpanel" id="niftybot-auto-trade-ai-panel-strikes" data-ai-tabpanel="strikes" aria-labelledby="niftybot-auto-trade-ai-tab-strikes" hidden>
+            <p class="niftybot-auto-trade-user__ai-tabpanel-lead">{{ 'Strike ideas ranked by delta (ATM, ITM, OTM). For manual planning only.'|t }}</p>
+            <ul class="niftybot-auto-trade-user__ai-contracts" id="niftybot-auto-trade-ai-contracts"></ul>
+            <p class="niftybot-auto-trade-user__ai-empty" id="niftybot-auto-trade-ai-contracts-empty" hidden>{{ 'Strike suggestions will appear once option chain data loads.'|t }}</p>
+          </div>
+        </div>
+
+        <details class="niftybot-auto-trade-user__ai-details">
+          <summary>{{ 'Indicator & OI breakdown'|t }}</summary>
+          <ul class="niftybot-auto-trade-user__ai-factors" id="niftybot-auto-trade-ai-factors"></ul>
+        </details>
+
+        <p class="niftybot-auto-trade-user__ai-summary visually-hidden" id="niftybot-auto-trade-ai-summary"></p>
+        <p class="niftybot-auto-trade-user__ai-hint visually-hidden" id="niftybot-auto-trade-ai-hint"></p>
         <p class="niftybot-auto-trade-user__ai-disclaimer" id="niftybot-auto-trade-ai-disclaimer"></p>
       </div>
     </div>
+  {% endif %}
   {% endif %}
 
   {% if not api_configured %}
@@ -287,13 +379,13 @@
             <div><dt>{{ 'Action'|t }}</dt><dd id="niftybot-auto-trade-signal-action">{{ status.last_signal.action|default('HOLD') }}</dd></div>
             <div><dt>{{ 'Confidence'|t }}</dt><dd id="niftybot-auto-trade-signal-confidence">{% if status.last_signal.confidence is defined %}{{ (status.last_signal.confidence * 100)|number_format(0) }}%{% else %}—{% endif %}</dd></div>
             <div><dt>{{ 'OI buildup'|t }}</dt><dd id="niftybot-auto-trade-oi">{{ status.last_signal.indicators.oi_buildup|default('—') }}</dd></div>
-            <div><dt>{{ 'EMA'|t }}</dt><dd id="niftybot-auto-trade-ema">{{ status.last_signal.indicators.ema_signal|default('—') }}</dd></div>
-            <div><dt>{{ 'RSI'|t }}</dt><dd id="niftybot-auto-trade-rsi">{{ status.last_signal.indicators.rsi_divergence|default('—') }}</dd></div>
-            <div><dt>{{ 'Core setup'|t }}</dt><dd id="niftybot-auto-trade-core-setup">—</dd></div>
+            <div><dt>{{ 'EMA 20 / 50 / 200'|t }}</dt><dd id="niftybot-auto-trade-ema">{{ status.last_signal.indicators.ema_signal|default('—') }}</dd></div>
+            <div><dt>{{ 'ADX / RSI'|t }}</dt><dd id="niftybot-auto-trade-rsi">{{ status.last_signal.indicators.adx|default('—') }}</dd></div>
+            <div><dt>{{ 'Entry rules'|t }}</dt><dd id="niftybot-auto-trade-core-setup">—</dd></div>
             <div><dt>{{ 'VWAP'|t }}</dt><dd id="niftybot-auto-trade-vwap">{% if status.last_signal.indicators.session_vwap is defined %}{{ status.last_signal.indicators.session_vwap|number_format(2) }}{% else %}—{% endif %}</dd></div>
             <div><dt>{{ 'Volume'|t }}</dt><dd id="niftybot-auto-trade-volume">—</dd></div>
             <div><dt>{{ 'Chain OI'|t }}</dt><dd id="niftybot-auto-trade-chain-oi">{{ status.last_signal.indicators.chain_oi_summary|default('—') }}</dd></div>
-            <div><dt>{{ 'Advanced'|t }}</dt><dd id="niftybot-auto-trade-advanced">—</dd></div>
+            <div><dt>{{ 'Chain OI'|t }}</dt><dd id="niftybot-auto-trade-advanced">—</dd></div>
             <div class="niftybot-auto-trade-user__metrics-full"><dt>{{ 'Reasons'|t }}</dt><dd id="niftybot-auto-trade-reasons">{% if status.last_signal.reasons is not empty %}{{ status.last_signal.reasons|join(', ') }}{% else %}—{% endif %}</dd></div>
           </dl>
         </div>

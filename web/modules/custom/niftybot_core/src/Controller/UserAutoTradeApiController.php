@@ -93,6 +93,13 @@ class UserAutoTradeApiController extends ControllerBase {
       ], 502);
     }
 
+    if ($this->autoTradeUser->isIndexInstrument($instrument)) {
+      $market = $this->autoTradeUser->getIndexMarketStatus();
+      $status['market_open'] = $market['market_open'];
+      $status['market_status'] = $market['market_status'];
+      $status['market_message'] = $market['market_message'];
+    }
+
     return new JsonResponse($status);
   }
 

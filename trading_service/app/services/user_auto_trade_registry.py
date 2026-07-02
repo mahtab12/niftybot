@@ -8,7 +8,7 @@ from typing import Any, Callable
 
 import httpx
 
-from app.auto_trade_profiles import get_profile
+from app.auto_trade_profiles import get_profile, GROWW_MCX_UNSUPPORTED_MESSAGE, assert_groww_trading_supported
 from app.brokers.groww_broker import GrowwBroker
 from app.config import settings
 from app.services.auto_trade_service import AutoTradeService
@@ -111,6 +111,7 @@ def activate_user_session(
     billing_mode: str,
     webhook_url: str,
 ) -> AutoTradeService:
+    assert_groww_trading_supported(instrument)
     key = _session_key(uid, instrument)
     existing = _REGISTRY.get(key)
     if existing and existing._active:

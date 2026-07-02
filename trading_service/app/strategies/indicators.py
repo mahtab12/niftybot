@@ -634,3 +634,671 @@ def volume_spike_factor(
     if direction == "bearish" and not bullish_candle:
         return "volume_spike"
     return None
+
+
+def latest_ema_value(closes: list[float], period: int) -> Optional[float]:
+    """Most recent EMA value for the given period."""
+    values = ema(closes, period)
+    for value in reversed(values):
+        if value is not None:
+            return value
+    return None
+
+
+def ema_stack_bullish(
+    closes: list[float],
+    fast: int = 20,
+    slow: int = 50,
+) -> bool:
+    """Fast EMA above slow EMA."""
+    fast_value = latest_ema_value(closes, fast)
+    slow_value = latest_ema_value(closes, slow)
+    if fast_value is None or slow_value is None:
+        return False
+    return fast_value > slow_value
+
+
+def ema_stack_bearish(
+    closes: list[float],
+    fast: int = 20,
+    slow: int = 50,
+) -> bool:
+    """Fast EMA below slow EMA."""
+    fast_value = latest_ema_value(closes, fast)
+    slow_value = latest_ema_value(closes, slow)
+    if fast_value is None or slow_value is None:
+        return False
+    return fast_value < slow_value
+
+
+def price_above_ema(closes: list[float], period: int = 20) -> bool:
+    ema_value = latest_ema_value(closes, period)
+    if ema_value is None or not closes:
+        return False
+    return closes[-1] > ema_value
+
+
+def price_below_ema(closes: list[float], period: int = 20) -> bool:
+    ema_value = latest_ema_value(closes, period)
+    if ema_value is None or not closes:
+        return False
+    return closes[-1] < ema_value
+
+
+def price_above_session_vwap(bars: list[dict[str, Any]]) -> bool:
+    vwap = session_vwap(bars)
+    if vwap is None or not bars:
+        return False
+    return float(bars[-1]["close"]) > vwap
+
+
+def price_below_session_vwap(bars: list[dict[str, Any]]) -> bool:
+    vwap = session_vwap(bars)
+    if vwap is None or not bars:
+        return False
+    return float(bars[-1]["close"]) < vwap
+
+
+def volume_above_average(
+    bars: list[dict[str, Any]],
+    lookback: int = 10,
+) -> bool:
+    """Last candle volume above the recent average."""
+    if len(bars) < lookback + 1:
+        return False
+    prior = bars[-(lookback + 1):-1]
+    vols = [float(b.get("volume") or 0) for b in prior]
+    avg_vol = sum(vols) / len(vols) if vols else 0.0
+    last_vol = float(bars[-1].get("volume") or 0)
+    return avg_vol > 0 and last_vol > avg_vol
+
+
+def adx(bars: list[dict[str, Any]], period: int = 14) -> list[Optional[float]]:
+    """Wilder ADX from OHLC bars."""
+    count = len(bars)
+    if count < period * 2:
+        return [None] * count
+
+    highs = [float(b["high"]) for b in bars]
+    lows = [float(b["low"]) for b in bars]
+    closes = [float(b["close"]) for b in bars]
+
+    tr_values: list[float] = [0.0] * count
+    plus_dm: list[float] = [0.0] * count
+    minus_dm: list[float] = [0.0] * count
+
+    for i in range(1, count):
+        tr_values[i] = max(
+            highs[i] - lows[i],
+            abs(highs[i] - closes[i - 1]),
+            abs(lows[i] - closes[i - 1]),
+        )
+        up_move = highs[i] - highs[i - 1]
+        down_move = lows[i - 1] - lows[i]
+        plus_dm[i] = up_move if up_move > down_move and up_move > 0 else 0.0
+        minus_dm[i] = down_move if down_move > up_move and down_move > 0 else 0.0
+
+    tr_smooth = sum(tr_values[1: period + 1])
+    plus_smooth = sum(plus_dm[1: period + 1])
+    minus_smooth = sum(minus_dm[1: period + 1])
+
+    dx_values: list[Optional[float]] = [None] * count
+    for i in range(period, count):
+        if i > period:
+            tr_smooth = tr_smooth - (tr_smooth / period) + tr_values[i]
+            plus_smooth = plus_smooth - (plus_smooth / period) + plus_dm[i]
+            minus_smooth = minus_smooth - (minus_smooth / period) + minus_dm[i]
+
+        if tr_smooth <= 0:
+            dx_values[i] = 0.0
+            continue
+
+        plus_di = 100.0 * plus_smooth / tr_smooth
+        minus_di = 100.0 * minus_smooth / tr_smooth
+        di_sum = plus_di + minus_di
+        dx_values[i] = (
+            100.0 * abs(plus_di - minus_di) / di_sum if di_sum > 0 else 0.0
+        )
+
+    adx_values: list[Optional[float]] = [None] * count
+    seed_start = period * 2 - 1
+    if seed_start >= count:
+        return adx_values
+
+    seed = [
+        value for value in dx_values[period: seed_start + 1] if value is not None
+    ]
+    if len(seed) < period:
+        return adx_values
+
+    adx_smooth = sum(seed[:period]) / period
+    adx_values[seed_start] = adx_smooth
+
+    for i in range(seed_start + 1, count):
+        current_dx = dx_values[i]
+        if current_dx is None:
+            continue
+        adx_smooth = ((adx_smooth * (period - 1)) + current_dx) / period
+        adx_values[i] = adx_smooth
+
+    return adx_values
+
+
+def latest_adx(bars: list[dict[str, Any]], period: int = 14) -> Optional[float]:
+    """Most recent ADX value."""
+    values = adx(bars, period)
+    for value in reversed(values):
+        if value is not None:
+            return round(value, 2)
+    return None
+
+
+def adx_above_threshold(
+    bars: list[dict[str, Any]],
+    threshold: float = 25.0,
+    period: int = 14,
+) -> bool:
+    value = latest_adx(bars, period)
+    return value is not None and value > threshold
+
+
+def latest_atr(bars: list[dict[str, float]], period: int = 14) -> Optional[float]:
+    """Wilder ATR (absolute) on the latest bar."""
+    if len(bars) < period + 1:
+        return None
+
+    trs: list[float] = []
+    for i in range(1, len(bars)):
+        high = bars[i]["high"]
+        low = bars[i]["low"]
+        prev_close = bars[i - 1]["close"]
+        tr = max(high - low, abs(high - prev_close), abs(low - prev_close))
+        trs.append(tr)
+
+    if len(trs) < period:
+        return None
+
+    atr_value = sum(trs[:period]) / period
+    for tr in trs[period:]:
+        atr_value = ((atr_value * (period - 1)) + tr) / period
+    return round(atr_value, 4)
+
+
+def volume_moving_average(
+    bars: list[dict[str, Any]],
+    period: int = 20,
+) -> Optional[float]:
+    """Simple moving average of bar volume."""
+    if len(bars) < period:
+        return None
+    segment = bars[-period:]
+    vols = [float(b.get("volume") or 0) for b in segment]
+    if not vols:
+        return None
+    return round(sum(vols) / len(vols), 2)
+
+
+def volume_above_ma(
+    bars: list[dict[str, Any]],
+    period: int = 20,
+) -> bool:
+    """Current bar volume above the volume moving average."""
+    if len(bars) < period + 1:
+        return False
+    avg = volume_moving_average(bars[:-1], period)
+    if avg is None or avg <= 0:
+        return False
+    last_vol = float(bars[-1].get("volume") or 0)
+    return last_vol > avg
+
+
+def ema_triple_stack_bullish(
+    closes: list[float],
+    fast: int = 20,
+    mid: int = 50,
+    slow: int = 200,
+) -> bool:
+    """EMA20 > EMA50 > EMA200."""
+    ema_fast = latest_ema_value(closes, fast)
+    ema_mid = latest_ema_value(closes, mid)
+    ema_slow = latest_ema_value(closes, slow)
+    if None in (ema_fast, ema_mid, ema_slow):
+        return False
+    return ema_fast > ema_mid > ema_slow
+
+
+def ema_triple_stack_bearish(
+    closes: list[float],
+    fast: int = 20,
+    mid: int = 50,
+    slow: int = 200,
+) -> bool:
+    """EMA20 < EMA50 < EMA200."""
+    ema_fast = latest_ema_value(closes, fast)
+    ema_mid = latest_ema_value(closes, mid)
+    ema_slow = latest_ema_value(closes, slow)
+    if None in (ema_fast, ema_mid, ema_slow):
+        return False
+    return ema_fast < ema_mid < ema_slow
+
+
+def rsi_in_range(
+    closes: list[float],
+    low: float,
+    high: float,
+    period: int = 14,
+) -> bool:
+    value = latest_rsi(closes, period)
+    if value is None:
+        return False
+    return low <= value <= high
+
+
+def _swing_points(
+    values: list[float],
+    window: int = 2,
+) -> tuple[list[tuple[int, float]], list[tuple[int, float]]]:
+    """Swing highs and lows as (index, value) within a price series."""
+    highs: list[tuple[int, float]] = []
+    lows: list[tuple[int, float]] = []
+    for i in range(window, len(values) - window):
+        segment = values[i - window: i + window + 1]
+        center = values[i]
+        if center == max(segment):
+            highs.append((i, center))
+        if center == min(segment):
+            lows.append((i, center))
+    return highs, lows
+
+
+def market_structure_hh_hl(
+    bars: list[dict[str, Any]],
+    lookback: int = 30,
+) -> bool:
+    """Higher high and higher low market structure."""
+    if len(bars) < lookback:
+        return False
+    segment = bars[-lookback:]
+    highs = [float(b["high"]) for b in segment]
+    lows = [float(b["low"]) for b in segment]
+    swing_highs, _ = _swing_points(highs)
+    _, swing_lows = _swing_points(lows)
+    if len(swing_highs) < 2 or len(swing_lows) < 2:
+        return False
+    return (
+        swing_highs[-1][1] > swing_highs[-2][1]
+        and swing_lows[-1][1] > swing_lows[-2][1]
+    )
+
+
+def market_structure_lh_ll(
+    bars: list[dict[str, Any]],
+    lookback: int = 30,
+) -> bool:
+    """Lower high and lower low market structure."""
+    if len(bars) < lookback:
+        return False
+    segment = bars[-lookback:]
+    highs = [float(b["high"]) for b in segment]
+    lows = [float(b["low"]) for b in segment]
+    swing_highs, _ = _swing_points(highs)
+    swing_lows, _ = _swing_points(lows)
+    if len(swing_highs) < 2 or len(swing_lows) < 2:
+        return False
+    return (
+        swing_highs[-1][1] < swing_highs[-2][1]
+        and swing_lows[-1][1] < swing_lows[-2][1]
+    )
+
+
+def _near_level(price: float, level: Optional[float], tolerance_pct: float) -> bool:
+    if level is None or level <= 0:
+        return False
+    return abs(price - level) / level * 100 <= tolerance_pct
+
+
+def pullback_to_ema_or_vwap(
+    bars: list[dict[str, Any]],
+    closes: list[float],
+    direction: str,
+    ema_period: int = 20,
+    touch_bars: int = 5,
+    tolerance_pct: float = 0.15,
+) -> bool:
+    """Price tagged EMA20 or VWAP recently, then reclaimed for the trend."""
+    if len(bars) < touch_bars + 2 or len(closes) < touch_bars + 2:
+        return False
+
+    vwap = session_vwap(bars)
+    ema_value = latest_ema_value(closes, ema_period)
+    if vwap is None and ema_value is None:
+        return False
+
+    recent_bars = bars[-(touch_bars + 1):-1]
+    recent_closes = closes[-(touch_bars + 1):-1]
+    touched = any(
+        _near_level(close, ema_value, tolerance_pct)
+        or _near_level(close, vwap, tolerance_pct)
+        or _near_level(bar["low"], ema_value, tolerance_pct)
+        or _near_level(bar["low"], vwap, tolerance_pct)
+        for bar, close in zip(recent_bars, recent_closes)
+    )
+    if not touched:
+        return False
+
+    last_close = closes[-1]
+    if direction == "bullish":
+        above_ema = ema_value is None or last_close >= ema_value
+        above_vwap = vwap is None or last_close >= vwap
+        return above_ema and above_vwap
+    if direction == "bearish":
+        below_ema = ema_value is None or last_close <= ema_value
+        below_vwap = vwap is None or last_close <= vwap
+        return below_ema and below_vwap
+    return False
+
+
+def confirmation_candle_at(
+    bars: list[dict[str, Any]],
+    index: int,
+    direction: str,
+) -> bool:
+    """Directional confirmation candle at a specific index."""
+    if index < 0 or index >= len(bars):
+        return False
+    candle = bars[index]
+    body = candle["close"] - candle["open"]
+    if direction == "bullish":
+        return body > 0
+    if direction == "bearish":
+        return body < 0
+    return False
+
+
+def _recent_confirmation_index(
+    bars: list[dict[str, Any]],
+    direction: str,
+    lookback: int = 6,
+) -> Optional[int]:
+    start = len(bars) - 2
+    end = max(len(bars) - lookback - 1, -1)
+    for index in range(start, end, -1):
+        if confirmation_candle_at(bars, index, direction):
+            return index
+    return None
+
+
+def confirmation_candle_formed(
+    bars: list[dict[str, Any]],
+    direction: str,
+    lookback: int = 6,
+) -> bool:
+    """A recent confirmation candle exists (not necessarily the last bar)."""
+    return _recent_confirmation_index(bars, direction, lookback) is not None
+
+
+def confirmation_candle_high_break(
+    bars: list[dict[str, Any]],
+    direction: str = "bullish",
+    lookback: int = 6,
+) -> bool:
+    """Price broke above the high of a recent bullish confirmation candle."""
+    if direction != "bullish" or len(bars) < 3:
+        return False
+    index = _recent_confirmation_index(bars, "bullish", lookback)
+    if index is None or index >= len(bars) - 1:
+        return False
+    confirm_high = float(bars[index]["high"])
+    return float(bars[-1]["close"]) > confirm_high
+
+
+def confirmation_candle_low_break(
+    bars: list[dict[str, Any]],
+    direction: str = "bearish",
+    lookback: int = 6,
+) -> bool:
+    """Price broke below the low of a recent bearish confirmation candle."""
+    if direction != "bearish" or len(bars) < 3:
+        return False
+    index = _recent_confirmation_index(bars, "bearish", lookback)
+    if index is None or index >= len(bars) - 1:
+        return False
+    confirm_low = float(bars[index]["low"])
+    return float(bars[-1]["close"]) < confirm_low
+
+
+def confirmation_candle_levels(
+    bars: list[dict[str, Any]],
+    direction: str,
+    lookback: int = 6,
+) -> Optional[tuple[float, float]]:
+    """Low and high of the most recent confirmation candle for a direction."""
+    index = _recent_confirmation_index(bars, direction, lookback)
+    if index is None:
+        return None
+    candle = bars[index]
+    return float(candle["low"]), float(candle["high"])
+
+
+def _level_source(
+    value: float,
+    *,
+    vwap: Optional[float],
+    ema20: Optional[float],
+    ema50: Optional[float],
+    session: Optional[tuple[float, float]],
+    direction: str,
+) -> str:
+    if direction == "overhead":
+        if vwap is not None and value == vwap:
+            return "vwap"
+        if ema20 is not None and value == ema20:
+            return "ema20"
+        if ema50 is not None and value == ema50:
+            return "ema50"
+        if session is not None and value == session[1]:
+            return "session_open_high"
+        return "nearest_overhead"
+    if vwap is not None and value == vwap:
+        return "vwap"
+    if ema20 is not None and value == ema20:
+        return "ema20"
+    if ema50 is not None and value == ema50:
+        return "ema50"
+    if session is not None and value == session[0]:
+        return "session_open_low"
+    return "nearest_support"
+
+
+def _next_ce_trigger(
+    ltp: float,
+    *,
+    vwap: Optional[float],
+    ema20: Optional[float],
+    ema50: Optional[float],
+    session: Optional[tuple[float, float]],
+    atr_val: Optional[float],
+    bull_confirm: Optional[tuple[float, float]],
+    include_confirmation: bool,
+) -> tuple[Optional[float], str]:
+    """Nearest level strictly above LTP for a fresh CE entry."""
+    candidates: list[tuple[float, str]] = []
+    if include_confirmation and bull_confirm is not None:
+        bull_high = bull_confirm[1]
+        if bull_high > ltp:
+            candidates.append((bull_high, "confirmation_high"))
+    for val in (vwap, ema20, ema50, session[1] if session else None):
+        if val is not None and float(val) > ltp:
+            candidates.append((float(val), _level_source(
+                float(val),
+                vwap=vwap,
+                ema20=ema20,
+                ema50=ema50,
+                session=session,
+                direction="overhead",
+            )))
+    if candidates:
+        price, source = min(candidates, key=lambda item: item[0])
+        return price, source
+    if atr_val:
+        return ltp + atr_val * 0.35, "atr_buffer"
+    return None, "none"
+
+
+def _next_pe_trigger(
+    ltp: float,
+    *,
+    vwap: Optional[float],
+    ema20: Optional[float],
+    ema50: Optional[float],
+    session: Optional[tuple[float, float]],
+    atr_val: Optional[float],
+    bear_confirm: Optional[tuple[float, float]],
+    include_confirmation: bool,
+) -> tuple[Optional[float], str]:
+    """Nearest level strictly below LTP for a fresh PE entry."""
+    candidates: list[tuple[float, str]] = []
+    if include_confirmation and bear_confirm is not None:
+        bear_low = bear_confirm[0]
+        if bear_low < ltp:
+            candidates.append((bear_low, "confirmation_low"))
+    for val in (vwap, ema20, ema50, session[0] if session else None):
+        if val is not None and float(val) < ltp:
+            candidates.append((float(val), _level_source(
+                float(val),
+                vwap=vwap,
+                ema20=ema20,
+                ema50=ema50,
+                session=session,
+                direction="support",
+            )))
+    if candidates:
+        price, source = max(candidates, key=lambda item: item[0])
+        return price, source
+    if atr_val:
+        return ltp - atr_val * 0.35, "atr_buffer"
+    return None, "none"
+
+
+def compute_setup_levels(
+    bars: list[dict[str, Any]],
+    closes: list[float],
+    live_ltp: Optional[float] = None,
+) -> dict[str, Any]:
+    """
+    Price triggers for manual CE/PE planning relative to live LTP (or last close).
+
+    CE: buy when price crosses above the trigger (points up from LTP).
+    PE: buy when price falls to the trigger (points down from LTP).
+    """
+    if not closes:
+        return {}
+
+    bar_close = float(closes[-1])
+    ltp = float(live_ltp) if live_ltp is not None and float(live_ltp) > 0 else bar_close
+    vwap = session_vwap(bars)
+    ema20 = latest_ema_value(closes, 20)
+    ema50 = latest_ema_value(closes, 50)
+    atr_val = latest_atr(bars, 14)
+    session = session_first_candle_levels(bars)
+    bull_confirm = confirmation_candle_levels(bars, "bullish")
+    bear_confirm = confirmation_candle_levels(bars, "bearish")
+
+    ce_triggered = confirmation_candle_high_break(bars)
+    pe_triggered = confirmation_candle_low_break(bars)
+
+    level_kwargs = {
+        "vwap": vwap,
+        "ema20": ema20,
+        "ema50": ema50,
+        "session": session,
+        "atr_val": atr_val,
+    }
+
+    if ce_triggered and bull_confirm is not None and ltp <= bull_confirm[1]:
+        ce_trigger = bull_confirm[1]
+        ce_source = "confirmation_high_triggered"
+    else:
+        ce_trigger, ce_source = _next_ce_trigger(
+            ltp,
+            bull_confirm=bull_confirm,
+            include_confirmation=not ce_triggered,
+            **level_kwargs,
+        )
+
+    if pe_triggered and bear_confirm is not None and ltp >= bear_confirm[0]:
+        pe_trigger = bear_confirm[0]
+        pe_source = "confirmation_low_triggered"
+    else:
+        pe_trigger, pe_source = _next_pe_trigger(
+            ltp,
+            bear_confirm=bear_confirm,
+            include_confirmation=not pe_triggered,
+            **level_kwargs,
+        )
+
+    ce_points = round(max(0.0, ce_trigger - ltp), 2) if ce_trigger is not None else None
+    pe_points = round(max(0.0, ltp - pe_trigger), 2) if pe_trigger is not None else None
+
+    return {
+        "ltp": round(ltp, 2),
+        "bar_close": round(bar_close, 2),
+        "ce_trigger_price": round(ce_trigger, 2) if ce_trigger is not None else None,
+        "ce_points_away": ce_points,
+        "ce_trigger_source": ce_source,
+        "ce_triggered": ce_triggered,
+        "pe_trigger_price": round(pe_trigger, 2) if pe_trigger is not None else None,
+        "pe_points_away": pe_points,
+        "pe_trigger_source": pe_source,
+        "pe_triggered": pe_triggered,
+    }
+
+
+def price_ranging_around_vwap(
+    bars: list[dict[str, Any]],
+    lookback: int = 5,
+    band_pct: float = 0.12,
+) -> bool:
+    """Several recent closes hugging VWAP — choppy, no clear bias."""
+    vwap = session_vwap(bars)
+    if vwap is None or vwap <= 0 or len(bars) < lookback:
+        return False
+    recent = bars[-lookback:]
+    return all(
+        abs(float(bar["close"]) - vwap) / vwap * 100 <= band_pct
+        for bar in recent
+    )
+
+
+def _bar_datetime_ist(bar: dict[str, Any]) -> Optional[datetime]:
+    ts = bar.get("ts")
+    if ts is None:
+        return None
+    try:
+        if isinstance(ts, (int, float)):
+            seconds = float(ts)
+            if seconds > 1e12:
+                seconds /= 1000.0
+            return datetime.fromtimestamp(seconds, tz=IST)
+        text = str(ts).replace("Z", "+00:00")
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=IST)
+        return dt.astimezone(IST)
+    except (ValueError, OSError, TypeError):
+        return None
+
+
+def is_late_session(
+    bars: list[dict[str, Any]],
+    cutoff_hour: int = 14,
+    cutoff_minute: int = 45,
+) -> bool:
+    """True when the latest bar is at or after 2:45 PM IST."""
+    if not bars:
+        return False
+    dt = _bar_datetime_ist(bars[-1])
+    if dt is None:
+        return False
+    cutoff = dt.replace(hour=cutoff_hour, minute=cutoff_minute, second=0, microsecond=0)
+    return dt >= cutoff
